@@ -1,0 +1,59 @@
+############################################################################
+# arch/arm/src/rzv2h/Make.defs
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.  The
+# ASF licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance with the
+# License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+############################################################################
+
+# External hal renesas
+HAL_EXDIR := $(TOPDIR)$(DELIM)..$(DELIM)external$(DELIM)hal_renesas
+HAL_DRIVER_EXDIR := $(HAL_EXDIR)$(DELIM)drivers
+HAL_NUTTX_EXDIR := $(HAL_EXDIR)$(DELIM)nuttx
+
+# Hal renesas in the arch tree
+HAL_INNDIR := $(TOPDIR)$(DELIM)arch$(DELIM)arm$(DELIM)src$(DELIM)rzv2h$(DELIM)hal_renesas
+HAL_DRIVER_INNDIR := $(HAL_INNDIR)$(DELIM)drivers
+HAL_NUTTX_INNDIR := $(HAL_INNDIR)$(DELIM)nuttx
+
+# Tool copy
+TOOL_CP :=$(TOPDIR)$(DELIM)tools$(DELIM)copydir.sh
+
+# Remove Renesas HAL
+distclean::
+	@rm -rf "$(HAL_INNDIR)"
+
+# Copy Renesas HAL
+hal_cp:
+	@echo "[INFOR]: Copy Renesas HAL into arch tree"
+	@rm -rf "$(HAL_INNDIR)"
+	@mkdir -p "$(HAL_INNDIR)"
+	@$(TOOL_CP) "$(HAL_DRIVER_EXDIR)" "$(HAL_DRIVER_INNDIR)"
+	@$(TOOL_CP) "$(HAL_NUTTX_EXDIR)" "$(HAL_NUTTX_INNDIR)"
+
+context:: hal_cp
+
+include chip/hal.mk
+CFLAGS += $(INCLUDES)
+CFLAGS += -Wno-undef
+
+ifeq ($(CONFIG_ARCH_ARMV7R),y)
+include armv7-r/Make.defs
+endif
+
+# rzv2h-specific C source files
+CHIP_CSRCS += rzv2h_start.c rzv2h_serial.c rzv2h_irq.c rzv2h_timerisr.c rzv2h_lowputc.c rzv2h_clockconfig.c rzv2h_mpu_region.c
