@@ -783,6 +783,13 @@ config ARCH_CHIP_TMS570
 	---help---
 		TI TMS570 family
 
+config ARCH_CHIP_RZV2H
+	bool "Renesas RZV2H"
+	select ARCH_HAVE_LOWVECTORS
+	select ARCH_HAVE_FETCHADD
+	---help---
+		Renesas RZV2H family (ARM Cortex-R8)
+
 config ARCH_CHIP_TIVA
 	bool "TI Tiva"
 	select ARCH_HAVE_MPU
@@ -1161,6 +1168,15 @@ config ARCH_CORTEXR7
 	select ARCH_HAVE_MPU
 	select ARCH_HAVE_TESTSET
 
+config ARCH_CORTEXR8
+	bool
+	default n
+	select ARCH_ARMV7R
+	select ARCH_DCACHE
+	select ARCH_ICACHE
+	select ARCH_HAVE_MPU
+	select ARCH_HAVE_TESTSET
+	
 config ARCH_CORTEXR52
 	bool
 	default n
@@ -1338,6 +1354,7 @@ config ARCH_CHIP
 	default "stm32wl5"	if ARCH_CHIP_STM32WL5
 	default "str71x"	if ARCH_CHIP_STR71X
 	default "tms570"	if ARCH_CHIP_TMS570
+	default "rzv2h"		if ARCH_CHIP_RZV2H
 	default "xmc4"		if ARCH_CHIP_XMC4
 	default "mx8mp"		if ARCH_CHIP_MX8MP
 	default "cxd56xx"	if ARCH_CHIP_CXD56XX
@@ -1892,6 +1909,9 @@ source "arch/arm/src/str71x/Kconfig"
 endif
 if ARCH_CHIP_TMS570
 source "arch/arm/src/tms570/Kconfig"
+endif
+if ARCH_CHIP_RZV2H
+source "arch/arm/src/rzv2h/Kconfig"
 endif
 if ARCH_CHIP_XMC4
 source "arch/arm/src/xmc4/Kconfig"

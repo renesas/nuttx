@@ -1,5 +1,5 @@
 # ##############################################################################
-# arch/arm/src/cmake/armv7-r.cmake
+# arch/arm/src/rzv2h/CMakeLists.txt
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -20,27 +20,13 @@
 #
 # ##############################################################################
 
-set(PLATFORM_FLAGS)
+set(SRCS
+    rzv2h_start.c
+    rzv2h_serial.c
+    rzv2h_irq.c
+    rzv2h_timerisr.c
+    rzv2h_lowputc.c
+    rzv2h_clockconfig.c
+    rzv2h_mpu_region.c)
 
-if(CONFIG_ARCH_CORTEXR4)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r4)
-elseif(CONFIG_ARCH_CORTEXR5)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r5)
-elseif(CONFIG_ARCH_CORTEXR7)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r7)
-elseif(CONFIG_ARCH_CORTEXR8)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r8)
-endif()
-
-if(CONFIG_ARCH_FPU)
-  list(APPEND PLATFORM_FLAGS -mfpu=vfpv3-d16)
-  if(CONFIG_ARM_FPU_ABI_SOFT)
-    list(APPEND PLATFORM_FLAGS -mfloat-abi=softfp)
-  else()
-    list(APPEND PLATFORM_FLAGS -mfloat-abi=hard)
-  endif()
-else()
-  list(APPEND PLATFORM_FLAGS -mfloat-abi=soft)
-endif()
-
-add_compile_options(${PLATFORM_FLAGS})
+target_sources(arch PRIVATE ${SRCS})

@@ -1,0 +1,32 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menu "RZ/V2H Configuration Options"
+
+choice
+	prompt "RZ/V2H Core Configuration"
+	default ARCH_CHIP_R9A09G057
+
+config ARCH_CHIP_R9A09G057
+	bool "RZ/V2H Processor (cortex-r8)"
+	select ARCH_CORTEXR8
+	select ARCH_HAVE_FPU
+	select ARCH_HAVE_THUMB
+	select ARCH_HAVE_DPFPU
+	select ARMV7R_HAVE_GICv2
+	select ARCH_HAVE_MPU
+	---help---
+		RZ/V2H family of Renesas MPUs cortex-r8
+
+endchoice # RZ/V2H Chip Selection
+
+config RZV2H_CORTEXR8_0
+	bool "Build for CR8_0 core"
+	default y
+	help
+		Build for the CR8_0 core of the RZV2H.
+		This is the default core for the EVK-RZV2H board.
+
+endmenu # "RZ/V2H Configuration Options"

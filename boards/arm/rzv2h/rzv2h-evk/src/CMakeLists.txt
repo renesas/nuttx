@@ -1,5 +1,5 @@
 # ##############################################################################
-# arch/arm/src/cmake/armv7-r.cmake
+# boards/arm/rzv2h/rzv2h-evk/src/CMakeLists.txt
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -20,27 +20,38 @@
 #
 # ##############################################################################
 
-set(PLATFORM_FLAGS)
+# Core board initialization files
+set(SRCS rzv2h_boot.c rzv2h_bringup.c)
 
-if(CONFIG_ARCH_CORTEXR4)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r4)
-elseif(CONFIG_ARCH_CORTEXR5)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r5)
-elseif(CONFIG_ARCH_CORTEXR7)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r7)
-elseif(CONFIG_ARCH_CORTEXR8)
-  list(APPEND PLATFORM_FLAGS -mcpu=cortex-r8)
+# Application examples support
+if(CONFIG_RZV2H_EXAMPLE_SUPPORT)
+  list(APPEND SRCS rzv2h_app_examples.c)
 endif()
 
-if(CONFIG_ARCH_FPU)
-  list(APPEND PLATFORM_FLAGS -mfpu=vfpv3-d16)
-  if(CONFIG_ARM_FPU_ABI_SOFT)
-    list(APPEND PLATFORM_FLAGS -mfloat-abi=softfp)
-  else()
-    list(APPEND PLATFORM_FLAGS -mfloat-abi=hard)
-  endif()
+# Board-specific initialization
+if(CONFIG_BOARDCTL)
+  list(APPEND SRCS rzv2h_appinit.c)
+endif()
+
+if(CONFIG_ARCH_BUTTONS)
+  list(APPEND SRCS rzv2h_buttons.c)
+endif()
+
+if(CONFIG_ARCH_LEDS)
+  list(APPEND SRCS rzv2h_auto_leds.c)
 else()
-  list(APPEND PLATFORM_FLAGS -mfloat-abi=soft)
+  list(APPEND SRCS rzv2h_user_leds.c)
 endif()
 
-add_compile_options(${PLATFORM_FLAGS})
+# Peripheral driver initialization
+if(CONFIG_RZV2H_UART_SCI)
+  list(APPEND SRCS rzv2h_serial.c)
+endif()
+
+target_sources(board PRIVATE ${SRCS})
+
+# Set linker script based on core configuration
+if(CONFIG_RZV2H_CORTEXR8_0)
+  set_property(GLOBAL PROPERTY LD_SCRIPT
+                               "${NUTTX_BOARD_DIR}/scripts/rzv2h-evk_cr8_0.ld")
+endif()
