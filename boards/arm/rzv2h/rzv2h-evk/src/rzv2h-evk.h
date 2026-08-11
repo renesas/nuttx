@@ -61,6 +61,21 @@ struct spi_dev_s;
 int rzv2h_bringup(void);
 
 /****************************************************************************
+ * Name: rzv2h_gpio_initialize
+ *
+ * Description:
+ *   Initialize GPIO drivers for use with /apps/examples/gpio
+ *
+ * Return Value:
+ *   OK on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_DEV_GPIO
+int rzv2h_gpio_initialize(void);
+#endif
+
+/****************************************************************************
  * Name: board_button_initialize
  *
  * Description:
@@ -97,7 +112,7 @@ int board_sci_spi_initialize(void);
 #endif
 
 /****************************************************************************
- * Name: rzv2h_app_examples
+ * Name: rzv2h_appexamples
  *
  * Description:
  *   Run all enabled board example applications
@@ -115,7 +130,7 @@ int board_sci_spi_initialize(void);
 void rzv2h_serial_setup(void);
 
 #ifdef CONFIG_RZV2H_EXAMPLE_SUPPORT
-int rzv2h_app_examples(void);
+int rzv2h_appexamples(void);
 #endif
 
 /****************************************************************************

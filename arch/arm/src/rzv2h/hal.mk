@@ -59,7 +59,9 @@ CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)all$(DELIM)bsp_io.c
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)all$(DELIM)bsp_address_convert.c
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)all$(DELIM)bsp_delay.c
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv$(DELIM)cr$(DELIM)bsp_irq.c
 
 ############################################################################
 # hal driver
 ############################################################################
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_ioport$(DELIM)r_ioport.c

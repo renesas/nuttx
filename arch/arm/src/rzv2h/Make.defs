@@ -56,4 +56,4 @@ include armv7-r/Make.defs
 endif
 
 # rzv2h-specific C source files
-CHIP_CSRCS += rzv2h_start.c rzv2h_serial.c rzv2h_irq.c rzv2h_timerisr.c rzv2h_lowputc.c rzv2h_clockconfig.c rzv2h_mpu_region.c
+CHIP_CSRCS += rzv2h_start.c rzv2h_serial.c rzv2h_irq.c rzv2h_timerisr.c rzv2h_lowputc.c rzv2h_clockconfig.c rzv2h_mpu_region.c rzv2h_gpio.c

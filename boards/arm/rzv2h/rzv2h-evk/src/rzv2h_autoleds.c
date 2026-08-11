@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_auto_leds.c
+ * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_autoleds.c
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -36,7 +36,7 @@
 
 #include "chip.h"
 #include "arm_internal.h"
-#include <arch/rzv2h/rzv2h_gpio.h>
+#include "rzv2h_gpio.h"
 
 #ifdef CONFIG_ARCH_LEDS
 
@@ -81,6 +81,7 @@ static void led_dumppins(const char *msg)
 
 void board_autoled_initialize(void)
 {
+  ;
 }
 
 /****************************************************************************
@@ -135,8 +136,8 @@ void board_autoled_off(int led)
  *
  ****************************************************************************/
 
-#ifndef CONFIG_ARCH_LEDS
-void board_userled_initialize(void)
+#ifdef CONFIG_ARCH_LEDS
+uint32_t board_userled_initialize(void)
 {
 }
 
