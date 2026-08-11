@@ -82,15 +82,230 @@ Buttons and LEDs
 Buttons
 -------
 
-No board buttons are supported by the NuttX port at this time.
+The RZ/V2H-EVK has no dedicated user button.  The board port reserves
+``P8_2`` for one external, active-high button and exposes it through the
+generic NuttX GPIO interface as ``/dev/gpio0``.  It does not currently
+provide a discrete NuttX button device such as ``/dev/buttons``.
+
+Hardware connection
+~~~~~~~~~~~~~~~~~~~
+
+Locate ``P8_2`` on the selected expansion connector using the RZ/V2H-EVK
+schematic.  Connect a normally-open momentary switch between ``P8_2`` and
+the board's 3.3-V logic supply, with a common ground between the board and
+the external circuit.  The board configures ``P8_2`` as an input with its
+internal pull-down enabled:
+
+* button released: the pull-down drives the input low; ``/dev/gpio0`` reads
+  ``0``;
+* button pressed: the switch drives the input high; ``/dev/gpio0`` reads
+  ``1``.
+
+The pin definition is ``BOARD_P8_2_BUTTON`` in
+``boards/arm/rzv2h/rzv2h-evk/include/board.h``.  It selects
+``BSP_IO_PORT_08_PIN_02`` with input, input-buffer, and pull-down settings.
+
+.. warning::
+
+   ``P8_2`` is a multiplexed pin.  Confirm the EVK schematic and make sure
+   that no enabled peripheral claims this pin before connecting the button.
+
+Configuration and registration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use a configuration that enables the generic GPIO test path, for example
+``rzv2h-evk:nsh-leds``.  The required options are::
+
+   CONFIG_DEV_GPIO=y
+   CONFIG_RZV2H_GPIO=y
+   CONFIG_EXAMPLES_GPIO=y
+   CONFIG_BOARD_LATE_INITIALIZE=y
+
+During ``board_late_initialize()``, ``rzv2h_bringup()`` calls
+``rzv2h_gpio_initialize()``.  This registers the one input first as
+``/dev/gpio0`` and configures the input through the Renesas FSP IOPORT
+driver.  ``CONFIG_RZV2H_GPIO`` defaults to enabled when ``CONFIG_DEV_GPIO``
+is selected, but it is shown above to make the dependency explicit.
+
+Manual NSH test
+~~~~~~~~~~~~~~~
+
+After booting NuttX, first verify that the device was registered::
+
+   nsh> ls /dev
+   nsh> gpio /dev/gpio0
+   Driver: /dev/gpio0
+     Input pin:     Value=0
+
+Press and hold the button, then run the read command again::
+
+   nsh> gpio /dev/gpio0
+   Driver: /dev/gpio0
+     Input pin:     Value=1
+
+Release the button and repeat the command; the value must return to ``0``.
+Each invocation of the standard ``apps/examples/gpio`` application performs
+one read and exits, so the button must remain pressed for the second command.
+
+Current limitations
+~~~~~~~~~~~~~~~~~~~
+
+The current GPIO implementation supports synchronous read and write only.
+GPIO interrupt attachment and enablement are placeholders, so ``gpio -w``
+cannot report button transitions.  Runtime pin-type changes are also not
+implemented, so do not use ``gpio -t``.  The board does not debounce the
+external switch; use a polling application with software debounce if
+continuous monitoring is required.
 
 LEDs
 ----
 
-``board_autoled_*()`` / ``board_userled_*()`` hooks exist in
-``boards/arm/rzv2h/rzv2h-evk/src/rzv2h_auto_leds.c``, but they are no-ops:
-no GPIO pin mapping has been implemented yet, so enabling
-``CONFIG_ARCH_LEDS``/``CONFIG_USERLED`` does not drive any physical LED.
+Two active-low GPIO outputs are available for LED testing.  They are
+registered after the button input, giving the following device mapping:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Pin
+     - GPIO device
+     - Function
+   * - ``P0_0``
+     - ``/dev/gpio1``
+     - LED output 1
+   * - ``P0_1``
+     - ``/dev/gpio2``
+     - LED output 2
+
+Using the NSH GPIO application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``nsh`` configuration enables ``CONFIG_DEV_GPIO`` and
+``CONFIG_EXAMPLES_GPIO``.  The ``gpio`` example is reused from the standard
+NuttX application repository at ``apps/examples/gpio``; it is not an
+RZ/V2H-specific application.  The RZ/V2H board port only configures the pins,
+registers ``/dev/gpio0`` through ``/dev/gpio2``, and enables the example in
+the board configuration.  The upstream example source is used without
+board-specific polling logic.
+
+The GPIO application uses the following command format::
+
+   gpio [-t <pintype>] [-w <signo>] [-o <value>] <driver-path>
+
+.. note::
+
+   At this stage, the RZ/V2H GPIO driver supports only GPIO read and write
+   operations for application testing.  Changing the pin type is not
+   supported: ``GPIOC_SETPINTYPE`` does not reconfigure the hardware.
+   GPIO interrupt attachment and enablement are also placeholders, so
+   interrupt notification is not available.
+
+   Consequently, use only ``gpio <driver-path>`` for reading and
+   ``gpio -o <0|1> <driver-path>`` for writing.  Do not use the ``-t``
+   pin-type option or the ``-w`` interrupt-wait option on this board.
+
+For these LED outputs, only ``-o`` and the device path are needed.  The
+``-o`` option writes the logical pin level (zero or one), while the device
+path selects the LED.  Because the LEDs are active low, write zero to turn an
+LED on and one to turn it off.  For example::
+
+   nsh> gpio -o 0 /dev/gpio1
+   nsh> gpio -o 1 /dev/gpio1
+   nsh> gpio -o 0 /dev/gpio2
+   nsh> gpio -o 1 /dev/gpio2
+
+For each command, the application reports the previous output level, the
+level being written, and the level read back from the driver.  For example,
+if LED output 1 is currently off::
+
+   nsh> gpio -o 0 /dev/gpio1
+   Driver: /dev/gpio1
+     Output pin:    Value=1
+     Writing:       Value=0
+     Verify:        Value=0
+
+Omit ``-o`` to read the current output level without changing it::
+
+   nsh> gpio /dev/gpio1
+
+Each invocation performs a single GPIO operation and then exits.  This is
+sufficient for the manual button and LED validation described here.
+
+Use ``gpio -h`` to display the generic application's command syntax.  Some
+options shown by that help text are not yet supported by the RZ/V2H GPIO
+driver, as described above.
+
+Using the NuttX user-LED application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``nsh-leds`` configuration also enables the standard NuttX user-LED
+interface and example with these options::
+
+   # CONFIG_ARCH_LEDS is not set
+   CONFIG_USERLED=y
+   CONFIG_USERLED_LOWER=y
+   CONFIG_EXAMPLES_LEDS=y
+   CONFIG_BOARD_LATE_INITIALIZE=y
+
+During late initialization, the board registers ``/dev/userleds``.  The
+``board_userled_*()`` callbacks configure ``P0_0`` and ``P0_1``, convert the
+logical LED state to the active-low pin level, and support LED mask bits
+``0x01`` and ``0x02``.
+
+Run the unmodified NuttX example from ``apps/examples/leds`` to cycle the two
+LED outputs::
+
+   nsh> ls /dev
+   nsh> leds
+
+The device list should contain ``userleds``, and the example should report a
+supported LED mask of ``0x03``.  The ``leds`` command starts a background
+``led_daemon`` that cycles the LED mask.  Its startup message prints the
+daemon PID; use ``kill <pid>`` to stop it.
+
+This interface is separate from the generic ``/dev/gpio1`` and
+``/dev/gpio2`` devices.  Use the ``gpio`` example for individual read/write
+validation, or use the ``leds`` example to exercise the NuttX user-LED API.
+Automatic OS-status LED control through ``CONFIG_ARCH_LEDS`` is not yet
+implemented.
+
+Application test responsibilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The current button and LED tests both reuse the standard NuttX GPIO example:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Test
+     - Application source
+     - Responsibility
+   * - Button read test
+     - Standard NuttX ``apps/examples/gpio`` application
+     - Press and hold the button, then read ``/dev/gpio0``
+   * - LED read/write test
+     - Standard NuttX ``apps/examples/gpio`` application
+     - Reused unchanged; the board port only configures and registers the
+       LED GPIO devices
+   * - User-LED sequence test
+     - Standard NuttX ``apps/examples/leds`` application
+     - Reused unchanged; it controls both active-low outputs through
+       ``/dev/userleds``
+
+.. important::
+
+   No RZ/V2H-specific test application is required for the current manual
+   validation.  Use the standard NuttX ``gpio`` example to read the button
+   through ``/dev/gpio0`` and to control the LEDs through ``/dev/gpio1`` and
+   ``/dev/gpio2``.  A separate polling application is needed only if
+   continuous monitoring, transition detection, or debounce testing is
+   required later.
+
+   The GPIO devices are registered from the board late-initialization path, so
+   ``CONFIG_BOARD_LATE_INITIALIZE`` must remain enabled.
+
+   The user-controlled ``board_userled_*()`` hooks and ``/dev/userleds`` are
+   supported.  The automatic ``board_autoled_*()`` hooks selected by
+   ``CONFIG_ARCH_LEDS`` remain placeholders.
 
 Serial Consoles
 ===============
@@ -107,7 +322,8 @@ Bring-up
 
 This section describes what has been brought up so far for the CR8_0 core.
 Only the items below are implemented; anything else selectable from Kconfig
-(serial, LEDs, ...) is a placeholder with no backing driver yet.
+(serial, automatic LED hooks, ...) is a placeholder with no backing driver
+yet.
 
 Clock control
 -------------
@@ -195,6 +411,9 @@ a debugger.
 nsh-leds
 --------
 
-Same bring-up as ``nsh``. The LED-related Kconfig options are currently
-placeholders only; ``board_userled_*()`` in
-``boards/arm/rzv2h/rzv2h-evk/src/rzv2h_auto_leds.c`` are no-ops.
+This configuration enables ``CONFIG_USERLED``, registers ``/dev/userleds``,
+and includes the standard NuttX ``leds`` example.  Run ``leds`` to cycle the
+active-low ``P0_0`` and ``P0_1`` LED outputs.  The generic ``/dev/gpio1`` and
+``/dev/gpio2`` interfaces are also available for individual read/write
+testing.  Automatic OS-status LED control through ``CONFIG_ARCH_LEDS`` is
+not yet implemented.

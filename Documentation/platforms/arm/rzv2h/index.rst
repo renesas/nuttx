@@ -25,17 +25,16 @@ Peripheral Support
 The following list indicates peripherals supported in NuttX on the CR8_0
 core:
 
-==========  =======  =====================================
+==========  =======  ============================================================
 Peripheral  Support  Notes
-==========  =======  =====================================
+==========  =======  ============================================================
 CLOCK       Yes      BSP clock tree init (PLL), internal use only
 GIC         Yes      Interrupt controller init (CPU0 + per-CPU)
 MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
 SCI         No       Kconfig option present, driver not yet implemented
-GPIO        No
-LED         No       Board hooks present, not yet wired to hardware
-==========  =======  =====================================
+GPIO        Yes      Basic operations (config/read/write), no interrupt support
+==========  =======  ============================================================
 
 CLOCK
 -----
@@ -75,15 +74,8 @@ available.
 GPIO
 ----
 
-No GPIO driver has been implemented yet.
-
-LED
----
-
-Board-level LED hooks (``board_userled_*()``,
-``board_autoled_on()``/``off()``) exist in
-``boards/arm/rzv2h/rzv2h-evk/src/rzv2h_auto_leds.c`` but are currently
-no-ops.
+The GPIO driver provides fundamental support for pin configuration, read
+, and write operations. The GPIO interrupt support are currently unavailable.
 
 Supported Boards
 ================

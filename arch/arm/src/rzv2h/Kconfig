@@ -24,9 +24,17 @@ endchoice # RZ/V2H Chip Selection
 
 config RZV2H_CORTEXR8_0
 	bool "Build for CR8_0 core"
-	default y
-	help
+	select RZV2H_HAVE_SCIF0_UART
+	select RZV2H_HAVE_SCIF1_UART
+	---help---
 		Build for the CR8_0 core of the RZV2H.
 		This is the default core for the EVK-RZV2H board.
+
+config RZV2H_GPIO
+	bool "GPIO support"
+	default y
+	depends on DEV_GPIO
+	---help---
+		Enable support for GPIO pins.
 
 endmenu # "RZ/V2H Configuration Options"

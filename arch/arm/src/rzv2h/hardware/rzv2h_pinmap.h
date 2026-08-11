@@ -29,9 +29,12 @@
 
 #include <nuttx/config.h>
 #include "chip.h"
+#include "r_ioport.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Porting implementation
  ****************************************************************************/
+
+/* GPT Alternative */
 
 #endif /* __ARCH_ARM_SRC_RZV2H_HARDWARE_RZV2H_PINMAP_H */

@@ -27,6 +27,7 @@ set(SRCS
     rzv2h_timerisr.c
     rzv2h_lowputc.c
     rzv2h_clockconfig.c
-    rzv2h_mpu_region.c)
+    rzv2h_mpu_region.c
+    rzv2h_gpio.c)
 
 target_sources(arch PRIVATE ${SRCS})

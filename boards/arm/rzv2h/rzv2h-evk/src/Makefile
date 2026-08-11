@@ -26,11 +26,11 @@ include $(TOPDIR)/Make.defs
 # Core board initialization files
 ############################################################################
 
-CSRCS = rzv2h_boot.c rzv2h_bringup.c rzv2h_auto_leds.c
+CSRCS = rzv2h_boot.c rzv2h_bringup.c
 
 # Application examples support
 ifeq ($(CONFIG_RZV2H_EXAMPLE_SUPPORT),y)
-CSRCS += rzv2h_app_examples.c
+CSRCS += rzv2h_appexamples.c
 endif
 
 ############################################################################
@@ -47,10 +47,16 @@ ifeq ($(CONFIG_ARCH_BUTTONS),y)
 CSRCS += rzv2h_buttons.c
 endif
 
-# LED support - temporarily disabled until GPIO is implemented
-# ifeq ($(CONFIG_ARCH_LEDS),y)
-# CSRCS += rzv2h_auto_leds.c
-# endif
+# LED support
+ifeq ($(CONFIG_ARCH_LEDS),y)
+CSRCS += rzv2h_autoleds.c
+else
+CSRCS += rzv2h_userleds.c
+endif
+
+ifeq ($(CONFIG_DEV_GPIO),y)
+CSRCS += rzv2h_gpio.c
+endif
 
 ############################################################################
 # Peripheral driver initialization

@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_app_examples.c
+ * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_appexamples.c
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -32,14 +32,14 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rzv2h_app_examples
+ * Name: rzv2h_appexamples
  *
  * Description:
  *   Run all enabled board example applications
  *
  ****************************************************************************/
 
-int rzv2h_app_examples(void)
+int rzv2h_appexamples(void)
 {
   /* Placeholder for board-specific examples */
 

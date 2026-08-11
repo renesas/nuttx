@@ -189,44 +189,45 @@ static const struct file_section_s g_section_info[] =
 
 static const char *g_white_prefix[] =
 {
-  "ASCII_",  /* Ref:  include/nuttx/ascii.h */
-  "Dl_info", /* Ref:  include/dlfcn.h */
-  "Elf",     /* Ref:  include/elf.h, include/elf32.h, include/elf64.h */
-  "Ifx",     /* Ref:  arch/tricore/src */
-  "PRId",    /* Ref:  inttypes.h */
-  "PRIi",    /* Ref:  inttypes.h */
-  "PRIo",    /* Ref:  inttypes.h */
-  "PRIu",    /* Ref:  inttypes.h */
-  "PRIx",    /* Ref:  inttypes.h */
-  "SCNd",    /* Ref:  inttypes.h */
-  "SCNi",    /* Ref:  inttypes.h */
-  "SCNo",    /* Ref:  inttypes.h */
-  "SCNu",    /* Ref:  inttypes.h */
-  "SCNx",    /* Ref:  inttypes.h */
-  "SYS_",    /* Ref:  include/sys/syscall.h */
-  "STUB_",   /* Ref:  syscall/syscall_lookup.h, syscall/sycall_stublookup.c */
-  "TEEC_",   /* Ref:  apps/tee/libteec/optee_client/libteec/include/tee_client_api.h */
-  "V4L2_",   /* Ref:  include/sys/video_controls.h */
-  "XK_",     /* Ref:  include/input/X11_keysymdef.h */
-  "b8",      /* Ref:  include/fixedmath.h */
-  "b16",     /* Ref:  include/fixedmath.h */
-  "b32",     /* Ref:  include/fixedmath.h */
-  "cJSON",   /* Ref:  apps/wireless/wapi/src */
-  "ub8",     /* Ref:  include/fixedmath.h */
-  "ub16",    /* Ref:  include/fixedmath.h */
-  "ub32",    /* Ref:  include/fixedmath.h */
-  "lua_",    /* Ref:  apps/interpreters/lua/lua-5.x.x/src/lua.h */
-  "luaL_",   /* Ref:  apps/interpreters/lua/lua-5.x.x/src/lauxlib.h */
-  "Ba",      /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "Thread",  /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "LThread", /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "Http",    /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "Disk",    /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "Xedge",   /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
-  "tAddr",   /* Ref:  arch/tricore/src */
-  "tClass",  /* Ref:  arch/tricore/src */
-  "tCpu",    /* Ref:  arch/tricore/src */
-  "tId",     /* Ref:  arch/tricore/src */
+  "ASCII_",     /* Ref:  include/nuttx/ascii.h */
+  "Dl_info",    /* Ref:  include/dlfcn.h */
+  "Elf",        /* Ref:  include/elf.h, include/elf32.h, include/elf64.h */
+  "Ifx",        /* Ref:  arch/tricore/src */
+  "PRId",       /* Ref:  inttypes.h */
+  "PRIi",       /* Ref:  inttypes.h */
+  "PRIo",       /* Ref:  inttypes.h */
+  "PRIu",       /* Ref:  inttypes.h */
+  "PRIx",       /* Ref:  inttypes.h */
+  "SCNd",       /* Ref:  inttypes.h */
+  "SCNi",       /* Ref:  inttypes.h */
+  "SCNo",       /* Ref:  inttypes.h */
+  "SCNu",       /* Ref:  inttypes.h */
+  "SCNx",       /* Ref:  inttypes.h */
+  "SYS_",       /* Ref:  include/sys/syscall.h */
+  "STUB_",      /* Ref:  syscall/syscall_lookup.h, syscall/sycall_stublookup.c */
+  "TEEC_",      /* Ref:  apps/tee/libteec/optee_client/libteec/include/tee_client_api.h */
+  "V4L2_",      /* Ref:  include/sys/video_controls.h */
+  "XK_",        /* Ref:  include/input/X11_keysymdef.h */
+  "b8",         /* Ref:  include/fixedmath.h */
+  "b16",        /* Ref:  include/fixedmath.h */
+  "b32",        /* Ref:  include/fixedmath.h */
+  "cJSON",      /* Ref:  apps/wireless/wapi/src */
+  "ub8",        /* Ref:  include/fixedmath.h */
+  "ub16",       /* Ref:  include/fixedmath.h */
+  "ub32",       /* Ref:  include/fixedmath.h */
+  "lua_",       /* Ref:  apps/interpreters/lua/lua-5.x.x/src/lua.h */
+  "luaL_",      /* Ref:  apps/interpreters/lua/lua-5.x.x/src/lauxlib.h */
+  "Ba",         /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "Thread",     /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "LThread",    /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "Http",       /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "Disk",       /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "Xedge",      /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
+  "tAddr",      /* Ref:  arch/tricore/src */
+  "tClass",     /* Ref:  arch/tricore/src */
+  "tId",        /* Ref:  arch/tricore/src */
+  "tCpu",       /* Ref:  arch/tricore/src */
+  "R_IOPORT_",  /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*
    * ROS 2 standard message package names and rosidl scalar type names

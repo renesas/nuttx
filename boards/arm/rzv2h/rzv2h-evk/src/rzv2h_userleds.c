@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_bringup.c
+ * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_userleds.c
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,58 +26,78 @@
 
 #include <nuttx/config.h>
 
-#include <sys/types.h>
-#include <sys/mount.h>
-#include <syslog.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <nuttx/debug.h>
 
-#include <nuttx/board.h>
-#include <nuttx/leds/userled.h>
-
+#include "chip.h"
+#include "rzv2h_gpio.h"
 #include "rzv2h-evk.h"
+
+#include <arch/board/board.h>
+
+#ifndef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rzv2h_bringup
+ * Name: board_userled_initialize
  ****************************************************************************/
 
-int rzv2h_bringup(void)
+uint32_t board_userled_initialize(void)
 {
-  int ret = OK;
+  /* Configure LED GPIOs for output */
 
-#ifdef CONFIG_FS_PROCFS
-  /* Mount the procfs file system */
+  rzv2h_configgpio(BOARD_P0_0_GPIO);
+  rzv2h_configgpio(BOARD_P0_1_GPIO);
 
-  ret = mount(NULL, "/proc", "procfs", 0, NULL);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: Failed to mount procfs at /proc: %d\n", ret);
-    }
-#endif
+  /* The LEDs are active low.  Leave both LEDs off after initialization. */
 
-#if defined(CONFIG_DEV_GPIO) && defined(CONFIG_EXAMPLES_GPIO)
-  ret = rzv2h_gpio_initialize();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: rzv2h_gpio_initialize() failed: %d\n", ret);
-      return ret;
-    }
-#endif
-
-#if !defined(CONFIG_ARCH_LEDS) && defined(CONFIG_USERLED_LOWER)
-  /* Register the user LED driver.  The generic lower half calls
-   * board_userled_initialize() before registering /dev/userleds.
-   */
-
-  ret = userled_lower_initialize(LED_DRIVER_PATH);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: userled_lower_initialize() failed: %d\n", ret);
-      return ret;
-    }
-#endif
-
-  return OK;
+  rzv2h_gpiowrite(BOARD_P0_0_GPIO, true);
+  rzv2h_gpiowrite(BOARD_P0_1_GPIO, true);
+  return BOARD_NLEDS;
 }
+
+/****************************************************************************
+ * Name: board_userled
+ ****************************************************************************/
+
+void board_userled(int led, bool ledon)
+{
+  gpio_pinset_t ledcfg;
+
+  if (led == BOARD_LED_0)
+    {
+      ledcfg = BOARD_P0_0_GPIO;
+    }
+  else if (led == BOARD_LED_1)
+    {
+      ledcfg = BOARD_P0_1_GPIO;
+    }
+  else
+    {
+      return;
+    }
+
+  /* Low illuminates. */
+
+  rzv2h_gpiowrite(ledcfg, !ledon);
+}
+
+/****************************************************************************
+ * Name: board_userled_all
+ ****************************************************************************/
+
+void board_userled_all(uint32_t ledset)
+{
+  /* Low illuminates. */
+
+  rzv2h_gpiowrite(BOARD_P0_0_GPIO,
+                   (ledset & BOARD_LED_0_BIT) == 0);
+  rzv2h_gpiowrite(BOARD_P0_1_GPIO,
+                   (ledset & BOARD_LED_1_BIT) == 0);
+}
+
+#endif /* !CONFIG_ARCH_LEDS */

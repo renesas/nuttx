@@ -33,20 +33,34 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* LED definitions **********************************************************/
+/* GPIO definitions *********************************************************/
 
-/* If CONFIG_ARCH_LEDS is defined, the LEDs will be controlled as follows
- * for NuttX debug functionality (where NC means "No Change").
- */
+#define BOARD_NGPIOOUT          2
+#define BOARD_NGPIOIN           1
 
-#define LED_STARTED       0  /* OFF      OFF      OFF      OFF      */
-#define LED_HEAPALLOCATE  1  /* ON       OFF      OFF      OFF      */
-#define LED_IRQSENABLED   2  /* OFF      ON       OFF      OFF      */
-#define LED_STACKCREATED  3  /* OFF      OFF      ON       OFF      */
-#define LED_INIRQ         4  /* NC       NC       NC       ON       */
-#define LED_SIGNAL        5  /* NC       NC       NC       NC       */
-#define LED_ASSERTION     6  /* BLINK    NC       NC       NC       */
-#define LED_PANIC         7  /* BLINK    BLINK    BLINK    BLINK    */
+/* LED index values for use with board_userled() */
+
+#define BOARD_LED_0             0
+#define BOARD_LED_1             1
+#define BOARD_NLEDS             2
+
+/* LED bits for use with board_userled_all() */
+
+#define BOARD_LED_0_BIT         (1 << BOARD_LED_0)
+#define BOARD_LED_1_BIT         (1 << BOARD_LED_1)
+
+/* LED pins - aliases to existing NuttX LED macros */
+
+#define BOARD_P0_0_GPIO         GPIO_P0_0_OUTPUT_LOW
+#define BOARD_P0_1_GPIO         GPIO_P0_1_OUTPUT_LOW
+
+/* Button pins - using Pmod at CN1 */
+#define BOARD_P8_2_BUTTON  GPIO_P8_2_INPUT_PULLDOWN
+
+/* GPIO Configuration */
+#define GPIO_P0_0_OUTPUT_LOW (gpio_pinset_t){BSP_IO_PORT_00_PIN_00, (IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_PORT_DIRECTION_OUTPUT | IOPORT_CFG_PORT_OUTPUT_LOW | IOPORT_CFG_SLEW_RATE_FAST)}
+#define GPIO_P0_1_OUTPUT_LOW (gpio_pinset_t){BSP_IO_PORT_00_PIN_01, (IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_PORT_DIRECTION_OUTPUT | IOPORT_CFG_PORT_OUTPUT_LOW | IOPORT_CFG_SLEW_RATE_FAST)}
+#define GPIO_P8_2_INPUT_PULLDOWN (gpio_pinset_t){BSP_IO_PORT_08_PIN_02, (IOPORT_CFG_PORT_DIRECTION_INPUT | IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_PULLDOWN_ENABLE)}
 
 /****************************************************************************
  * Public Function Prototypes

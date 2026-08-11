@@ -25,7 +25,7 @@ set(SRCS rzv2h_boot.c rzv2h_bringup.c)
 
 # Application examples support
 if(CONFIG_RZV2H_EXAMPLE_SUPPORT)
-  list(APPEND SRCS rzv2h_app_examples.c)
+  list(APPEND SRCS rzv2h_appexamples.c)
 endif()
 
 # Board-specific initialization
@@ -38,9 +38,13 @@ if(CONFIG_ARCH_BUTTONS)
 endif()
 
 if(CONFIG_ARCH_LEDS)
-  list(APPEND SRCS rzv2h_auto_leds.c)
+  list(APPEND SRCS rzv2h_autoleds.c)
 else()
-  list(APPEND SRCS rzv2h_user_leds.c)
+  list(APPEND SRCS rzv2h_userleds.c)
+endif()
+
+if(CONFIG_DEV_GPIO)
+  list(APPEND SRCS rzv2h_gpio.c)
 endif()
 
 # Peripheral driver initialization
