@@ -225,8 +225,8 @@ static const char *g_white_prefix[] =
   "Xedge",      /* Ref:  apps/netutils/xedge/BAS/examples/xedge/src/xedge.h */
   "tAddr",      /* Ref:  arch/tricore/src */
   "tClass",     /* Ref:  arch/tricore/src */
-  "tId",        /* Ref:  arch/tricore/src */
   "tCpu",       /* Ref:  arch/tricore/src */
+  "tId",        /* Ref:  arch/tricore/src */
   "R_IOPORT_",  /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*

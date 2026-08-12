@@ -55,12 +55,25 @@
 #define BOARD_P0_1_GPIO         GPIO_P0_1_OUTPUT_LOW
 
 /* Button pins - using Pmod at CN1 */
+
 #define BOARD_P8_2_BUTTON  GPIO_P8_2_INPUT_PULLDOWN
 
 /* GPIO Configuration */
+
 #define GPIO_P0_0_OUTPUT_LOW (gpio_pinset_t){BSP_IO_PORT_00_PIN_00, (IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_PORT_DIRECTION_OUTPUT | IOPORT_CFG_PORT_OUTPUT_LOW | IOPORT_CFG_SLEW_RATE_FAST)}
 #define GPIO_P0_1_OUTPUT_LOW (gpio_pinset_t){BSP_IO_PORT_00_PIN_01, (IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_PORT_DIRECTION_OUTPUT | IOPORT_CFG_PORT_OUTPUT_LOW | IOPORT_CFG_SLEW_RATE_FAST)}
 #define GPIO_P8_2_INPUT_PULLDOWN (gpio_pinset_t){BSP_IO_PORT_08_PIN_02, (IOPORT_CFG_PORT_DIRECTION_INPUT | IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_PULLDOWN_ENABLE)}
+
+/* In this stage, autoled is not supported */
+
+#define LED_STARTED         0
+#define LED_HEAPALLOCATE    0
+#define LED_IRQSENABLED     0
+#define LED_STACKCREATED    0
+#define LED_INIRQ           0
+#define LED_SIGNAL          0
+#define LED_ASSERTION       0
+#define LED_PANIC           0
 
 /****************************************************************************
  * Public Function Prototypes

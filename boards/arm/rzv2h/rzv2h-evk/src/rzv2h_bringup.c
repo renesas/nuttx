@@ -57,7 +57,7 @@ int rzv2h_bringup(void)
     }
 #endif
 
-#if defined(CONFIG_DEV_GPIO) && defined(CONFIG_EXAMPLES_GPIO)
+#if defined(CONFIG_DEV_GPIO)
   ret = rzv2h_gpio_initialize();
   if (ret < 0)
     {

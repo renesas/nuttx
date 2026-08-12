@@ -273,7 +273,7 @@ static int gpio_setpintype(struct gpio_dev_s *dev,
  * Description:
  *   Initialize GPIO drivers for use with /apps/examples/gpio
  ****************************************************************************/
-#ifdef CONFIG_EXAMPLES_GPIO
+
 int rzv2h_gpio_initialize(void)
 {
   int   pincount = 0;
@@ -327,5 +327,4 @@ int rzv2h_gpio_initialize(void)
   return ret;
 }
 
-#endif  /* CONFIG_EXAMPLES_GPIO */
 #endif  /* CONFIG_RZV2H_GPIO */

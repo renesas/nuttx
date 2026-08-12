@@ -139,6 +139,7 @@ void board_autoled_off(int led)
 #ifdef CONFIG_ARCH_LEDS
 uint32_t board_userled_initialize(void)
 {
+  return 0;
 }
 
 /****************************************************************************
