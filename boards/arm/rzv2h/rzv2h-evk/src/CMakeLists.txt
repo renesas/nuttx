@@ -48,9 +48,6 @@ if(CONFIG_DEV_GPIO)
 endif()
 
 # Peripheral driver initialization
-if(CONFIG_RZV2H_UART_SCI)
-  list(APPEND SRCS rzv2h_serial.c)
-endif()
 
 target_sources(board PRIVATE ${SRCS})
 

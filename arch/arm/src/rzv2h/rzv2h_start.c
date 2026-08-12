@@ -219,7 +219,7 @@ void arm_boot(void)
 
   /* Perform early serial initialization */
 
-#ifdef USE_EARLYSERIALINIT
+#if defined(USE_EARLYSERIALINIT) && defined(CONFIG_RZV2H_SCI_B)
   rzv2h_earlyserialinit();
 #endif
   showprogress('D');

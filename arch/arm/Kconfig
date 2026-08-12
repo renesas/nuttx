@@ -1176,7 +1176,8 @@ config ARCH_CORTEXR8
 	select ARCH_ICACHE
 	select ARCH_HAVE_MPU
 	select ARCH_HAVE_TESTSET
-	
+	select ARCH_HAVE_IRQPRIO
+
 config ARCH_CORTEXR52
 	bool
 	default n
