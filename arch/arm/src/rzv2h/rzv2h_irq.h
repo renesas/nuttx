@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/rzv2h/rzv2h_serial.h
+ * arch/arm/src/rzv2h/rzv2h_irq.h
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,34 +20,26 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_RZV2H_SERIAL_H
-#define __ARCH_ARM_SRC_RZV2H_SERIAL_H
+#ifndef __ARCH_ARM_SRC_RZV2H_RZV2H_IRQ_H
+#define __ARCH_ARM_SRC_RZV2H_RZV2H_IRQ_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/serial/serial.h>
 
-#include "r_sci_b_uart.h"
+#include "bsp_api.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define RZV2H_FSP_STATUS_PARITY_ERR   (1u << 0)
-#define RZV2H_FSP_STATUS_FRAMING_ERR  (1u << 1)
-#define RZV2H_FSP_STATUS_OVERRUN_ERR  (1u << 2)
+/* FSP numbers peripheral interrupts relative to the first SPI.  NuttX uses
+ * the absolute GIC interrupt ID, including the 16 SGIs and 16 PPIs.
+ */
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+#define RZV2H_FSP_TO_GIC_IRQ(irq) \
+  ((int)(irq) + BSP_CORTEX_VECTOR_TABLE_ENTRIES)
 
-void rzv2h_fsp_uart_cb(uart_callback_args_t *args);
-
-#if defined(USE_EARLYSERIALINIT) && defined(CONFIG_RZV2H_SCI_B)
-void rzv2h_earlyserialinit(void);
-#endif
-
-#endif /* __ARCH_ARM_SRC_RZV2H_SERIAL_H */
+#endif /* __ARCH_ARM_SRC_RZV2H_RZV2H_IRQ_H */

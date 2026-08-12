@@ -22,7 +22,6 @@
 
 set(SRCS
     rzv2h_start.c
-    rzv2h_serial.c
     rzv2h_irq.c
     rzv2h_timerisr.c
     rzv2h_lowputc.c
@@ -31,6 +30,10 @@ set(SRCS
 
 if(CONFIG_DEV_GPIO)
   list(APPEND SRCS rzv2h_gpio.c)
+endif()
+
+if(CONFIG_RZV2H_SCI_B)
+  list(APPEND SRCS rzv2h_serial.c)
 endif()
 
 target_sources(arch PRIVATE ${SRCS})

@@ -62,10 +62,6 @@ endif
 # Peripheral driver initialization
 ############################################################################
 
-# Serial/UART support
-ifeq ($(CONFIG_RZV2H_UART_SCI),y)
-CSRCS += rzv2h_serial.c
-endif
 
 ############################################################################
 # Example applications

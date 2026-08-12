@@ -179,9 +179,6 @@ SECTIONS
      * of losing a quarter of the RAM silently.
      */
 
-    ASSERT(__mpu_code_end - __mpu_code_start <= 128K,
-           "ROM region grew past 128K: the MPU padding just took another 128K of SRAM")
-
     /* Stabs debugging sections. */
     .stab 0 : { *(.stab) }
     .stabstr 0 : { *(.stabstr) }

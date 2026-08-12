@@ -7,6 +7,11 @@ heterogeneous set of Arm cores: dual Cortex-A55 (application cores) plus
 dual Cortex-R8 (real-time cores), alongside a DSP and an AI-MAC (DRP-AI3)
 accelerator.
 
+.. image:: RZV2H-block-chart-DRP-AI3.png
+   :alt: RZV2H block chart DRP-AI3
+   :width: 100%
+   :align: center
+
 Supported MCUs
 ==============
 
@@ -32,7 +37,7 @@ CLOCK       Yes      BSP clock tree init (PLL), internal use only
 GIC         Yes      Interrupt controller init (CPU0 + per-CPU)
 MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
-SCI         No       Kconfig option present, driver not yet implemented
+SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
 ==========  =======  ============================================================
 
@@ -66,16 +71,27 @@ from the BSP clock tree and reloaded to match ``CLK_TCK``.
 SCI
 ---
 
-The Serial Communications Interface Kconfig options are present
-(``CONFIG_SCI1_*``) but there is no backing driver yet: ``rzv2h_serial.c``
-and ``rzv2h_lowputc.c`` only contain empty stubs, so no console output is
-available.
+The Serial Communication Interface (SCI) provides multiple serial
+communication modes. NuttX currently supports interrupt-driven UART operation
+on channels 0 through 9 through the SCI-B lower-half driver.
+``CONFIG_RZV2H_UART_SCI`` enables the driver and
+``CONFIG_RZV2H_SCI_B_UARTn`` selects each required channel. The standard
+``CONFIG_SCIn_*`` options configure the channel and select the console.
+
+The driver supports early console output and registers the selected
+console as ``/dev/console`` and ``/dev/ttyS0``. Other enabled channels are
+registered in ascending channel order.
+
+Runtime baud-rate changes are supported through the standard termios
+``TCGETS`` and ``TCSETS`` operations.
+
+Hardware flow control and DMA are not implemented yet.
 
 GPIO
 ----
 
-The GPIO driver provides fundamental support for pin configuration, read
-, and write operations. The GPIO interrupt support are currently unavailable.
+The GPIO driver provides fundamental support for pin configuration, read,
+and write operations. GPIO interrupt support is currently unavailable.
 
 Supported Boards
 ================

@@ -67,3 +67,7 @@ CHIP_CSRCS += $(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv$(DE
 ifeq ($(CONFIG_DEV_GPIO),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_ioport$(DELIM)r_ioport.c
 endif
+
+ifeq ($(CONFIG_RZV2H_SCI_B),y)
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_sci_b_uart$(DELIM)r_sci_b_uart.c
+endif

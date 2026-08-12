@@ -310,12 +310,59 @@ The current button and LED tests both reuse the standard NuttX GPIO example:
 Serial Consoles
 ===============
 
-The R9A09G057 has multiple SCI (serial communication interface) channels.
-``CONFIG_SCI1_*`` Kconfig options are present to select SCI1 as the NSH
-console, but there is currently no backing driver: ``rzv2h_serial.c`` and
-``rzv2h_lowputc.c`` are empty stubs, so no console output is produced by any
-of the current configurations. Bring-up must be done through a debugger
-(see Bring-up below).
+The default ``nsh`` configuration uses SCI channel 0 as the serial console
+at 115200 baud, 8 data bits, no parity, and one stop bit. The board pin
+definitions route SCI0 as follows:
+
+======  ========  =======================
+Signal  Pin       Board definition
+======  ========  =======================
+TXD0    ``P5_0``  ``BOARD_SCI0_TXD_GPIO``
+RXD0    ``P5_1``  ``BOARD_SCI0_RXD_GPIO``
+======  ========  =======================
+
+Connect the CN3 Pmod in EVK and the USB-to-UART adapter as follows:
+
+==========  =========================
+EVK signal  USB-to-UART connection
+==========  =========================
+TXD0        RX
+RXD0        TX
+GND         GND
+VCC (3.3V)  Leave disconnected
+==========  =========================
+
+These signals are used by the CN3 Pmod UART connection. Connect the
+USB-to-UART adapter with crossed data lines and a common ground.
+Do not connect an adapter using RS-232 voltage levels. The table
+assumes that the adapter is powered by its USB connection;
+do not connect the adapter VCC pin to the EVK.
+
+The relevant default options are::
+
+   CONFIG_RZV2H_UART_SCI=y
+   CONFIG_RZV2H_SCI_B_UART0=y
+   CONFIG_SCI0_SERIAL_CONSOLE=y
+   CONFIG_SCI0_BAUD=115200
+   CONFIG_SCI0_BITS=8
+   CONFIG_SCI0_PARITY=0
+   CONFIG_SCI0_2STOP=0
+
+After boot, SCI0 is available as both ``/dev/console`` and ``/dev/ttyS0``.
+The terminal should display the NuttX banner followed by the ``nsh>`` prompt.
+Verify the registration with::
+
+   nsh> ls /dev
+   /dev:
+    console
+    null
+    ttyS0
+    zero
+
+Additional enabled SCI channels are registered as later ``/dev/ttyS*``
+devices in ascending hardware-channel order. Their TX and RX pin choices are
+board-specific and are defined by ``BOARD_SCIn_TXD_GPIO`` and
+``BOARD_SCIn_RXD_GPIO`` in ``boards/arm/rzv2h/rzv2h-evk/include/board.h``.
 
 Bring-up
 ========
@@ -393,9 +440,10 @@ sub-region mask.
 Loading Code
 ============
 
-There is no working console or bootloader path yet. Load the ELF image
-onto CR8_0 using a J-Link (or similar SWD/JTAG probe) attached to the
-board's debug connector, then run from the debugger.
+There is no bootloader loading path yet. Load the ELF image onto CR8_0 using
+a J-Link (or similar SWD/JTAG probe) attached to the board's debug connector,
+then run from the debugger. Once execution starts, the SCI0 console is
+available through the CN3 Pmod UART connection described above.
 
 Configurations
 ==============
@@ -403,10 +451,10 @@ Configurations
 nsh
 ---
 
-Minimal NuttShell configuration exercising clock, MPU and interrupt/timer
-bring-up on CR8_0. There is no working console driver yet, so shell I/O is
-not available; this configuration is intended for bring-up validation with
-a debugger.
+NuttShell configuration exercising clock, MPU, interrupt/timer, GPIO, and
+SCI-B UART bring-up on CR8_0. SCI0 provides the default 115200-8N1 NSH
+console through CN3 and is registered as ``/dev/console`` and
+``/dev/ttyS0``.
 
 nsh-leds
 --------
