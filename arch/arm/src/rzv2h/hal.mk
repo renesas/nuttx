@@ -64,4 +64,6 @@ CHIP_CSRCS += $(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv$(DE
 ############################################################################
 # hal driver
 ############################################################################
+ifeq ($(CONFIG_DEV_GPIO),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_ioport$(DELIM)r_ioport.c
+endif
