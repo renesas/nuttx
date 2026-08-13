@@ -49,6 +49,7 @@
 #include "arm_internal.h"
 
 #include "hardware/rzv2h_pinmap.h"
+#include "rzv2h_fsp_err.h"
 #include "rzv2h_gpio.h"
 #include "rzv2h_irq.h"
 #include "rzv2h_lowputc.h"
@@ -1074,7 +1075,7 @@ static int rzv2h_fsp_uart_baud_calculate(
 
   err = R_SCI_B_UART_BaudCalculate(baud, false,
                                    RZV2H_UART_BAUD_ERROR, setting);
-  return err == FSP_SUCCESS ? OK : -EINVAL;
+  return rzv2h_fsp_err_to_errno(err);
 }
 
 /****************************************************************************
@@ -1108,7 +1109,7 @@ static int rzv2h_fsp_uart_open(struct up_dev_s *ctx)
   err = R_SCI_B_UART_Open(ctx->hal_inst->p_ctrl, cfg);
   if (FSP_SUCCESS != err)
     {
-      return -EIO;
+      return rzv2h_fsp_err_to_errno(err);
     }
 
   ctx->rx_enabled        = false;
@@ -1125,7 +1126,7 @@ static int rzv2h_fsp_uart_open(struct up_dev_s *ctx)
     {
       (void)R_SCI_B_UART_Close(ctx->hal_inst->p_ctrl);
       ctx->opened = false;
-      return -EIO;
+      return rzv2h_fsp_err_to_errno(err);
     }
 
   return OK;
@@ -1159,7 +1160,7 @@ static int rzv2h_fsp_uart_close(struct up_dev_s *ctx)
       ctx->opened = false;
     }
 
-  return (FSP_SUCCESS == err) ? OK : -EIO;
+  return rzv2h_fsp_err_to_errno(err);
 }
 
 #ifdef CONFIG_SERIAL_TERMIOS
@@ -1208,7 +1209,7 @@ static int rzv2h_fsp_uart_set_baud(struct up_dev_s *ctx, uint32_t baud)
     }
 
   leave_critical_section(flags);
-  return err == FSP_SUCCESS ? OK : -EIO;
+  return rzv2h_fsp_err_to_errno(err);
 }
 #endif
 

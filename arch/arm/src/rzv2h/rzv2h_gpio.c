@@ -37,6 +37,7 @@
 
 #include "arm_internal.h"
 #include "chip.h"
+#include "rzv2h_fsp_err.h"
 #include "rzv2h_gpio.h"
 
 /****************************************************************************
@@ -57,10 +58,10 @@
 
 int rzv2h_configgpio(gpio_pinset_t pinset)
 {
-  fsp_err_t ret;
+  fsp_err_t err;
 
-  ret = R_IOPORT_PinCfg(NULL, pinset.port_pin, pinset.cfg);
-  return ret;
+  err = R_IOPORT_PinCfg(NULL, pinset.port_pin, pinset.cfg);
+  return rzv2h_fsp_err_to_errno(err);
 }
 
 /****************************************************************************
@@ -72,11 +73,11 @@ int rzv2h_configgpio(gpio_pinset_t pinset)
 
 int rzv2h_gpiowrite(gpio_pinset_t pinset, bool value)
 {
-  fsp_err_t ret;
+  fsp_err_t err;
   bsp_io_level_t level = value ? BSP_IO_LEVEL_HIGH : BSP_IO_LEVEL_LOW;
 
-  ret = R_IOPORT_PinWrite(NULL, pinset.port_pin, level);
-  return ret;
+  err = R_IOPORT_PinWrite(NULL, pinset.port_pin, level);
+  return rzv2h_fsp_err_to_errno(err);
 }
 
 /****************************************************************************
@@ -89,7 +90,13 @@ int rzv2h_gpiowrite(gpio_pinset_t pinset, bool value)
 bool rzv2h_gpioread(gpio_pinset_t pinset)
 {
   bsp_io_level_t level;
+  fsp_err_t err;
 
-  R_IOPORT_PinRead(NULL, pinset.port_pin, &level);
+  err = R_IOPORT_PinRead(NULL, pinset.port_pin, &level);
+  if (err != FSP_SUCCESS)
+    {
+      return false;
+    }
+
   return level == BSP_IO_LEVEL_HIGH;
 }

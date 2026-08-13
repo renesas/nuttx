@@ -26,7 +26,8 @@ set(SRCS
     rzv2h_timerisr.c
     rzv2h_lowputc.c
     rzv2h_clockconfig.c
-    rzv2h_mpu_region.c)
+    rzv2h_mpu_region.c
+    rzv2h_fsp_err.c)
 
 if(CONFIG_DEV_GPIO)
   list(APPEND SRCS rzv2h_gpio.c)
