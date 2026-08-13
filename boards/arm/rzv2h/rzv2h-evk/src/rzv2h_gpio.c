@@ -140,13 +140,12 @@ static struct rzv2hgpio_dev_s   g_gpout[BOARD_NGPIOOUT];
 static int gpin_read(struct gpio_dev_s *dev, bool *value)
 {
   struct rzv2hgpio_dev_s *rzv2hgpio = (struct rzv2hgpio_dev_s *)dev;
-  bsp_io_level_t level;
 
   DEBUGASSERT(rzv2hgpio != NULL && value != NULL);
   DEBUGASSERT(rzv2hgpio->id < BOARD_NGPIOIN);
   gpioinfo("Reading...");
-  R_IOPORT_PinRead(NULL, g_gpioinputs[rzv2hgpio->id].port_pin, &level);
-  *value = level == BSP_IO_LEVEL_HIGH;
+
+  *value = rzv2h_gpioread(g_gpioinputs[rzv2hgpio->id]);
 
   return OK;
 }
@@ -214,14 +213,13 @@ static int gpin_enable(struct gpio_dev_s *dev, bool enable)
 static int gpout_read(struct gpio_dev_s *dev, bool *value)
 {
   struct rzv2hgpio_dev_s *rzv2hgpio = (struct rzv2hgpio_dev_s *)dev;
-  bsp_io_level_t level;
 
   DEBUGASSERT(rzv2hgpio != NULL && value != NULL);
   DEBUGASSERT(rzv2hgpio->id < BOARD_NGPIOOUT);
   gpioinfo("Reading...");
 
-  R_IOPORT_PinRead(NULL, g_gpiooutputs[rzv2hgpio->id].port_pin, &level);
-  *value = level == BSP_IO_LEVEL_HIGH;
+  *value = rzv2h_gpioread(g_gpiooutputs[rzv2hgpio->id]);
+
   return OK;
 }
 
@@ -240,8 +238,7 @@ static int gpout_write(struct gpio_dev_s *dev, bool value)
   DEBUGASSERT(rzv2hgpio->id < BOARD_NGPIOOUT);
   gpioinfo("Writing %d", (int)value);
 
-  R_IOPORT_PinWrite(NULL, g_gpiooutputs[rzv2hgpio->id].port_pin, value);
-  return OK;
+  return rzv2h_gpiowrite(g_gpiooutputs[rzv2hgpio->id], value);
 }
 
 #endif
@@ -298,7 +295,12 @@ int rzv2h_gpio_initialize(void)
 
       /* Configure the pin that will be used as input */
 
-      R_IOPORT_PinCfg(NULL, g_gpioinputs[i].port_pin, g_gpioinputs[i].cfg);
+      ret = rzv2h_configgpio(g_gpioinputs[i]);
+      if (ret < 0)
+        {
+          gpioerr("GPIOIN(%d): rzv2h_configgpio failed: %d", i, ret);
+          return ret;
+        }
     }
 #endif
 
@@ -320,7 +322,12 @@ int rzv2h_gpio_initialize(void)
 
       /* Configure the pin that will be used as output */
 
-      R_IOPORT_PinCfg(NULL, g_gpiooutputs[i].port_pin, g_gpiooutputs[i].cfg);
+      ret = rzv2h_configgpio(g_gpiooutputs[i]);
+      if (ret < 0)
+        {
+          gpioerr("GPIOOUT(%d): rzv2h_configgpio failed: %d", i, ret);
+          return ret;
+        }
     }
 #endif
 
