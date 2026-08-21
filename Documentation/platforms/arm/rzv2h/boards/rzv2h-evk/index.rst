@@ -411,6 +411,10 @@ Generic Interrupt Controller (GIC): ``arm_gic0_initialize()`` runs once, on
 CPU0 only, followed by ``arm_gic_initialize()`` on every CPU. Interrupts are
 then unmasked with ``up_irq_enable()``.
 
+Beyond the GIC's fixed interrupt lines, the CR8 core's INTC also exposes a
+pool of 127 programmable "SEL" lines used by peripherals such as I2C, SPI,
+ADC, and the TINT pin-interrupt controller.
+
 Timer
 -----
 
