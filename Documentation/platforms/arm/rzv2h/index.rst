@@ -93,6 +93,47 @@ GPIO
 The GPIO driver provides fundamental support for pin configuration, read,
 and write operations. GPIO interrupt support is currently unavailable.
 
+INTC SEL (Interrupt Select) Lines
+---------------------------------
+
+The CR8 core's INTC provides a
+pool of 127 programmable "SEL" lines (SEL0-SEL126, GIC IRQ numbers
+353-479) whose peripheral event mapping is set through the INTC INTSEL
+registers. Peripheral drivers that need one of these programmable lines
+request a specific SEL number and event through
+``rzv2h_intsel_connect_event()``.
+
+Default SEL IDs
+^^^^^^^^^^^^^^^
+
+The 127-line SEL pool (SEL0-SEL126, IRQ 353-479) is conventionally
+partitioned by module, allocated from the top of the range downward:
+
+======  ==================  ================================
+Module  Count                IRQ range (>= 353)
+======  ==================  ================================
+TINT    32 (tint0-tint31)    479-448
+I2C     9 (i2c0-i2c8)        447-430 (txi/rxi only)
+ADC     1 (adc0)             429
+SPI     3 (spi0-spi2)        428-423 (txi/rxi only)
+======  ==================  ================================
+
+Changing interrupt-select IDs (RIIC2 as an example)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When the default interrupt-select ID needs to change, e.g. to move
+RIIC2 off its default TXI/RXI SEL IDs (443/442) and onto SEL IDs
+397/396 instead:
+
+#. Run ``make menuconfig`` and navigate to
+   ``System Type -> RZ/V2H Configuration Options -> RIIC I2C support ->
+   RIIC 2``.
+#. Set ``RIIC2 TXI interrupt-select (SEL) IRQ number`` to ``397``.
+#. Set ``RIIC2 RXI interrupt-select (SEL) IRQ number`` to ``396``.
+
+Rebuild and reflash after changing either option so the new INTSEL
+values are picked up.
+
 Supported Boards
 ================
 
