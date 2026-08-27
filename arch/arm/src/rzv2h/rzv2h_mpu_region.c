@@ -226,6 +226,11 @@ void rzv2h_mpuinit(void)
 
   up_invalidate_icache_all();
   up_enable_icache();
-  up_enable_dcache();
+
+  /* TODO: re-check enabling cache to inscrease performance
+   */
+
+  /* up_enable_dcache(); */
+
 #endif
 }

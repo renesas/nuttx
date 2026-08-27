@@ -1370,13 +1370,7 @@ static int rzv2h_uart_interrupt(int irq, void *context, void *arg)
       return -EINVAL;
     }
 
-  g_current_interrupt_num[g_current_interrupt_pointer++] =
-    (uint16_t)fsp_irq;
-  __asm volatile ("dmb" ::: "memory");
-
-  fsp_isr();
-
-  g_current_interrupt_pointer--;
+  rzv2h_interrupt_common_handler((rzv2h_irqn_t)fsp_irq, fsp_isr);
 
   /* Continue the NuttX TX ring only after the FSP ISR has cleared
    * its pending status and restored its interrupt context.

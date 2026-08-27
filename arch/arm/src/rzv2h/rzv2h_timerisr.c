@@ -56,7 +56,7 @@
  * Use the BSP-defined clock value instead of a hardcoded frequency.
  */
 
-#define RZV2H_PTIMER_CLOCK    (BSP_CFG_CLOCK_I6CLK_HZ / 2)
+#define RZV2H_PTIMER_CLOCK    (BSP_CFG_CLOCK_I6CLK_HZ / 4)
 
 #define RZV2H_PTIMER_RELOAD   ((RZV2H_PTIMER_CLOCK / CLK_TCK) - 1)
 
