@@ -372,6 +372,143 @@ devices in ascending hardware-channel order. Their TX and RX pin choices are
 board-specific and are defined by ``BOARD_SCIn_TXD_GPIO`` and
 ``BOARD_SCIn_RXD_GPIO`` in ``boards/arm/rzv2h/rzv2h-evk/include/board.h``.
 
+I2C
+===
+
+The RZV2H-EVK exposes nine RIIC I2C master channels (RIIC0-RIIC8).
+
+Pin Assignments
+---------------
+
+Each RIIC channel is routed to the following board pins.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Channel
+     - SCL Pin
+     - SDA Pin
+   * - RIIC0
+     - ``P3_1``
+     - ``P3_0``
+   * - RIIC1
+     - ``P3_3``
+     - ``P3_2``
+   * - RIIC2
+     - ``P2_1``
+     - ``P2_0``
+   * - RIIC3
+     - ``P3_7``
+     - ``P3_6``
+   * - RIIC4
+     - ``P4_1``
+     - ``P4_0``
+   * - RIIC5
+     - ``P4_3``
+     - ``P4_2``
+   * - RIIC6
+     - ``P4_5``
+     - ``P4_4``
+   * - RIIC7
+     - ``P4_7``
+     - ``P4_6``
+   * - RIIC8
+     - ``P0_7``
+     - ``P0_6``
+
+These definitions are in ``boards/arm/rzv2h/rzv2h-evk/include/board.h``.
+
+Default Interrupt Select IDs
+-----------------------------
+
+Each RIIC channel uses eight interrupt sources. TXI and RXI are routed
+through the programmable INTC interrupt-select (SEL) lines; the remaining
+six (TEI, NAKI, SPI, STI, ALI, TMOI) are fixed GIC interrupts.
+
+**TXI / RXI SEL IRQ numbers** (configurable via Kconfig, valid range
+353-479):
+
+.. list-table::
+   :header-rows: 1
+
+   * - Channel
+     - TXI SEL (GIC IRQ)
+     - RXI SEL (GIC IRQ)
+   * - RIIC0
+     - 447 (SEL94)
+     - 446 (SEL93)
+   * - RIIC1
+     - 445 (SEL92)
+     - 444 (SEL91)
+   * - RIIC2
+     - 443 (SEL90)
+     - 442 (SEL89)
+   * - RIIC3
+     - 441 (SEL88)
+     - 440 (SEL87)
+   * - RIIC4
+     - 439 (SEL86)
+     - 438 (SEL85)
+   * - RIIC5
+     - 437 (SEL84)
+     - 436 (SEL83)
+   * - RIIC6
+     - 435 (SEL82)
+     - 434 (SEL81)
+   * - RIIC7
+     - 433 (SEL80)
+     - 432 (SEL79)
+   * - RIIC8
+     - 431 (SEL78)
+     - 430 (SEL77)
+
+The relevant options for enabling RIIC2 as an example are::
+
+   CONFIG_I2C=y
+   CONFIG_RZV2H_RIIC_I2C=y
+   CONFIG_RZV2H_RIIC2=y
+   CONFIG_I2C_RESET=y
+   CONFIG_SYSTEM_I2CTOOL=y
+
+Each channel has additional Kconfig options for bitrate, SCL rise/fall
+times, duty cycle, noise filter stages, TXI/RXI interrupt-select (SEL) IRQ
+numbers, and interrupt priority.
+
+After boot, enabled I2C channels are registered as ``/dev/i2cN`` devices.
+Verify with::
+
+   nsh> ls /dev
+   /dev:
+    console
+    i2c2
+    null
+    zero
+
+The ``i2c`` board configuration (``rzv2h-evk:i2c``) enables RIIC2 and the
+``i2ctool`` application for interactive testing. Other channels can be
+enabled by adding the corresponding ``CONFIG_RZV2H_RIICn`` options.
+
+Using the ``i2ctool`` Application
+---------------------------------
+
+Scan for devices on bus 2 from address 0x00 to 0x20::
+
+   nsh> i2c dev -b 2 0 0x20
+
+Get the register at address 0x2D from a device at address 0x1D on bus 2::
+
+   nsh> i2c get -b 2 -a 0x1D -r 0x2D
+
+Set value 0x08 to the register at address 0x2D of a device at address 0x1D
+on bus 2::
+
+   nsh> i2c set -b 2 -a 0x1D -r 0x2D 0x08
+
+Dump 6 consecutive bytes starting at register address 0x32 from a device at
+address 0x1D on bus 2::
+
+   nsh> i2c dump -b 2 -a 0x1D -r 0x32 6
+
 Bring-up
 ========
 
@@ -477,3 +614,11 @@ active-low ``P0_0`` and ``P0_1`` LED outputs.  The generic ``/dev/gpio1`` and
 ``/dev/gpio2`` interfaces are also available for individual read/write
 testing.  Automatic OS-status LED control through ``CONFIG_ARCH_LEDS`` is
 not yet implemented.
+
+i2c
+---
+
+I2C configuration enabling RIIC2 with the
+``i2ctool`` application for interactive bus scanning and device
+read/write testing.  The channel is registered as ``/dev/i2c2`` at boot.
+Bus reset recovery (``CONFIG_I2C_RESET``) is enabled.

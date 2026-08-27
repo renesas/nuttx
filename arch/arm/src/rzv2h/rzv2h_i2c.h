@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_appinit.c
+ * arch/arm/src/rzv2h/rzv2h_i2c.h
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,53 +20,61 @@
  *
  ****************************************************************************/
 
+#ifndef __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H
+#define __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <sys/types.h>
-#include <nuttx/board.h>
-#include "rzv2h-evk.h"
+#include <nuttx/i2c/i2c_master.h>
+
+#include "chip.h"
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define RZ_RIIC_MASTER_DIV_TIME_NS (1000000000.0)
+
+/****************************************************************************
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_app_initialize
+ * Name: rzv2h_i2cbus_initialize
  *
  * Description:
- *   Perform application specific initialization.  This function is never
- *   called directly from application code, but only indirectly via the
- *   (non-standard) boardctl() interface using the command BOARDIOC_INIT.
+ *   Initialize one I2C bus.  On first call for a given port, initializes
+ *   the hardware via rzv2h_i2c_init().  Increments the reference count
+ *   on subsequent calls.
  *
  * Input Parameters:
- *   arg - The boardctl() argument is passed to the board_app_initialize()
- *         implementation without modification.  The argument has no
- *         meaning to NuttX; the meaning of the argument is a contract
- *         between the board-specific initialization logic and the
- *         matching application logic.  The value could be such things as a
- *         mode enumeration value, a set of DIP switch settings, a pointer
- *         to configuration data read from a file or serial FLASH, or
- *         whatever you would like to do with it.  Every implementation
- *         should accept zero/NULL as a default configuration.
+ *   port - I2C port number (0-8)
  *
  * Returned Value:
- *   Zero (OK) is returned on success; a negated errno value is returned on
- *   any failure to indicate the nature of the failure.
+ *   I2C master device instance on success, NULL on failure
  *
  ****************************************************************************/
 
-int board_app_initialize(uintptr_t arg)
-{
-#ifdef CONFIG_BOARD_LATE_INITIALIZE
-  /* Board initialization already performed by board_late_initialize() */
+struct i2c_master_s *rzv2h_i2cbus_initialize(int port);
 
-  return OK;
-#else
-  /* Perform board-specific initialization */
+/****************************************************************************
+ * Name: rzv2h_i2cbus_uninitialize
+ *
+ * Description:
+ *   Uninitialize an I2C bus.  Decrements the reference count and shuts
+ *   down the hardware when the last reference is released.
+ *
+ * Input Parameters:
+ *   dev - I2C master device instance
+ *
+ * Returned Value:
+ *   OK on success, ERROR if reference count underflow
+ *
+ ****************************************************************************/
 
-  return rzv2h_bringup();
-#endif
-}
+int rzv2h_i2cbus_uninitialize(struct i2c_master_s *dev);
+
+#endif /* __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H */

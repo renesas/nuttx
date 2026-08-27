@@ -787,6 +787,7 @@ config ARCH_CHIP_RZV2H
 	bool "Renesas RZV2H"
 	select ARCH_HAVE_LOWVECTORS
 	select ARCH_HAVE_FETCHADD
+	select ARCH_HAVE_I2CRESET
 	---help---
 		Renesas RZV2H family (ARM Cortex-R8)
 

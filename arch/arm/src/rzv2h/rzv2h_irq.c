@@ -124,11 +124,20 @@ void rzv2h_intsel_initialize(void)
  *   10 bits each.
  *
  * Input Parameters:
- *   irq   - IRQ number to program (rzv2h_irqn_t, e.g. RZV2H_IRQ_SEL0 = 353).
- *           Must be in [RZV2H_INTSEL_FIRST, RZV2H_INTSEL_LAST].
- *   event - Event selector value (rzv2h_irqsel_t, the peripheral event
- *           to map to 'irq').  These values are fixed per
- *           peripheral/channel.
+ *   irq      - IRQ number to program (rzv2h_irqn_t, e.g.
+ *              RZV2H_IRQ_SEL0 = 353).  Must be in [RZV2H_INTSEL_FIRST,
+ *              RZV2H_INTSEL_LAST].
+ *   event    - Event selector value (rzv2h_irqsel_t, the peripheral
+ *              event to map to 'irq').  These values are fixed per
+ *              peripheral/channel.
+ *   irq_detect_type - GIC detect type for 'irq'
+ *              (BSP_GIC_SPI_DETECT_LEVEL or BSP_GIC_SPI_DETECT_EDGE,
+ *              see bsp_irq_gic.h).  Recorded into FSP's
+ *              g_gic_detect_type[] table so that R_BSP_IrqCfg()
+ *              (called from *_Open()) applies the correct GIC detect
+ *              type for this SEL line automatically, on this and every
+ *              future Open(), without the caller having to call
+ *              up_set_irq_type() itself.
  *
  * Returned Value:
  *   OK (0) on success.  Returns -EINVAL if 'irq' is outside the SEL0-
@@ -137,7 +146,8 @@ void rzv2h_intsel_initialize(void)
  *
  ****************************************************************************/
 
-int rzv2h_intsel_connect_event(rzv2h_irqn_t irq, rzv2h_irqsel_t event)
+int rzv2h_intsel_connect_event(rzv2h_irqn_t irq, rzv2h_irqsel_t event,
+                          uint8_t irq_detect_type)
 {
   irqstate_t flags;
   uint32_t regval;
@@ -172,6 +182,12 @@ int rzv2h_intsel_connect_event(rzv2h_irqn_t irq, rzv2h_irqsel_t event)
   regval |= ((uint32_t)event << REG_INTSEL_SPIK_SEL_SHIFT(irq))
              & REG_INTSEL_SPIK_SEL_MASK(irq);
   REG_INTSEL_WRITE(irq, regval);
+
+  /* Recorded into FSP's g_gic_detect_type[] table to
+   * apply the correct trigger type automatically.
+   */
+
+  g_gic_detect_type[RZV2H_FSP_TO_GIC_IRQ(irq)] = irq_detect_type;
 
   leave_critical_section(flags);
 
@@ -259,6 +275,8 @@ int rzv2h_intsel_disconnect_event(rzv2h_irqn_t irq)
 void rzv2h_interrupt_common_handler(rzv2h_irqn_t fsp_irq,
                                      void (*fsp_isr)(void))
 {
+  DEBUGASSERT(g_current_interrupt_pointer < RZV2H_BSP_PRV_INTERRUPTABLE_NUM);
+
   g_current_interrupt_num[g_current_interrupt_pointer++] =
     (uint16_t)fsp_irq;
 

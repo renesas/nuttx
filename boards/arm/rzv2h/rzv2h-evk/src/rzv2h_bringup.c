@@ -35,6 +35,74 @@
 
 #include "rzv2h-evk.h"
 
+#if defined(CONFIG_I2C) && defined(CONFIG_RZV2H_I2C)
+#include <nuttx/i2c/i2c_master.h>
+#include "rzv2h_i2c.h"
+#endif
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: rzv2h_i2c_initialize
+ ****************************************************************************/
+
+#if defined(CONFIG_I2C) && defined(CONFIG_RZV2H_I2C)
+static void rzv2h_i2c_register(int bus)
+{
+  struct i2c_master_s *i2c;
+  int ret;
+
+  i2c = rzv2h_i2cbus_initialize(bus);
+  if (i2c == NULL)
+    {
+      syslog(LOG_ERR, "ERROR: Failed to get I2C%d interface\n", bus);
+    }
+  else
+    {
+      ret = i2c_register(i2c, bus);
+      if (ret < 0)
+        {
+          syslog(LOG_ERR, "ERROR: Failed to register I2C%d driver: %d\n",
+                 bus, ret);
+          rzv2h_i2cbus_uninitialize(i2c);
+        }
+    }
+}
+
+static void rzv2h_i2c_initialize(void)
+{
+#ifdef CONFIG_RZV2H_RIIC0
+  rzv2h_i2c_register(0);
+#endif
+#ifdef CONFIG_RZV2H_RIIC1
+  rzv2h_i2c_register(1);
+#endif
+#ifdef CONFIG_RZV2H_RIIC2
+  rzv2h_i2c_register(2);
+#endif
+#ifdef CONFIG_RZV2H_RIIC3
+  rzv2h_i2c_register(3);
+#endif
+#ifdef CONFIG_RZV2H_RIIC4
+  rzv2h_i2c_register(4);
+#endif
+#ifdef CONFIG_RZV2H_RIIC5
+  rzv2h_i2c_register(5);
+#endif
+#ifdef CONFIG_RZV2H_RIIC6
+  rzv2h_i2c_register(6);
+#endif
+#ifdef CONFIG_RZV2H_RIIC7
+  rzv2h_i2c_register(7);
+#endif
+#ifdef CONFIG_RZV2H_RIIC8
+  rzv2h_i2c_register(8);
+#endif
+}
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -77,6 +145,10 @@ int rzv2h_bringup(void)
       syslog(LOG_ERR, "ERROR: userled_lower_initialize() failed: %d\n", ret);
       return ret;
     }
+#endif
+
+#if defined(CONFIG_I2C) && defined(CONFIG_RZV2H_I2C)
+  rzv2h_i2c_initialize();
 #endif
 
   return OK;

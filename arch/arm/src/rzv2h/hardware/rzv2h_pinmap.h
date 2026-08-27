@@ -128,4 +128,51 @@
 #define GPIO_RXD9_MISO9_SCL9_P8_3_M6  RZV2H_PINMUX(8, 3, 6)
 #define GPIO_RXD9_MISO9_SCL9_PB_3_M2  RZV2H_PINMUX(11, 3, 2)
 
+/* RIIC I2C pin configurations. */
+
+/* RIIC channel 0: P31/SCL, P30/SDA, Mode 1 */
+
+#define GPIO_SCL0_P3_1_M1   RZV2H_PINMUX(3, 1, 1)
+#define GPIO_SDA0_P3_0_M1   RZV2H_PINMUX(3, 0, 1)
+
+/* RIIC channel 1: P33/SCL, P32/SDA, Mode 1 */
+
+#define GPIO_SCL1_P3_3_M1   RZV2H_PINMUX(3, 3, 1)
+#define GPIO_SDA1_P3_2_M1   RZV2H_PINMUX(3, 2, 1)
+
+/* RIIC channel 2: P21/SCL, P20/SDA, Mode 4 */
+
+#define GPIO_SCL2_P2_1_M4   RZV2H_PINMUX(2, 1, 4)
+#define GPIO_SDA2_P2_0_M4   RZV2H_PINMUX(2, 0, 4)
+
+/* RIIC channel 3: P37/SCL, P36/SDA, Mode 1 */
+
+#define GPIO_SCL3_P3_7_M1   RZV2H_PINMUX(3, 7, 1)
+#define GPIO_SDA3_P3_6_M1   RZV2H_PINMUX(3, 6, 1)
+
+/* RIIC channel 4: P41/SCL, P40/SDA, Mode 1 */
+
+#define GPIO_SCL4_P4_1_M1   RZV2H_PINMUX(4, 1, 1)
+#define GPIO_SDA4_P4_0_M1   RZV2H_PINMUX(4, 0, 1)
+
+/* RIIC channel 5: P43/SCL, P42/SDA, Mode 1 */
+
+#define GPIO_SCL5_P4_3_M1   RZV2H_PINMUX(4, 3, 1)
+#define GPIO_SDA5_P4_2_M1   RZV2H_PINMUX(4, 2, 1)
+
+/* RIIC channel 6: P45/SCL, P44/SDA, Mode 1 */
+
+#define GPIO_SCL6_P4_5_M1   RZV2H_PINMUX(4, 5, 1)
+#define GPIO_SDA6_P4_4_M1   RZV2H_PINMUX(4, 4, 1)
+
+/* RIIC channel 7: P47/SCL, P46/SDA, Mode 1 */
+
+#define GPIO_SCL7_P4_7_M1   RZV2H_PINMUX(4, 7, 1)
+#define GPIO_SDA7_P4_6_M1   RZV2H_PINMUX(4, 6, 1)
+
+/* RIIC channel 8: P07/SCL, P06/SDA, Mode 1 */
+
+#define GPIO_SCL8_P0_7_M1   RZV2H_PINMUX(0, 7, 1)
+#define GPIO_SDA8_P0_6_M1   RZV2H_PINMUX(0, 6, 1)
+
 #endif /* __ARCH_ARM_SRC_RZV2H_HARDWARE_RZV2H_PINMAP_H */
