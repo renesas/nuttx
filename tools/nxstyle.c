@@ -229,6 +229,8 @@ static const char *g_white_prefix[] =
   "tId",             /* Ref:  arch/tricore/src */
   "R_IOPORT_",       /* Ref:  arch/arm/src/rzv2h */
   "R_SCI_B_UART_",   /* Ref:  arch/arm/src/rzv2h */
+  "R_RIIC_",         /* Ref:  arch/arm/src/rzv2h */
+  "R_FSP_",          /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*
    * ROS 2 standard message package names and rosidl scalar type names

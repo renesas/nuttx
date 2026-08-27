@@ -39,6 +39,7 @@ MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
 SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
+I2C         Yes      Interrupt-driven RIIC master on channels 0-8
 ==========  =======  ============================================================
 
 CLOCK
@@ -133,6 +134,22 @@ RIIC2 off its default TXI/RXI SEL IDs (443/442) and onto SEL IDs
 
 Rebuild and reflash after changing either option so the new INTSEL
 values are picked up.
+
+I2C
+---
+
+The RIIC driver provides interrupt-driven I2C master
+operation on channels 0 through 8.
+
+``CONFIG_RZV2H_RIIC_I2C`` enables the driver and
+``CONFIG_RZV2H_RIICn`` selects each required channel. Each channel has
+independent Kconfig options for bus bitrate, SCL rise/fall times, duty
+cycle, noise filter stages, TXI/RXI interrupt-select (SEL) IRQ numbers,
+and interrupt priority.
+
+I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported. The driver
+bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
+sequence to reset slave state machines.
 
 Supported Boards
 ================

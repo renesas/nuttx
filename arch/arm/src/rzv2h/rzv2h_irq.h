@@ -53,6 +53,8 @@
 #define RZV2H_INTSEL_LAST            RZV2H_IRQ_SEL126  /* 479 */
 #define RZV2H_INTSEL_COUNT           (RZV2H_INTSEL_LAST - RZV2H_INTSEL_FIRST + 1)
 
+#define RZV2H_BSP_PRV_INTERRUPTABLE_NUM      (32U)
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
@@ -87,11 +89,20 @@ void rzv2h_intsel_initialize(void);
  *   10 bits each.
  *
  * Input Parameters:
- *   irq   - IRQ number to program (rzv2h_irqn_t, e.g. RZV2H_IRQ_SEL0 = 353).
- *           Must be in [RZV2H_INTSEL_FIRST, RZV2H_INTSEL_LAST].
- *   event - Event selector value (rzv2h_irqsel_t, the peripheral event
- *           to map to 'irq').  These values are fixed per
- *           peripheral/channel.
+ *   irq      - IRQ number to program (rzv2h_irqn_t, e.g.
+ *              RZV2H_IRQ_SEL0 = 353).  Must be in [RZV2H_INTSEL_FIRST,
+ *              RZV2H_INTSEL_LAST].
+ *   event    - Event selector value (rzv2h_irqsel_t, the peripheral
+ *              event to map to 'irq').  These values are fixed per
+ *              peripheral/channel.
+ *   irq_detect_type - GIC detect type for 'irq'
+ *              (BSP_GIC_SPI_DETECT_LEVEL or BSP_GIC_SPI_DETECT_EDGE,
+ *              see bsp_irq_gic.h).  Recorded into FSP's
+ *              g_gic_detect_type[] table so that R_BSP_IrqCfg()
+ *              (called from *_Open()) applies the correct GIC detect
+ *              type for this SEL line automatically, on this and every
+ *              future Open(), without the caller having to call
+ *              up_set_irq_type() itself.
  *
  * Returned Value:
  *   OK (0) on success.  Returns -EINVAL if 'irq' is outside the SEL0-
@@ -100,7 +111,8 @@ void rzv2h_intsel_initialize(void);
  *
  ****************************************************************************/
 
-int rzv2h_intsel_connect_event(rzv2h_irqn_t irq, rzv2h_irqsel_t event);
+int rzv2h_intsel_connect_event(rzv2h_irqn_t irq, rzv2h_irqsel_t event,
+                          uint8_t irq_detect_type);
 
 /****************************************************************************
  * Name: rzv2h_intsel_disconnect_event
