@@ -41,8 +41,8 @@ J-Link debugger:
    1-4    OFF  2-4    OFF
    1-5    ON   2-5    OFF
    1-6    OFF  2-6    OFF
-   1-7    ON   2-7    OFF
-   1-8    OFF  2-8    OFF
+   1-7    ON   
+   1-8    OFF  
    =====  ===  =====  ===
 
 2. Connect CN1 to the J-Link debugger.
@@ -321,22 +321,30 @@ TXD0    ``P5_0``  ``BOARD_SCI0_TXD_GPIO``
 RXD0    ``P5_1``  ``BOARD_SCI0_RXD_GPIO``
 ======  ========  =======================
 
-Connect the CN3 Pmod in EVK and the USB-to-UART adapter as follows:
+Connect the USB-to-UART adapter to the CN3 Pmod contacts shown below:
 
-==========  =========================
-EVK signal  USB-to-UART connection
-==========  =========================
-TXD0        RX
-RXD0        TX
-GND         GND
-VCC (3.3V)  Leave disconnected
-==========  =========================
+========  ==========  ========  =========================
+CN3 pin   CN3 signal  SoC pin   USB-to-UART connection
+========  ==========  ========  =========================
+1         CTS         ``P52``   RTS (Unused)
+2         TXD0        ``P50``   RX
+3         RXD0        ``P51``   TX
+4         RTS         ``P53``   CTS (Unused)
+5         GND         --        GND
+6         VCC         --        VCC
+7         IO1         ``P57``   Unused
+8         IO2         ``P73``   Unused
+9         IO3         ``P76``   Unused
+10        IO4         ``P77``   Unused
+11        GND         --        Unused
+12        VCC         --        Unused
+========  ==========  ========  =========================
 
-These signals are used by the CN3 Pmod UART connection. Connect the
-USB-to-UART adapter with crossed data lines and a common ground.
-Do not connect an adapter using RS-232 voltage levels. The table
-assumes that the adapter is powered by its USB connection;
-do not connect the adapter VCC pin to the EVK.
+Cross the data lines so that CN3 TXD0 connects to the adapter RX and CN3
+RXD0 connects to the adapter TX. Hardware flow control is not enabled, so
+CTS and RTS remain disconnected. Use a 3.3 V TTL UART adapter, not an RS-232
+adapter. The table assumes that the adapter is powered through USB; do not
+connect either CN3 VCC contact to the adapter.
 
 The relevant default options are::
 
