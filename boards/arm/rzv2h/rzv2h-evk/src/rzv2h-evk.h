@@ -95,7 +95,7 @@ void board_button_initialize(void);
  *
  ****************************************************************************/
 
-#ifdef CONFIG_RZV2H_SPI
+#ifdef CONFIG_RZV2H_SPI_B
 int board_spi_initialize(void);
 #endif
 

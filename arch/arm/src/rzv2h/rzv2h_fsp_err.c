@@ -88,3 +88,37 @@ int rzv2h_fsp_err_to_errno(fsp_err_t err)
         return -EIO;
     }
 }
+
+/****************************************************************************
+ * Name: rzv2h_spi_event_to_errno
+ *
+ * Description:
+ *   Convert an SPI_B transfer-completion event to a NuttX errno value.
+ ****************************************************************************/
+
+int rzv2h_spi_event_to_errno(spi_event_t event)
+{
+  switch (event)
+    {
+      case SPI_EVENT_TRANSFER_COMPLETE:
+        return OK;
+
+      case SPI_EVENT_TRANSFER_ABORTED:
+        return -ECANCELED;
+
+      case SPI_EVENT_ERR_READ_OVERFLOW:
+      case SPI_EVENT_ERR_OVERRUN:
+        return -EOVERFLOW;
+
+      case SPI_EVENT_ERR_PARITY:
+        return -EILSEQ;
+
+      case SPI_EVENT_ERR_FRAMING:
+        return -EPROTO;
+
+      case SPI_EVENT_ERR_MODE_FAULT:
+      case SPI_EVENT_ERR_MODE_UNDERRUN:
+      default:
+        return -EIO;
+    }
+}

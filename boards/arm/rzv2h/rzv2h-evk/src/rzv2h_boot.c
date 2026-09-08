@@ -121,12 +121,6 @@ void rzv2h_board_initialize(void)
   rzv2h_serial_setup();
 #endif
 
-  /* Configure SPI chip selects if SPI driver is enabled */
-
-#ifdef CONFIG_RZV2H_SPI
-  /* Configure SPI-based devices */
-#endif
-
   /* Configure on-board LEDs if LED support has been selected */
 
 #ifdef CONFIG_ARCH_LEDS

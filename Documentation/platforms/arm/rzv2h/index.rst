@@ -38,6 +38,7 @@ GIC         Yes      Interrupt controller init (CPU0 + per-CPU)
 MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
 SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
+SPI         Yes      Interrupt-driven SPI-B on channels 0-2
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
 I2C         Yes      Interrupt-driven RIIC master on channels 0-8
 ==========  =======  ============================================================
@@ -150,6 +151,24 @@ and interrupt priority.
 I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported. The driver
 bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
 sequence to reset slave state machines.
+
+SPI
+---
+
+The interrupt-driven SPI lower half supports SPI-B channels 0 through 2.  Each
+channel can be enabled independently and configured at build time as either a
+master or a slave using the standard NuttX SPI frameworks.
+
+Master channels use ``struct spi_dev_s`` and support runtime frequency,
+CPOL/CPHA mode, and 4- to 32-bit word-width configuration.  Slave channels use
+``struct spi_slave_ctrlr_s`` and fixed-length transactions.  Both 3-wire
+clock-synchronous operation without SSL and 4-wire operation with native
+hardware SSL are supported.  RXI and TXI are routed through INTSEL, while TEI
+and ERI use fixed SPI-B interrupts.
+
+The RZ/V2H-EVK ``nsh-spi`` configuration provides SPI1 master loopback and
+SPI0-master-to-SPI2-slave validation.  See the board documentation for wiring
+and commands.
 
 Supported Boards
 ================

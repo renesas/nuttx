@@ -41,4 +41,8 @@ if(CONFIG_RZV2H_I2C)
   list(APPEND SRCS rzv2h_i2c.c)
 endif()
 
+if(CONFIG_RZV2H_SPI_B)
+  list(APPEND SRCS rzv2h_spi.c)
+endif()
+
 target_sources(arch PRIVATE ${SRCS})
