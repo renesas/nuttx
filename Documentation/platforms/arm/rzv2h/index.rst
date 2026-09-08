@@ -41,6 +41,7 @@ SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
 SPI         Yes      Interrupt-driven SPI-B on channels 0-2
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
 I2C         Yes      Interrupt-driven RIIC master on channels 0-8
+RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
 ==========  =======  ============================================================
 
 CLOCK
@@ -94,6 +95,20 @@ GPIO
 
 The GPIO driver provides fundamental support for pin configuration, read,
 and write operations. GPIO interrupt support is currently unavailable.
+
+RTC
+---
+
+The RTC driver provides a calendar clock (date and time) through the
+standard NuttX RTC lower-half. ``CONFIG_RZV2H_RTC`` enables it and requires
+``CONFIG_RTC``, ``CONFIG_RTC_DATETIME``, ``CONFIG_RTC_DRIVER`` and
+``CONFIG_RTC_ARCH``. It exposes ``/dev/rtc0`` and seeds the NuttX system
+clock at boot. The supported calendar range is 2000-2099. If the RTC has
+never been set, the system clock falls back to the build-time default date.
+
+``CONFIG_RTC_ALARM`` adds a single one-shot alarm (``CONFIG_RTC_NALARMS``
+must be 1) supporting absolute, relative, read-back and cancel operations.
+``CONFIG_RTC_PERIODIC`` adds a periodic wakeup at rates from `1/128s` to `2s`.
 
 INTC SEL (Interrupt Select) Lines
 ---------------------------------

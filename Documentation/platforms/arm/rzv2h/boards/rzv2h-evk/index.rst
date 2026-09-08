@@ -127,7 +127,7 @@ During ``board_late_initialize()``, ``rzv2h_bringup()`` calls
 driver.  ``CONFIG_RZV2H_GPIO`` defaults to enabled when ``CONFIG_DEV_GPIO``
 is selected, but it is shown above to make the dependency explicit.
 
-Manual NSH test
+NSH usage example
 ~~~~~~~~~~~~~~~
 
 After booting NuttX, first verify that the device was registered::
@@ -674,6 +674,95 @@ devices in ascending hardware-channel order. Their TX and RX pin choices are
 board-specific and are defined by ``BOARD_SCIn_TXD_GPIO`` and
 ``BOARD_SCIn_RXD_GPIO`` in ``boards/arm/rzv2h/rzv2h-evk/include/board.h``.
 
+Real-Time Clock (RTC)
+=====================
+
+The RZ/V2H RTC provides a calendar clock, a one-shot alarm and a periodic
+wakeup.  It is registered through ``CONFIG_RTC_ARCH`` so a single driver both
+exposes ``/dev/rtc0`` and seeds the NuttX system clock at boot.  If the RTC
+has never been set, the system clock falls back to the build-time default
+date.
+
+Clock source
+------------
+
+On the RZ/V2H-EVK the RTC sub-clock is driven from a 32.768 kHz crystal.
+Alarm and periodic wakeup have been verified running on the EVK.
+
+Configuration
+-------------
+
+Enable the RTC on top of an existing configuration (for example
+``rzv2h-evk:nsh``) with the following options::
+
+   CONFIG_RTC=y
+   CONFIG_RTC_DATETIME=y
+   CONFIG_RTC_DRIVER=y
+   CONFIG_RTC_ARCH=y
+   CONFIG_RTC_ALARM=y
+   CONFIG_RTC_NALARMS=1
+   CONFIG_RTC_PERIODIC=y
+   CONFIG_RZV2H_RTC=y
+   CONFIG_NSH_DISABLE_DATE=n
+   CONFIG_SIG_EVTHREAD=y
+   CONFIG_SCHED_LPWORK=y
+   CONFIG_EXAMPLES_ALARM=y
+   CONFIG_BOARD_LATE_INITIALIZE=y
+
+With these options the board registers ``/dev/rtc0`` during board
+initialization.
+
+NSH usage example
+-----------------
+
+The following console sessions show how an application/user drives the RTC
+from NSH.  The RTC character device is registered as ``/dev/rtc0``:
+
+.. code-block:: console
+
+   nsh> ls /dev
+   /dev:
+    ...
+    rtc0
+    ...
+
+
+Read and set the calendar with the NSH ``date`` builtin
+(``CONFIG_NSH_DISABLE_DATE=n``).  If the RTC has never been set, the boot
+log reports the fallback and ``date`` shows the build-time default:
+
+.. code-block:: console
+
+   rzv2h_rtc: RTC not set; using build-time default date
+   NuttShell (NSH) NuttX-13.0.0
+   nsh> date -s "Jul 29 15:30:00 2026"
+   nsh> date
+   Wed, Jul 29 15:30:01 2026
+
+Arm a relative alarm with the standard ``apps/examples/alarm`` application
+(``CONFIG_EXAMPLES_ALARM``).  The example starts an ``alarm_daemon`` on first
+use; the daemon prints when the alarm signal is received:
+
+.. code-block:: console
+
+   nsh> alarm 5
+   alarm_daemon started
+   alarm_daemon: Running
+   Opening /dev/rtc0
+   Alarm 0 set in 5 seconds
+   nsh> alarm_daemon: alarm 0 received
+
+A pending alarm can be read back, and an armed alarm can be cancelled:
+
+.. code-block:: console
+
+   nsh> alarm 30
+   Opening /dev/rtc0
+   Alarm 0 set in 30 seconds
+   nsh> alarm -c -a 0
+   Opening /dev/rtc0
+   Alarm 0 has been canceled
+
 I2C
 ===
 
@@ -869,6 +958,22 @@ Timer
 as the system tick source. Its clock is ``BSP_CFG_CLOCK_I6CLK_HZ / 2``, and
 the reload value is derived from ``CLK_TCK`` so the timer fires every system
 tick. The Private Timer interrupt (BSP IRQn -3) maps to GIC INTID 29.
+
+RTC
+---
+
+When ``CONFIG_RZV2H_RTC`` is enabled, ``rzv2h_bringup()``
+(``boards/arm/rzv2h/rzv2h-evk/src/rzv2h_bringup.c``) initializes the RTC
+during board late-initialization. It configures the RTC hardware, routes the
+interrupt sources.
+``/dev/rtc0`` and publishes the lower half to the ``CONFIG_RTC_ARCH`` bridge
+so that a single driver both serves ``/dev/rtc0`` and seeds the NuttX system
+clock.
+
+The system clock is seeded from the RTC at boot. If the RTC has never been
+started it falls back to the build-time default date and the boot log prints
+``rzv2h_rtc: RTC not set; using build-time default date``. See the Real-Time
+Clock (RTC) section above for configuration and NSH usage.
 
 Linker script
 -------------
