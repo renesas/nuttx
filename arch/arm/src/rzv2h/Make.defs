@@ -66,6 +66,10 @@ ifeq ($(CONFIG_DEV_GPIO),y)
 CHIP_CSRCS += rzv2h_gpio.c
 endif
 
+ifeq ($(CONFIG_RZV2H_SPI_B),y)
+CHIP_CSRCS += rzv2h_spi.c
+endif
+
 ifeq ($(CONFIG_RZV2H_I2C),y)
 CHIP_CSRCS += rzv2h_i2c.c
 endif

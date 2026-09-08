@@ -32,6 +32,7 @@
 /* FSP headers -- included last, per espressif precedent (R2) */
 
 #include "bsp_api.h"
+#include "r_spi_api.h"
 
 /****************************************************************************
  * Public Function Prototypes
@@ -59,6 +60,15 @@ extern "C"
  ****************************************************************************/
 
 int rzv2h_fsp_err_to_errno(fsp_err_t err);
+
+/****************************************************************************
+ * Name: rzv2h_spi_event_to_errno
+ *
+ * Description:
+ *   Convert an SPI_B transfer-completion event to a NuttX errno value.
+ ****************************************************************************/
+
+int rzv2h_spi_event_to_errno(spi_event_t event);
 
 #ifdef __cplusplus
 }
