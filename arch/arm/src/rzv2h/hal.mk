@@ -33,6 +33,7 @@ INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DE
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)inc$(DELIM)instances$(DELIM)rzv
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)inc$(DELIM)api
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)rzv2h
+INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)rzv2h$(DELIM)cr
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)all
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)mcu$(DELIM)all$(DELIM)cr
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)bsp$(DELIM)cmsis$(DELIM)Device$(DELIM)RENESAS$(DELIM)Include
@@ -79,4 +80,8 @@ endif
 
 ifeq ($(CONFIG_RZV2H_SPI_B),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_spi_b$(DELIM)r_spi_b.c
+endif
+
+ifeq ($(CONFIG_RZV2H_RTC),y)
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_rtc$(DELIM)r_rtc.c
 endif

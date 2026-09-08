@@ -232,6 +232,9 @@ static const char *g_white_prefix[] =
   "R_RIIC_",         /* Ref:  arch/arm/src/rzv2h */
   "R_FSP_",          /* Ref:  arch/arm/src/rzv2h */
   "R_SPI_B_",        /* Ref:  arch/arm/src/rzv2h */
+  "R_RTC",           /* Ref:  arch/arm/src/rzv2h */
+  "RCR",             /* Ref:  arch/arm/src/rzv2h */
+  "R_BSP",           /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*
    * ROS 2 standard message package names and rosidl scalar type names
