@@ -49,6 +49,10 @@
 #include "rzv2h_i2c.h"
 #endif
 
+#if defined(CONFIG_RZV2H_GPT_PWM)
+#include "rzv2h_pwm.h"
+#endif
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -208,6 +212,16 @@ int rzv2h_bringup(void)
           syslog(LOG_INFO,
                  "rzv2h_rtc: RTC not set; using build-time default date\n");
         }
+    }
+#endif
+
+#ifdef CONFIG_RZV2H_GPT_PWM
+  /* Initialize PWM and register the PWM device */
+
+  ret = rzv2h_pwm_setup();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: rzv2h_pwm_setup() failed: %d\n", ret);
     }
 #endif
 

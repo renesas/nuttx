@@ -42,6 +42,7 @@ SPI         Yes      Interrupt-driven SPI-B on channels 0-2
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
 I2C         Yes      Interrupt-driven RIIC master on channels 0-8
 RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
+PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 ==========  =======  ============================================================
 
 CLOCK
@@ -184,6 +185,18 @@ and ERI use fixed SPI-B interrupts.
 The RZ/V2H-EVK ``nsh-spi`` configuration provides SPI1 master loopback and
 SPI0-master-to-SPI2-slave validation.  See the board documentation for wiring
 and commands.
+
+PWM
+---
+
+The RZ/V2H use the pulsed output control
+implemented using the GPT (General PWM Timer). The driver supports PWM with
+configurable frequency and duty cycle on channels 0 through 15.
+
+``CONFIG_RZV2H_GPT_PWM`` enables the GPT PWM driver. Each channel is
+individually selectable via ``CONFIG_RZV2H_GPTn_PWM``.
+The output pin (GTIOCA or GTIOCB) for each channel is defined in the
+board's ``board.h`` (``BOARD_GPTn_GTIOC_GPIO`` and ``BOARD_GPTn_USE_GTIOCA``).
 
 Supported Boards
 ================
