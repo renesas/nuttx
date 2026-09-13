@@ -49,4 +49,8 @@ if(CONFIG_RZV2H_RTC)
   list(APPEND SRCS rzv2h_rtc.c)
 endif()
 
+if(CONFIG_RZV2H_GPT_PWM)
+  list(APPEND SRCS rzv2h_pwm.c)
+endif()
+
 target_sources(arch PRIVATE ${SRCS})
