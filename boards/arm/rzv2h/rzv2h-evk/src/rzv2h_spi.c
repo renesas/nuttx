@@ -564,7 +564,7 @@ int board_spi_initialize(void)
 #endif
 
 #ifdef CONFIG_RZV2H_SPI_CHANNEL_0_MASTER
-  ret = rzv2h_spi_master_bus_initialize(0, BOARD_SPI0_SSL_CONFIG,
+  ret = rzv2h_spi_master_bus_initialize(0, BOARD_SPI0_SSL_PIN,
                                          BOARD_SPI0_SSL_USED,
                                          BOARD_SPI0_MISO_GPIO,
                                          BOARD_SPI0_MOSI_GPIO,
@@ -575,7 +575,7 @@ int board_spi_initialize(void)
     }
 #elif defined(HAVE_RZV2H_SPI_SLAVE) && \
       defined(CONFIG_RZV2H_SPI_CHANNEL_0_SLAVE)
-  ret = rzv2h_spi_slave_bus_initialize(0, BOARD_SPI0_SSL_CONFIG,
+  ret = rzv2h_spi_slave_bus_initialize(0, BOARD_SPI0_SSL_PIN,
                                        BOARD_SPI0_SSL_USED,
                                        BOARD_SPI0_MISO_GPIO,
                                        BOARD_SPI0_MOSI_GPIO,
@@ -587,7 +587,7 @@ int board_spi_initialize(void)
 #endif
 
 #ifdef CONFIG_RZV2H_SPI_CHANNEL_1_MASTER
-  ret = rzv2h_spi_master_bus_initialize(1, BOARD_SPI1_SSL_CONFIG,
+  ret = rzv2h_spi_master_bus_initialize(1, BOARD_SPI1_SSL_PIN,
                                          BOARD_SPI1_SSL_USED,
                                          BOARD_SPI1_MISO_GPIO,
                                          BOARD_SPI1_MOSI_GPIO,
@@ -598,7 +598,7 @@ int board_spi_initialize(void)
     }
 #elif defined(HAVE_RZV2H_SPI_SLAVE) && \
       defined(CONFIG_RZV2H_SPI_CHANNEL_1_SLAVE)
-  ret = rzv2h_spi_slave_bus_initialize(1, BOARD_SPI1_SSL_CONFIG,
+  ret = rzv2h_spi_slave_bus_initialize(1, BOARD_SPI1_SSL_PIN,
                                        BOARD_SPI1_SSL_USED,
                                        BOARD_SPI1_MISO_GPIO,
                                        BOARD_SPI1_MOSI_GPIO,
@@ -610,7 +610,7 @@ int board_spi_initialize(void)
 #endif
 
 #ifdef CONFIG_RZV2H_SPI_CHANNEL_2_MASTER
-  ret = rzv2h_spi_master_bus_initialize(2, BOARD_SPI2_SSL_CONFIG,
+  ret = rzv2h_spi_master_bus_initialize(2, BOARD_SPI2_SSL_PIN,
                                          BOARD_SPI2_SSL_USED,
                                          BOARD_SPI2_MISO_GPIO,
                                          BOARD_SPI2_MOSI_GPIO,
@@ -621,7 +621,7 @@ int board_spi_initialize(void)
     }
 #elif defined(HAVE_RZV2H_SPI_SLAVE) && \
       defined(CONFIG_RZV2H_SPI_CHANNEL_2_SLAVE)
-  ret = rzv2h_spi_slave_bus_initialize(2, BOARD_SPI2_SSL_CONFIG,
+  ret = rzv2h_spi_slave_bus_initialize(2, BOARD_SPI2_SSL_PIN,
                                        BOARD_SPI2_SSL_USED,
                                        BOARD_SPI2_MISO_GPIO,
                                        BOARD_SPI2_MOSI_GPIO,

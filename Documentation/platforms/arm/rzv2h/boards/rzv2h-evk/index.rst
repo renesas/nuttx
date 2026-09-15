@@ -315,41 +315,135 @@ lower half.  All three channels can be enabled independently.  A channel
 selected as master uses the NuttX master interface; a channel selected as
 slave uses the separate NuttX slave-controller interface.
 
-Default signal routing
-----------------------
+Pin Assignments
+---------------
 
-The board definitions provide the following clock and data routes.  The last
-column shows the SSL choice stored by ``nsh-spi``; SSL is used only in 4-wire
-mode.
+The SPI-B channels use the following board-defined pin assignments.  The SSL
+column shows the default route selected in
+``boards/arm/rzv2h/rzv2h-evk/include/board.h``.  SSL is configured only in
+4-wire mode.
 
 .. list-table::
    :header-rows: 1
 
    * - Channel
-     - MOSI
-     - MISO
-     - RSPCK
-     - ``nsh-spi`` SSL choice
-   * - 0
-     - ``P90``
-     - ``P91``
-     - ``P92``
-     - ``SSLA0`` on ``P93``
-   * - 1
-     - ``PB1``
-     - ``PB2``
-     - ``PB0``
-     - ``SSLB0`` on ``PA4``
-   * - 2
-     - ``PB4``
-     - ``PB3``
-     - ``PB5``
-     - ``SSLC0`` on ``PA7``
+     - RSPCK Pin
+     - MOSI Pin
+     - MISO Pin
+     - Default SSL Pin
+   * - SPI-B 0
+     - ``P9_2``
+     - ``P9_0``
+     - ``P9_1``
+     - ``SSLA0`` on ``P9_3``
+   * - SPI-B 1
+     - ``PB_0``
+     - ``PB_1``
+     - ``PB_2``
+     - ``SSLB0`` on ``PA_4``
+   * - SPI-B 2
+     - ``PB_5``
+     - ``PB_4``
+     - ``PB_3``
+     - ``SSLC0`` on ``PA_7``
 
-These SSL pins remain unconfigured when 3-wire mode is selected.  Kconfig also
-exposes the other SSL signals and pin routes represented by the board pin
-definitions.  The board rejects enabled channel combinations that select the
-same physical SSL pin.
+SSL Route Selection
+-------------------
+
+Kconfig selects only 3-wire or 4-wire operation; it does not select an SSL
+signal or pin.  For 4-wire operation, each channel's
+``BOARD_SPIx_SSL_ROUTE`` definition in ``board.h`` selects one of the
+following routes supported by the current pin definitions:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Channel
+     - SSL Signal
+     - Hardware Selector
+     - Available Route Definitions
+   * - SPI-B 0
+     - ``SSLA0``
+     - 0
+     - ``BOARD_SPI0_SSL_ROUTE_SSLA0_P04`` (``P0_4``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA0_P34`` (``P3_4``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA0_P93`` (``P9_3``)
+   * - SPI-B 0
+     - ``SSLA1``
+     - 1
+     - ``BOARD_SPI0_SSL_ROUTE_SSLA1_P05`` (``P0_5``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA1_P35`` (``P3_5``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA1_P94`` (``P9_4``)
+   * - SPI-B 0
+     - ``SSLA2``
+     - 2
+     - ``BOARD_SPI0_SSL_ROUTE_SSLA2_P14`` (``P1_4``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA2_P36`` (``P3_6``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA2_P95`` (``P9_5``)
+   * - SPI-B 0
+     - ``SSLA3``
+     - 3
+     - ``BOARD_SPI0_SSL_ROUTE_SSLA3_P15`` (``P1_5``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA3_P37`` (``P3_7``),
+       ``BOARD_SPI0_SSL_ROUTE_SSLA3_P96`` (``P9_6``)
+   * - SPI-B 1
+     - ``SSLB0``
+     - 0
+     - ``BOARD_SPI1_SSL_ROUTE_SSLB0_P34`` (``P3_4``),
+       ``BOARD_SPI1_SSL_ROUTE_SSLB0_PA4`` (``PA_4``)
+   * - SPI-B 1
+     - ``SSLB1``
+     - 1
+     - ``BOARD_SPI1_SSL_ROUTE_SSLB1_P36`` (``P3_6``),
+       ``BOARD_SPI1_SSL_ROUTE_SSLB1_PA5`` (``PA_5``)
+   * - SPI-B 1
+     - ``SSLB2``
+     - 2
+     - ``BOARD_SPI1_SSL_ROUTE_SSLB2_P04`` (``P0_4``),
+       ``BOARD_SPI1_SSL_ROUTE_SSLB2_PA6`` (``PA_6``)
+   * - SPI-B 1
+     - ``SSLB3``
+     - 3
+     - ``BOARD_SPI1_SSL_ROUTE_SSLB3_P14`` (``P1_4``),
+       ``BOARD_SPI1_SSL_ROUTE_SSLB3_PA7`` (``PA_7``)
+   * - SPI-B 2
+     - ``SSLC0``
+     - 0
+     - ``BOARD_SPI2_SSL_ROUTE_SSLC0_P35`` (``P3_5``),
+       ``BOARD_SPI2_SSL_ROUTE_SSLC0_PA7`` (``PA_7``)
+   * - SPI-B 2
+     - ``SSLC1``
+     - 1
+     - ``BOARD_SPI2_SSL_ROUTE_SSLC1_P37`` (``P3_7``),
+       ``BOARD_SPI2_SSL_ROUTE_SSLC1_PA6`` (``PA_6``)
+   * - SPI-B 2
+     - ``SSLC2``
+     - 2
+     - ``BOARD_SPI2_SSL_ROUTE_SSLC2_P05`` (``P0_5``),
+       ``BOARD_SPI2_SSL_ROUTE_SSLC2_PA5`` (``PA_5``)
+   * - SPI-B 2
+     - ``SSLC3``
+     - 3
+     - ``BOARD_SPI2_SSL_ROUTE_SSLC3_P15`` (``P1_5``),
+       ``BOARD_SPI2_SSL_ROUTE_SSLC3_PA4`` (``PA_4``)
+
+To change an SSL route, edit only the applicable default in ``board.h``.  For
+example, SPI-B 0 defaults to SSLA0 on P9_3::
+
+   #define BOARD_SPI0_SSL_ROUTE  BOARD_SPI0_SSL_ROUTE_SSLA0_P93
+
+To use SSLA2 on P9_5 instead, change it to::
+
+   #define BOARD_SPI0_SSL_ROUTE  BOARD_SPI0_SSL_ROUTE_SSLA2_P95
+
+The board definitions derive the hardware selector and the master output or
+slave input pin from this route.  Do not edit the derived
+``BOARD_SPIx_SSL_SELECT``, ``BOARD_SPIx_SSL_INPUT``,
+``BOARD_SPIx_SSL_OUTPUT``, or ``BOARD_SPIx_SSL_PIN`` definitions.
+
+Before selecting another route, check the EVK schematic and all enabled
+peripherals for pin conflicts.  Some routes share physical pins with routes
+on other SPI-B channels or with other peripheral functions.
 
 Configuration
 -------------
@@ -379,7 +473,6 @@ For each required channel, enable ``CONFIG_RZV2H_SPI_CHANNEL_0``,
 * CPOL and CPHA;
 * the master or slave operating role;
 * 3-wire clock-synchronous or 4-wire SPI operation;
-* one SSL signal and pin;
 * RXI and TXI interrupt-select numbers.
 
 The role and wire mode are compile-time choices.  ``CONFIG_SPI_DRIVER``
@@ -505,16 +598,16 @@ clock-synchronous operation, mode 0, 8-bit words, and an initial frequency of
    CONFIG_RZV2H_SPI_CHANNEL_1_CPOL_LOW=y
    CONFIG_RZV2H_SPI_CHANNEL_1_CPHA_ODD=y
 
-With the board powered off, connect channel 1 MOSI ``PB1`` directly to
-channel 1 MISO ``PB2``.  No SSL connection is required in 3-wire mode.
-Channel 1 RSPCK is available on ``PB0`` for logic-analyzer measurements.
+With the board powered off, connect channel 1 MOSI ``PB_1`` directly to
+channel 1 MISO ``PB_2``.  No SSL connection is required in 3-wire mode.
+Channel 1 RSPCK is available on ``PB_0`` for logic-analyzer measurements.
 
 .. warning::
 
-   ``PB0``, ``PB1``, and ``PB2`` are multiplexed with board USB and camera
+   ``PB_0``, ``PB_1``, and ``PB_2`` are multiplexed with board USB and camera
    control signals.  Do not run a conflicting peripheral while using these
    pins for SPI1, and verify the EVK connection before installing the
-   PB1-to-PB2 loopback jumper.
+   PB_1-to-PB_2 loopback jumper.
 
 After rebuilding and booting NuttX, verify that ``/dev/spi1`` is present and
 run::
@@ -526,7 +619,7 @@ run::
 Matching transmitted and received bytes validate the SPI1 pin multiplexing,
 master transfer, interrupt dispatch, and completion path.  The SPI clock is
 active only while data is transferred.  To measure its frequency, capture a
-clock burst on ``PB0`` and measure between steady-state RSPCK edges rather
+clock burst on ``PB_0`` and measure between steady-state RSPCK edges rather
 than between separate transfers.
 
 Channel 0 master to channel 2 slave test
@@ -539,15 +632,15 @@ The intended inter-channel wiring is:
 
    * - Channel 0 master
      - Channel 2 slave
-   * - MOSI ``P90``
-     - MOSI ``PB4``
-   * - MISO ``P91``
-     - MISO ``PB3``
-   * - RSPCK ``P92``
-     - RSPCK ``PB5``
+   * - MOSI ``P9_0``
+     - MOSI ``PB_4``
+   * - MISO ``P9_1``
+     - MISO ``PB_3``
+   * - RSPCK ``P9_2``
+     - RSPCK ``PB_5``
 
-For the default 3-wire mode, do not connect channel 0 CS ``P93`` to channel 2
-SSL0 ``PA7``.  The slave does not use SSL in this mode.  Select 3-wire mode
+For the default 3-wire mode, do not connect channel 0 SSL ``P9_3`` to channel
+2 SSL ``PA_7``.  The slave does not use SSL in this mode.  Select 3-wire mode
 explicitly when reproducing this setup::
 
    CONFIG_RZV2H_SPI_CHANNEL_0_3WIRE=y
@@ -559,8 +652,8 @@ connection::
    CONFIG_RZV2H_SPI_CHANNEL_0_4WIRE=y
    CONFIG_RZV2H_SPI_CHANNEL_2_4WIRE=y
 
-Connect channel 0 SSL0 ``P93`` to channel 2 SSL0 ``PA7``.  The board
-configures ``P93`` as the native SSLA0 peripheral output and ``PA7`` as the
+Connect channel 0 SSLA0 ``P9_3`` to channel 2 SSLC0 ``PA_7``.  The board
+configures ``P9_3`` as the native SSLA0 peripheral output and ``PA_7`` as the
 native SSLC0 peripheral input.
 
 The ``nsh-spi`` configuration already selects channel 0 master, channel 2
@@ -1124,8 +1217,8 @@ three use mode 0 and 8-bit words.  The master devices are registered as
 ``/dev/spi0`` and ``/dev/spi1``.  The slave is registered as
 ``/dev/spislv2`` and uses a four-word default listen transfer.
 
-For channel 1 loopback validation, connect PB1 to PB2 and use the documented
-``spi exch -b1`` command.
+For channel 1 loopback validation, connect ``PB_1`` to ``PB_2`` and use the
+documented ``spi exch -b1`` command.
 
 pwm
 ---

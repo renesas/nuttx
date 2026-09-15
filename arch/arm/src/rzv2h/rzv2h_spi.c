@@ -56,6 +56,8 @@
 #  include <nuttx/spi/slave.h>
 #endif
 
+#include <arch/board/board.h>
+
 #include "chip.h"
 #include "rzv2h_fsp_err.h"
 #include "rzv2h_irq.h"
@@ -315,8 +317,7 @@ static spi_b_extended_cfg_t g_spi0_ext_cfg =
   .spi_clksyn       = RZV2H_SPI_CHANNEL_0_WIRE_MODE,
   .spi_comm         = SPI_B_COMMUNICATION_FULL_DUPLEX,
   .ssl_polarity     = SPI_B_SSLP_LOW,
-  .ssl_select       =
-    (spi_b_ssl_select_t)CONFIG_RZV2H_SPI_CHANNEL_0_SSL,
+  .ssl_select       = (spi_b_ssl_select_t)BOARD_SPI0_SSL_SELECT,
   .mosi_idle        = SPI_B_MOSI_IDLE_VALUE_FIXING_DISABLE,
   .parity           = SPI_B_PARITY_MODE_DISABLE,
   .byte_swap        = SPI_B_BYTE_SWAP_DISABLE,
@@ -443,8 +444,7 @@ static spi_b_extended_cfg_t g_spi1_ext_cfg =
   .spi_clksyn       = RZV2H_SPI_CHANNEL_1_WIRE_MODE,
   .spi_comm         = SPI_B_COMMUNICATION_FULL_DUPLEX,
   .ssl_polarity     = SPI_B_SSLP_LOW,
-  .ssl_select       =
-    (spi_b_ssl_select_t)CONFIG_RZV2H_SPI_CHANNEL_1_SSL,
+  .ssl_select       = (spi_b_ssl_select_t)BOARD_SPI1_SSL_SELECT,
   .mosi_idle        = SPI_B_MOSI_IDLE_VALUE_FIXING_DISABLE,
   .parity           = SPI_B_PARITY_MODE_DISABLE,
   .byte_swap        = SPI_B_BYTE_SWAP_DISABLE,
@@ -571,8 +571,7 @@ static spi_b_extended_cfg_t g_spi2_ext_cfg =
   .spi_clksyn       = RZV2H_SPI_CHANNEL_2_WIRE_MODE,
   .spi_comm         = SPI_B_COMMUNICATION_FULL_DUPLEX,
   .ssl_polarity     = SPI_B_SSLP_LOW,
-  .ssl_select       =
-    (spi_b_ssl_select_t)CONFIG_RZV2H_SPI_CHANNEL_2_SSL,
+  .ssl_select       = (spi_b_ssl_select_t)BOARD_SPI2_SSL_SELECT,
   .mosi_idle        = SPI_B_MOSI_IDLE_VALUE_FIXING_DISABLE,
   .parity           = SPI_B_PARITY_MODE_DISABLE,
   .byte_swap        = SPI_B_BYTE_SWAP_DISABLE,
