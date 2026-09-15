@@ -837,60 +837,6 @@ config RZV2H_SPI_CHANNEL_0_4WIRE
 
 endchoice
 
-choice
-	prompt "SPI_B channel 0 SSL pin"
-	default RZV2H_SPI_SSLA0_P93
-	---help---
-		Select the SSL signal and physical pin used as the channel 0
-		chip select.  In 4-wire mode it is a native SPI_B output for a
-		master or input for a slave.  3-wire mode does not configure or
-		use it.
-
-config RZV2H_SPI_SSLA0_P04
-	bool "SSLA0 on P0.4"
-
-config RZV2H_SPI_SSLA0_P34
-	bool "SSLA0 on P3.4"
-
-config RZV2H_SPI_SSLA0_P93
-	bool "SSLA0 on P9.3"
-
-config RZV2H_SPI_SSLA1_P05
-	bool "SSLA1 on P0.5"
-
-config RZV2H_SPI_SSLA1_P35
-	bool "SSLA1 on P3.5"
-
-config RZV2H_SPI_SSLA1_P94
-	bool "SSLA1 on P9.4"
-
-config RZV2H_SPI_SSLA2_P14
-	bool "SSLA2 on P1.4"
-
-config RZV2H_SPI_SSLA2_P36
-	bool "SSLA2 on P3.6"
-
-config RZV2H_SPI_SSLA2_P95
-	bool "SSLA2 on P9.5"
-
-config RZV2H_SPI_SSLA3_P15
-	bool "SSLA3 on P1.5"
-
-config RZV2H_SPI_SSLA3_P37
-	bool "SSLA3 on P3.7"
-
-config RZV2H_SPI_SSLA3_P96
-	bool "SSLA3 on P9.6"
-
-endchoice
-
-config RZV2H_SPI_CHANNEL_0_SSL
-	int
-	default 0 if RZV2H_SPI_SSLA0_P04 || RZV2H_SPI_SSLA0_P34 || RZV2H_SPI_SSLA0_P93
-	default 1 if RZV2H_SPI_SSLA1_P05 || RZV2H_SPI_SSLA1_P35 || RZV2H_SPI_SSLA1_P94
-	default 2 if RZV2H_SPI_SSLA2_P14 || RZV2H_SPI_SSLA2_P36 || RZV2H_SPI_SSLA2_P95
-	default 3 if RZV2H_SPI_SSLA3_P15 || RZV2H_SPI_SSLA3_P37 || RZV2H_SPI_SSLA3_P96
-
 endif # RZV2H_SPI_CHANNEL_0
 
 config RZV2H_SPI_CHANNEL_1
@@ -1005,48 +951,6 @@ config RZV2H_SPI_CHANNEL_1_4WIRE
 
 endchoice
 
-choice
-	prompt "SPI_B channel 1 SSL pin"
-	default RZV2H_SPI_SSLB0_PA4
-	---help---
-		Select the SSL signal and physical pin used as the channel 1
-		chip select.  In 4-wire mode it is a native SPI_B output for a
-		master or input for a slave.  3-wire mode does not configure or
-		use it.
-
-config RZV2H_SPI_SSLB0_P34
-	bool "SSLB0 on P3.4"
-
-config RZV2H_SPI_SSLB0_PA4
-	bool "SSLB0 on PA.4"
-
-config RZV2H_SPI_SSLB1_P36
-	bool "SSLB1 on P3.6"
-
-config RZV2H_SPI_SSLB1_PA5
-	bool "SSLB1 on PA.5"
-
-config RZV2H_SPI_SSLB2_P04
-	bool "SSLB2 on P0.4"
-
-config RZV2H_SPI_SSLB2_PA6
-	bool "SSLB2 on PA.6"
-
-config RZV2H_SPI_SSLB3_P14
-	bool "SSLB3 on P1.4"
-
-config RZV2H_SPI_SSLB3_PA7
-	bool "SSLB3 on PA.7"
-
-endchoice
-
-config RZV2H_SPI_CHANNEL_1_SSL
-	int
-	default 0 if RZV2H_SPI_SSLB0_P34 || RZV2H_SPI_SSLB0_PA4
-	default 1 if RZV2H_SPI_SSLB1_P36 || RZV2H_SPI_SSLB1_PA5
-	default 2 if RZV2H_SPI_SSLB2_P04 || RZV2H_SPI_SSLB2_PA6
-	default 3 if RZV2H_SPI_SSLB3_P14 || RZV2H_SPI_SSLB3_PA7
-
 endif # RZV2H_SPI_CHANNEL_1
 
 config RZV2H_SPI_CHANNEL_2
@@ -1160,48 +1064,6 @@ config RZV2H_SPI_CHANNEL_2_4WIRE
 		peripheral output in master mode or input in slave mode.
 
 endchoice
-
-choice
-	prompt "SPI_B channel 2 SSL pin"
-	default RZV2H_SPI_SSLC0_PA7
-	---help---
-		Select the SSL signal and physical pin used as the channel 2
-		chip select.  In 4-wire mode it is a native SPI_B output for a
-		master or input for a slave.  3-wire mode does not configure or
-		use it.
-
-config RZV2H_SPI_SSLC0_P35
-	bool "SSLC0 on P3.5"
-
-config RZV2H_SPI_SSLC0_PA7
-	bool "SSLC0 on PA.7"
-
-config RZV2H_SPI_SSLC1_P37
-	bool "SSLC1 on P3.7"
-
-config RZV2H_SPI_SSLC1_PA6
-	bool "SSLC1 on PA.6"
-
-config RZV2H_SPI_SSLC2_P05
-	bool "SSLC2 on P0.5"
-
-config RZV2H_SPI_SSLC2_PA5
-	bool "SSLC2 on PA.5"
-
-config RZV2H_SPI_SSLC3_P15
-	bool "SSLC3 on P1.5"
-
-config RZV2H_SPI_SSLC3_PA4
-	bool "SSLC3 on PA.4"
-
-endchoice
-
-config RZV2H_SPI_CHANNEL_2_SSL
-	int
-	default 0 if RZV2H_SPI_SSLC0_P35 || RZV2H_SPI_SSLC0_PA7
-	default 1 if RZV2H_SPI_SSLC1_P37 || RZV2H_SPI_SSLC1_PA6
-	default 2 if RZV2H_SPI_SSLC2_P05 || RZV2H_SPI_SSLC2_PA5
-	default 3 if RZV2H_SPI_SSLC3_P15 || RZV2H_SPI_SSLC3_PA4
 
 endif # RZV2H_SPI_CHANNEL_2
 
