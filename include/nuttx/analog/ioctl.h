@@ -131,6 +131,11 @@
 #define AN_ADS7046_FIRST  (AN_MCP47X6_FIRST + AN_MCP47X6_NCMDS)
 #define AN_ADS7046_NCMDS  3
 
+/* See arch/arm/include/rzv2h/adc.h */
+
+#define AN_RZV2H_FIRST    (AN_ADS7046_FIRST + AN_ADS7046_NCMDS)
+#define AN_RZV2H_NCMDS    1
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/

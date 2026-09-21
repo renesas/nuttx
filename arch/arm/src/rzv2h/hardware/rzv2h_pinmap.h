@@ -32,7 +32,6 @@
 #include <stdint.h>
 
 #include "bsp_api.h"
-#include "r_ioport.h"
 #include "chip.h"
 #include "r_ioport.h"
 
@@ -40,15 +39,21 @@
  * Porting implementation
  ****************************************************************************/
 
-/* Pin configuration encoding. */
+/* Pin configuration encoding with support for input/output. */
 
-#define RZV2H_PINMUX(port, pin, mode) \
+#define RZV2H_PINMUX_CFG(port, pin, mode, cfg) \
   ((gpio_pinset_t) \
     { \
       (uint32_t)(((port) << 8) | (pin)), \
-      IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_PERIPHERAL_PIN | \
-      IOPORT_CFG_SLEW_RATE_FAST | ((uint32_t)(mode) << 24) \
+      IOPORT_CFG_PERIPHERAL_PIN | ((uint32_t)(mode) << 24) | \
+      (cfg) \
     })
+
+/* Pin configuration encoding. */
+
+#define RZV2H_PINMUX(port, pin, mode) \
+  RZV2H_PINMUX_CFG(port, pin, mode, \
+                   IOPORT_CFG_DRIVE_B01 | IOPORT_CFG_SLEW_RATE_FAST)
 
 #define RZV2H_PINMUX_INPUT(port, pin, mode) \
   ((gpio_pinset_t) \
@@ -185,6 +190,24 @@
 
 #define GPIO_SCL8_P0_7_M1   RZV2H_PINMUX(0, 7, 1)
 #define GPIO_SDA8_P0_6_M1   RZV2H_PINMUX(0, 6, 1)
+
+/* ADC_E external trigger pin configuration. */
+
+#define GPIO_ADTRG_P0_4_M4 \
+  RZV2H_PINMUX_CFG(0, 4, 4, IOPORT_CFG_PULLUP_ENABLE | \
+                            IOPORT_CFG_SCHMITT_ENABLE)
+#define GPIO_ADTRG_P0_5_M4 \
+  RZV2H_PINMUX_CFG(0, 5, 4, IOPORT_CFG_PULLUP_ENABLE | \
+                            IOPORT_CFG_SCHMITT_ENABLE)
+#define GPIO_ADTRG_P1_4_M4 \
+  RZV2H_PINMUX_CFG(1, 4, 4, IOPORT_CFG_PULLUP_ENABLE | \
+                            IOPORT_CFG_SCHMITT_ENABLE)
+#define GPIO_ADTRG_P1_5_M4 \
+  RZV2H_PINMUX_CFG(1, 5, 4, IOPORT_CFG_PULLUP_ENABLE | \
+                            IOPORT_CFG_SCHMITT_ENABLE)
+#define GPIO_ADTRG_P9_7_M4 \
+  RZV2H_PINMUX_CFG(9, 7, 4, IOPORT_CFG_PULLUP_ENABLE | \
+                            IOPORT_CFG_SCHMITT_ENABLE)
 
 /* SPI-B channel 0. */
 

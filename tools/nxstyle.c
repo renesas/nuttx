@@ -228,6 +228,7 @@ static const char *g_white_prefix[] =
   "tCpu",            /* Ref:  arch/tricore/src */
   "tId",             /* Ref:  arch/tricore/src */
   "R_IOPORT_",       /* Ref:  arch/arm/src/rzv2h */
+  "R_ADC_E_",        /* Ref:  arch/arm/src/rzv2h */
   "R_SCI_B_UART_",   /* Ref:  arch/arm/src/rzv2h */
   "R_RIIC_",         /* Ref:  arch/arm/src/rzv2h */
   "R_FSP_",          /* Ref:  arch/arm/src/rzv2h */
