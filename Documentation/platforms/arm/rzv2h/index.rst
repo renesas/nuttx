@@ -41,6 +41,7 @@ SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
 SPI         Yes      Interrupt-driven SPI-B on channels 0-2
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
 I2C         Yes      Interrupt-driven RIIC master on channels 0-8
+ADC         Yes      ADC-E unit 0 with 8 analog inputs and group-A scans
 RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
 PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 ==========  =======  ============================================================
@@ -167,6 +168,33 @@ and interrupt priority.
 I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported. The driver
 bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
 sequence to reset slave state machines.
+
+ADC
+---
+
+The ADC-E driver supports the single RZ/V2H ADC0 unit and provides eight
+dedicated analog inputs, ``ANI000`` through ``ANI007``.
+``CONFIG_RZV2H_ADC`` enables the ADC-E driver. The following functions are
+currently supported:
+
+* 8-bit or 12-bit conversion results
+* Polling or scan-end interrupt
+* Software-triggered group-A scans
+* Asynchronous external ``ADTRG`` input triggering in interrupt mode
+* Configurable addition or averaging of results
+* Clear-after-read operation
+* Window A comparison and event status
+
+``ANIOC_TRIGGER`` starts a software-triggered scan or arms the external
+trigger, depending on the selected Kconfig trigger source.
+``ANIOC_GET_NCHANNELS`` reports the number of configured inputs. Window A
+builds also provide ``ANIOC_RZV2H_WINDOW_A_STATUS``.
+
+The scan-end request is connected to a programmable INTC SEL line.
+Currently set ADC's scan-end interrupt-select IRQ number to ``429`` (SEL76).
+
+Group-B and group-C scans, GPT/ELC trigger routing, DMA delivery, and Window B
+comparison are not currently supported.
 
 SPI
 ---

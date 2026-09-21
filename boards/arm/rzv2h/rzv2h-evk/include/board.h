@@ -354,6 +354,10 @@
 #define BOARD_RIIC8_SCL_GPIO  GPIO_SCL8_P0_7_M1
 #define BOARD_RIIC8_SDA_GPIO  GPIO_SDA8_P0_6_M1
 
+/* ADC_E external trigger input. */
+
+#define BOARD_ADC0_ADTRG_GPIO  GPIO_ADTRG_P0_5_M4
+
 /* GPT PWM pin configurations. */
 
 #define BOARD_GPT0_GTIOC_GPIO   GPIO_GTIOC0A_P7_0_M9
