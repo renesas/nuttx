@@ -1344,16 +1344,7 @@ int rzv2h_rtc_initialize(void)
   fsp_err_t  err;
   int        ret;
 
-  /* Step 1: Open the FSP driver. */
-
-  err = R_RTC_Open(&g_rtc_ctrl, &g_rtc_cfg);
-  if (err != FSP_SUCCESS)
-    {
-      rtcerr("R_RTC_Open failed: %d\n", (int)err);
-      return rzv2h_fsp_err_to_errno(err);
-    }
-
-  /* Step 2: Route SELECT slots and attach IRQs. */
+  /* Step 1: Route SELECT slots and attach IRQs. */
 
   ret = rzv2h_intsel_connect_event(CONFIG_RZV2H_RTC_CARRY_INTSEL,
                     RZV2H_IRQSEL_RTC_CUP, BSP_GIC_SPI_DETECT_EDGE);
@@ -1409,9 +1400,46 @@ int rzv2h_rtc_initialize(void)
 
 #endif
 
+  /* Step 2: Open the FSP driver. */
+
+  err = R_RTC_Open(&g_rtc_ctrl, &g_rtc_cfg);
+  if (err != FSP_SUCCESS)
+    {
+      rtcerr("R_RTC_Open failed: %d\n", (int)err);
+      return rzv2h_fsp_err_to_errno(err);
+    }
+
   return OK;
 
 err_close:
   R_RTC_Close(&g_rtc_ctrl);
+
+  /* De-initializte the NuttX IRQ handlers. */
+
+  irq_detach(RZV2H_IRQ_RTC_CARRY);
+  ret = rzv2h_intsel_disconnect_event(CONFIG_RZV2H_RTC_CARRY_INTSEL);
+  if (ret < 0)
+    {
+      rtcerr("IRQSEL un-route carry failed: %d\n", ret);
+    }
+#ifdef CONFIG_RTC_ALARM
+
+  irq_detach(RZV2H_IRQ_RTC_ALARM);
+  ret = rzv2h_intsel_disconnect_event(CONFIG_RZV2H_RTC_ALARM_INTSEL);
+  if (ret < 0)
+    {
+      rtcerr("IRQSEL un-route alarm failed: %d\n", ret);
+    }
+#endif
+#ifdef CONFIG_RTC_PERIODIC
+
+  irq_detach(RZV2H_IRQ_RTC_PERIODIC);
+  ret = rzv2h_intsel_disconnect_event(CONFIG_RZV2H_RTC_PERIODIC_INTSEL);
+  if (ret < 0)
+    {
+      rtcerr("IRQSEL un-route periodic failed: %d\n", ret);
+    }
+#endif
+
   return ret;
 }
