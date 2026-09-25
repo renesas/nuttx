@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_autoleds.c
+ * boards/arm/rzv2h/rzv2h-rdk/src/rzv2h-rdk.h
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,153 +20,122 @@
  *
  ****************************************************************************/
 
+#ifndef __BOARDS_ARM_RZV2H_RZV2H_RDK_SRC_H
+#define __BOARDS_ARM_RZV2H_RZV2H_RDK_SRC_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
 #include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <debug.h>
-
-#include <nuttx/board.h>
-#include <arch/board/board.h>
-
-#include "chip.h"
-#include "arm_internal.h"
-#include "rzv2h_gpio.h"
-
-#ifdef CONFIG_ARCH_LEDS
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/* This array maps LED numbers to GPIO configurations */
+#define LED_DRIVER_PATH "/dev/userleds"
 
 /****************************************************************************
- * Private Functions
+ * Public Types
+ ****************************************************************************/
+
+/* Forward declarations */
+
+struct spi_dev_s;
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#ifndef __ASSEMBLY__
+
+/****************************************************************************
+ * Public Function Prototypes
  ****************************************************************************/
 
 /****************************************************************************
- * Name: led_dumppins
+ * Name: rzv2h_bringup
  ****************************************************************************/
 
-#ifdef LED_VERBOSE
-static void led_dumppins(const char *msg)
-{
-  (void)msg;
-}
-#else
-#  define led_dumppins(m)
+int rzv2h_bringup(void);
+
+/****************************************************************************
+ * Name: rzv2h_gpio_initialize
+ *
+ * Description:
+ *   Initialize GPIO drivers for use with /apps/examples/gpio
+ *
+ * Return Value:
+ *   OK on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_DEV_GPIO
+int rzv2h_gpio_initialize(void);
 #endif
 
 /****************************************************************************
- * Public Functions
+ * Name: board_button_initialize
+ *
+ * Description:
+ *   Initialize buttons
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_ARCH_BUTTONS
+void board_button_initialize(void);
+#endif
+
+/****************************************************************************
+ * Name: board_spi_initialize
+ *
+ * Description:
+ *   Initialize SPI buses
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_RZV2H_SPI_B
+int board_spi_initialize(void);
+#endif
+
+/****************************************************************************
+ * Name: board_sci_spi_initialize
+ *
+ * Description:
+ *   Initialize SCI_B SPI buses
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_RZV2H_SCI_SPI
+int board_sci_spi_initialize(void);
+#endif
+
+/****************************************************************************
+ * Name: rzv2h_appexamples
+ *
+ * Description:
+ *   Run all enabled board example applications
+ *
  ****************************************************************************/
 
 /****************************************************************************
- * Name: board_autoled_initialize
+ * Name: rzv2h_serial_setup
  *
  * Description:
- *   Initialize LED GPIOs so that LEDs can be controlled.
+ *   Configure serial pins for UART operation
  *
  ****************************************************************************/
 
-void board_autoled_initialize(void)
-{
-  ;
-}
+void rzv2h_serial_setup(void);
+
+#ifdef CONFIG_RZV2H_EXAMPLE_SUPPORT
+int rzv2h_appexamples(void);
+#endif
 
 /****************************************************************************
- * Name: board_autoled_on
- *
- * Description:
- *   Set the LED configuration into the ON condition for the state provided
- *   by the led parameter.  This may be one of:
- *
- *   LED_STARTED       - NuttX has been started
- *   LED_HEAPALLOCATE  - Heap has been allocated
- *   LED_IRQSENABLED   - Interrupts enabled
- *   LED_STACKCREATED  - Idle stack created
- *   LED_INIRQ         - In an interrupt handler
- *   LED_SIGNAL        - In a signal handler
- *   LED_ASSERTION     - An assertion failed
- *   LED_PANIC         - The system has crashed
- *
+ * Example application initialization functions
  ****************************************************************************/
 
-void board_autoled_on(int led)
-{
-  /* Active low LEDs: write 0 to turn ON */
-
-  (void)led;
-}
-
-/****************************************************************************
- * Name: board_autoled_off
- *
- * Description:
- *   Set the LED configuration into the OFF condition for the state provided
- *   by the led parameter.
- *
- ****************************************************************************/
-
-void board_autoled_off(int led)
-{
-  /* Active low LEDs: write 1 to turn OFF */
-
-  (void)led;
-}
-
-#endif /* CONFIG_ARCH_LEDS */
-
-/****************************************************************************
- * Name: board_userled_initialize
- *
- * Description:
- *   If CONFIG_ARCH_LEDS is not defined, then the board can provide
- *   application-controlled LED functionality via these functions.
- *
- ****************************************************************************/
-
-#ifndef CONFIG_ARCH_LEDS
-uint32_t board_userled_initialize(void)
-{
-  return 0;
-}
-
-/****************************************************************************
- * Name: board_userled
- *
- * Description:
- *   Set the LED to the on or off state
- *
- ****************************************************************************/
-
-void board_userled(int led, bool ledon)
-{
-  (void)led;
-  (void)ledon;
-}
-
-/****************************************************************************
- * Name: board_userled_all
- *
- * Description:
- *   Set the state of all LEDs
- *
- ****************************************************************************/
-
-void board_userled_all(uint32_t ledset)
-{
-  (void)ledset;
-}
-
-#endif /* !CONFIG_ARCH_LEDS */
+#endif /* __ASSEMBLY__ */
+#endif /* __BOARDS_ARM_RZV2H_RZV2H_RDK_SRC_H */

@@ -112,7 +112,7 @@ config RZV2H_HAVE_RIIC8
 
 menuconfig RZV2H_RIIC_I2C
 	bool "RIIC I2C support"
-	default y
+	default n
 	select RZV2H_I2C
 	---help---
 		Enable the RZ/V2H RIIC I2C driver. Select this option to
