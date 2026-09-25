@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/rzv2h/rzv2h-evk/src/rzv2h_autoleds.c
+ * boards/arm/rzv2h/rzv2h-rdk/src/rzv2h_autoleds.c
  *
  * SPDX-License-Identifier: Apache-2.0
  *

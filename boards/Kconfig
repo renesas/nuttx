@@ -3339,6 +3339,13 @@ config ARCH_BOARD_RZV2H_EVK
 	---help---
 		Renesas RZV2H Evaluation Kit featuring the R9A09G057 (Cortex-R8) chip.
 
+config ARCH_BOARD_RZV2H_RDK
+	bool "Renesas RZV2H-RDK"
+	depends on ARCH_CHIP_R9A09G057
+	select ARCH_HAVE_LEDS
+	---help---
+		Renesas RZV2H Development Kit featuring the R9A09G057 (Cortex-R8) chip.
+
 config ARCH_BOARD_TWR_K60N512
 	bool "FreeScale TWR-K60N512 development board"
 	depends on ARCH_CHIP_MK60N512VMD100
@@ -3999,6 +4006,7 @@ config ARCH_BOARD
 	default "tm4c129e-launchpad"           if ARCH_BOARD_TM4C129E_LAUNCHPAD
 	default "tms570ls31x-usb-kit"          if ARCH_BOARD_TMS570LS31X_USB_KIT
 	default "rzv2h-evk"                    if ARCH_BOARD_RZV2H_EVK
+	default "rzv2h-rdk"                    if ARCH_BOARD_RZV2H_RDK
 	default "lilygo_tbeam_lora_gps"        if ARCH_BOARD_LILYGO_TBEAM_LORA_GPS
 	default "ttgo_lora_esp32"              if ARCH_BOARD_TTGO_LORA_ESP32
 	default "ttgo_t_display_esp32"         if ARCH_BOARD_TTGO_T_DISPLAY_ESP32
@@ -4852,6 +4860,9 @@ source "boards/arm/tms570/tms570ls31x-usb-kit/Kconfig"
 endif
 if ARCH_BOARD_RZV2H_EVK
 source "boards/arm/rzv2h/rzv2h-evk/Kconfig"
+endif
+if ARCH_BOARD_RZV2H_RDK
+source "boards/arm/rzv2h/rzv2h-rdk/Kconfig"
 endif
 if ARCH_BOARD_XMC4500RELAX
 source "boards/arm/xmc4/xmc4500-relax/Kconfig"
