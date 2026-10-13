@@ -30,6 +30,8 @@
 #include <sys/mount.h>
 #include <syslog.h>
 
+#include <arch/barriers.h>
+#include <nuttx/arch.h>
 #include <nuttx/board.h>
 #include <nuttx/leds/userled.h>
 
@@ -132,6 +134,7 @@ int rzv2h_bringup(void)
   /* Mount the procfs file system */
 
   ret = mount(NULL, "/proc", "procfs", 0, NULL);
+  UP_DSB();
   if (ret < 0)
     {
       syslog(LOG_ERR, "ERROR: Failed to mount procfs at /proc: %d\n", ret);
@@ -140,6 +143,7 @@ int rzv2h_bringup(void)
 
 #if defined(CONFIG_DEV_GPIO)
   ret = rzv2h_gpio_initialize();
+  UP_DSB();
   if (ret < 0)
     {
       syslog(LOG_ERR, "ERROR: rzv2h_gpio_initialize() failed: %d\n", ret);
@@ -153,6 +157,15 @@ int rzv2h_bringup(void)
     {
       syslog(LOG_ERR, "ERROR: board_spi_initialize() failed: %d\n", ret);
       return ret;
+    }
+#endif
+
+#ifdef CONFIG_RZV2H_QSPI
+  ret = rzv2h_qspi_initialize();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR,
+             "ERROR: rzv2h_qspi_initialize() failed: %d\n", ret);
     }
 #endif
 

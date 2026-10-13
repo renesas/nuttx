@@ -405,4 +405,62 @@
 #define GPIO_GTIOC15B_P3_7_M11   RZV2H_PINMUX(3, 7, 11)
 #define GPIO_GTIOC15B_P6_7_M11   RZV2H_PINMUX(6, 7, 11)
 
+/* xSPI0 (QSPI) pin configurations.
+ *
+ * Drive strength (IOPORT_CFG_DRIVE_B11) matches the Renesas HAL reference
+ * pin table (RZV2HCR8_0/rzv_gen/pin_data.c), which sets it on every xSPI0
+ * pin including CKP/CS0N/RESET0N -- IOPORT_CFG_SPECIAL_PURPOSE_PORT_
+ * INPUT_DISABLE alone is 0x00000000 and leaves the IOLH drive-strength
+ * field at its hardware reset value instead of the intended B11 (maximum)
+ * setting.
+ */
+
+#define GPIO_XSPI0_CKN \
+  (gpio_pinset_t){BSP_IO_XSPI0_CKN, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_DISABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_CKP \
+  (gpio_pinset_t){BSP_IO_XSPI0_CKP, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_DISABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_CS0N \
+  (gpio_pinset_t){BSP_IO_XSPI0_CS0N, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_DISABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_RESET0N \
+  (gpio_pinset_t){BSP_IO_XSPI0_RESET0N, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_DISABLE | IOPORT_CFG_DRIVE_B11)}
+
+/* xSPI0_DS (Data Strobe): required for any DDR protocol (4S-4D-4D,
+ * 8D-8D-8D) per the hardware manual's Figure 10.1-24 "DDR Transmission
+ * and Reception Timing" -- the flash drives/samples this line to latch
+ * data on both clock edges.  Not needed by (and not configured for) any
+ * SDR-only protocol.  Bidirectional like IO0-3, hence INPUT_ENABLE
+ * rather than CKP/CS0N/RESET0N's INPUT_DISABLE.
+ */
+
+#define GPIO_XSPI0_DS \
+  (gpio_pinset_t){BSP_IO_XSPI0_DS, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_DRIVE_B11)}
+
+/* xSPI0_CS1N: unlike CKP/CS0N/RESET0N/IO0-3 above, this signal is not
+ * one of the xSPI0 peripheral's dedicated special-purpose pins -- it is
+ * an ordinary PFC-muxed function on port pin P1_0 (P10, Func15 in the
+ * hardware manual's pin function table).
+ */
+
+#define GPIO_XSPI0_CS1N \
+  RZV2H_PINMUX_CFG(1, 0, 15, \
+                   IOPORT_CFG_DRIVE_B11 | IOPORT_CFG_SLEW_RATE_FAST)
+
+#define GPIO_XSPI0_IO0 \
+  (gpio_pinset_t){BSP_IO_XSPI0_IO0, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_IO1 \
+  (gpio_pinset_t){BSP_IO_XSPI0_IO1, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_IO2 \
+  (gpio_pinset_t){BSP_IO_XSPI0_IO2, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_DRIVE_B11)}
+#define GPIO_XSPI0_IO3 \
+  (gpio_pinset_t){BSP_IO_XSPI0_IO3, \
+    (IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE | IOPORT_CFG_DRIVE_B11)}
+
 #endif /* __ARCH_ARM_SRC_RZV2H_HARDWARE_RZV2H_PINMAP_H */

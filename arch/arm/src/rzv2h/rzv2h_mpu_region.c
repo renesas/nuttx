@@ -95,10 +95,14 @@ struct mpu_region_s g_mpu_region_table[] =
 
   /* region 2 for core0 (RCPU-SRAM Cacheable)
    *
-   * The whole image lives here - .vectors, .text, .data, .bss, the IDLE
-   * stack and the heap are all inside 0x08180000..0x081FFFFF.  This entry is
-   * the data default: read/write and XN, so nothing in the heap, in a stack
-   * or in .data can ever be executed.
+   * Covers .vectors/.text/.data/.bss/IDLE stack/heap
+   * (0x08180000..0x081BFFFF). Data default: read/write and XN.
+   *
+   * Sized at 256 KB, not the full 512 KB RCPU-SRAM span: per the HAL's
+   * MPU table, 0x081C0000..0x08200000 is core1's private SRAM, not
+   * reachable from core0. Covering the full 512 KB here would let the
+   * linker/CONFIG_RAM_SIZE hand out heap/stack into core1's half, and
+   * any access there faults as a bus error reported arbitrarily later.
    *
    * XN is only safe because MPU_REGION_CODE below re-maps the code range as
    * executable, and being a higher-numbered region it wins where the two
@@ -129,12 +133,19 @@ struct mpu_region_s g_mpu_region_table[] =
     MPU_RACR_S | MPU_RACR_B | MPU_RACR_XN              /* attribute */
   },
 
-  /* region 4 (xSPI) */
+  /* region 4 (xSPI)
+   *
+   * Read-only, cacheable, matching the CR8 reference table (region 5).
+   * Nothing here writes through the mapped window -- page-program uses
+   * DirectTransfer instead -- so a stray store faults immediately
+   * rather than stalling the CPU in the write-buffer flush.
+   */
 
   {
     0x20000000,                                        /* base address */
     MPU_SIZE_MB(256),                                  /* size */
-    MPU_RACR_AP_RORO | MPU_RACR_TEX(4) | MPU_RACR_B    /* attribute */
+    MPU_RACR_AP_RORO | MPU_RACR_TEX(1) | MPU_RACR_C |
+    MPU_RACR_B | MPU_RACR_XN                           /* attribute */
   },
 
   /* region 5 (code window: .vectors load image, .text, .rodata,

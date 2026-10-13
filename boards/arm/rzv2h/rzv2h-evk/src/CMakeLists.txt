@@ -47,7 +47,9 @@ if(CONFIG_DEV_GPIO)
   list(APPEND SRCS rzv2h_gpio.c)
 endif()
 
-# Peripheral driver initialization
+if(CONFIG_RZV2H_QSPI)
+  list(APPEND SRCS rzv2h_qspi.c)
+endif()
 
 if(CONFIG_RZV2H_ADC)
   list(APPEND SRCS rzv2h_adc.c)

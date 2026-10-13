@@ -27,17 +27,6 @@
 
 #include "rzv2h_clockconfig.h"
 #include <bsp_api.h>
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
@@ -46,6 +35,14 @@
 /****************************************************************************
  * Name: rzv2h_clockconfig
  ****************************************************************************/
+
+/* Confirmed on hardware: bsp_clock_init() alone is enough for xSPI
+ * DirectTransfer (reads/WREN/status/program). The CM33 PD_XSPI_ON
+ * reset/clock/TZC/master-access sequence is not needed since the
+ * memory-mapped write window is never used -- and driving it from a
+ * CR8-only boot has been observed to break DirectTransfer instead
+ * (asynchronous external abort). Leave as-is until proven otherwise.
+ */
 
 void rzv2h_clockconfig(void)
 {

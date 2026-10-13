@@ -682,6 +682,15 @@ config RZV2H_SCI_B_UART9
 	select SCI9_SERIALDRIVER
 
 endif # RZV2H_UART_SCI
+config RZV2H_QSPI
+	bool "QSPI (xSPI) support"
+	default n
+	---help---
+		Enable support for the RZ/V2H xSPI controller in QSPI mode,
+		used to talk to a QSPI-capable SPI NOR flash device through
+		NuttX's generic QSPI interface (struct qspi_dev_s).  The attached
+		flash type, wiring and partitioning are board properties and are
+		configured in the board's Kconfig.
 
 menuconfig RZV2H_ADC
 	bool "ADC-E support"
