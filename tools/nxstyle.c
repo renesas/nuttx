@@ -237,6 +237,8 @@ static const char *g_white_prefix[] =
   "RCR",             /* Ref:  arch/arm/src/rzv2h */
   "R_BSP",           /* Ref:  arch/arm/src/rzv2h */
   "R_GPT_",          /* Ref:  arch/arm/src/rzv2h */
+  "R_CPG",           /* Ref:  arch/arm/src/rzv2h */
+  "R_XSPI_",         /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*
    * ROS 2 standard message package names and rosidl scalar type names
@@ -291,6 +293,18 @@ static const char *g_white_suffix[] =
 
 static const char *g_white_content_list[] =
 {
+  /* Ref:  arch/arm/src/rzv2h (Renesas FSP register bitfield union
+   * member, e.g. R_CPG->CPG_CSDIV0_b.DIVCTL3)
+   */
+
+  "CPG_CSDIV0_b",
+
+  /* Ref:  arch/arm/src/rzv2h/rzv2h_qspi.c (Renesas FSP register
+   * bitfield union member)
+   */
+
+  "LIOCTL_b",
+
   /* Ref:
    * nuttx-apps/examples/wamr_module/module_hello.c
    * nuttx-apps/interpreters/wamr/wamr_custom_init.c

@@ -52,7 +52,7 @@
 
 #define RZV2H_PTISR_CLR       (1 << 0)  /* Write 1 to clear the event flag */
 
-/* The MPCore Private Timer clock is I6CLK / 2.
+/* The MPCore Private Timer clock is I6CLK / 4.
  * Use the BSP-defined clock value instead of a hardcoded frequency.
  */
 

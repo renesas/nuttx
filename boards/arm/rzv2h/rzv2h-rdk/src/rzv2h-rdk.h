@@ -112,6 +112,22 @@ int board_sci_spi_initialize(void);
 #endif
 
 /****************************************************************************
+ * Name: rzv2h_qspi_initialize
+ *
+ * Description:
+ *   Initialize the xSPI bus in QSPI mode and register the attached SPI
+ *   NOR flash as an MTD device, optionally mounted with a filesystem.
+ *
+ * Return Value:
+ *   OK on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_RZV2H_QSPI
+int rzv2h_qspi_initialize(void);
+#endif
+
+/****************************************************************************
  * Name: rzv2h_appexamples
  *
  * Description:
@@ -128,6 +144,18 @@ int board_sci_spi_initialize(void);
  ****************************************************************************/
 
 void rzv2h_serial_setup(void);
+
+/****************************************************************************
+ * Name: rzv2h_qspi_setup
+ *
+ * Description:
+ *   Configure the xSPI0 pins (SPCLK/IO0-3/CS0) for QSPI operation.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_RZV2H_QSPI
+void rzv2h_qspi_setup(void);
+#endif
 
 #ifdef CONFIG_RZV2H_EXAMPLE_SUPPORT
 int rzv2h_appexamples(void);
