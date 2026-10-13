@@ -20,8 +20,11 @@
  *
  ****************************************************************************/
 
+#include <nuttx/config.h>
+#include <arch/board/rzv2h-rptun.h>
+
 /*
- * RZ/V2H Cortex-R8_0 linker script for NuttX debug loading.
+ * RZ/V2H Cortex-R8_0 linker script for NuttX.
  *
  */
 
@@ -31,11 +34,17 @@
  *   ITCM  core 0x00000000, 128 KB, AXI alias 0x12040000
  *   DTCM  core 0x00020000, 128 KB, AXI alias 0x12060000
  *
- * Nothing is linked at 0x00000000.  ITCM is not mapped until arm_boot()
- * programs the ATCM region register, which happens long after the debugger
- * has loaded the image, so a section with an LMA of 0 could never be written.
- * The exception table is therefore linked into RAM and copied into ITCM by
- * arm_boot(); see VECTOR_ADDRESS in rzv2h_start.c.
+ * Both build types keep a load copy of the vector table at the start of
+ * RAM, which arm_boot() copies to ITCM.  CR8_0 takes its reset vector from
+ * ITCM, so before releasing CR8_0 from reset U-Boot writes a fixed two-word
+ * trampoline there through the AXI alias:
+ *
+ *   0x0: 0xe51ff004  ldr pc, [pc, #-4]
+ *   0x4: 0x08180000  ORIGIN(RAM), the load copy of the table
+ *
+ * The reset slot of the load copy then branches to __start.  A
+ * debugger-loaded image is entered at __start directly; ITCM is not mapped
+ * until arm_boot() programs the ATCM region register.
  */
 
 MEMORY
@@ -43,16 +52,29 @@ MEMORY
     ITCM (rwx)     : ORIGIN = 0x00000000, LENGTH = 128K
     DTCM (rwx)     : ORIGIN = 0x00020000, LENGTH = 128K
     RAM  (rwx)     : ORIGIN = 0x08180000, LENGTH = 512K
+#ifdef CONFIG_RZV2H_RPTUN
+    RSCTBL (rw)    : ORIGIN = BOARD_RPTUN_RESOURCE_ADDR,
+                     LENGTH = BOARD_RPTUN_RESOURCE_SIZE
+#endif
 }
 
 OUTPUT_ARCH(arm)
 EXTERN(_vector_start)
 ENTRY(__start)
 
-/* Start of the read-only part of the image.  Everything from here up to
- * __mpu_code_end (.vectors load image, .text, .rodata, .init_section,
- * .ARM.exidx) is covered by one MPU region programmed RO + executable; see
- * g_mpu_region_table[] in arch/arm/src/rzv2h/rzv2h_mpu_region.c.
+#ifdef CONFIG_RZV2H_RPTUN
+/* The generated reference MHU_B_NS instance leaves p_shared_memory NULL.
+ * FSP uses this base symbol and adds eight bytes per logical MHU channel.
+ */
+
+PROVIDE(__mhu_shmem_start = BOARD_RPTUN_MHU_SHMEM_ADDR);
+#endif
+
+/* Start of the read-only SRAM part of the image.  Everything from here up to
+ * __mpu_code_end (the vector load image, .text, .rodata, .init_section and
+ * .ARM.exidx) is covered by one MPU region programmed
+ * RO + executable; see g_mpu_region_table[] in
+ * arch/arm/src/rzv2h/rzv2h_mpu_region.c.
  */
 
 __mpu_code_start = ABSOLUTE(ORIGIN(RAM));
@@ -60,12 +82,17 @@ __mpu_code_start = ABSOLUTE(ORIGIN(RAM));
 SECTIONS
 {
 
-    /* Load image of the ARM exception table.  arm_boot() copies
-     * _vector_start.._vector_end to VECTOR_ADDRESS (0x00000000, ITCM).  The
-     * table is position independent: the eight branch slots are
-     * "ldr pc, [pc, #24]", PC-relative inside the 64-byte block, and the
-     * eight handler entries are absolute addresses
-     * [armv7-r/arm_vectortab.S:65].
+    /* The table always has a load copy at the start of RAM, at
+     * _vector_load, which arm_boot() copies to VECTOR_ADDRESS (ITCM).
+     *
+     * The U-Boot image links the table at its ITCM run address and stores
+     * it in RAM (AT> RAM), so nuttx_uboot.bin starts with it.  CR8_0
+     * reaches it at reset through the U-Boot trampoline described at the
+     * top of this file, so the load copy has to stay at ORIGIN(RAM).
+     *
+     * The debugger image links the table in RAM.  That works because the
+     * table is position independent: its branch slots are PC-relative and
+     * its handler entries contain absolute addresses.
      */
 
     .vectors :
@@ -74,7 +101,22 @@ SECTIONS
         _vector_start = ABSOLUTE(.);
         KEEP(*(.vectors))
         _vector_end = ABSOLUTE(.);
+#ifdef CONFIG_RZV2H_UBOOT_IMAGE
+    } > ITCM AT> RAM
+#else
     } > RAM
+#endif
+
+    /* Where the table is stored in the image, as opposed to _vector_start,
+     * where it runs.  The two are equal in debugger builds.
+     */
+
+    _vector_load = LOADADDR(.vectors);
+
+#ifdef CONFIG_RZV2H_UBOOT_IMAGE
+    ASSERT(_vector_load == ORIGIN(RAM),
+           "U-Boot reset trampoline expects .vectors at ORIGIN(RAM)")
+#endif
     .text :
     {
         . = ALIGN(4);
@@ -153,6 +195,23 @@ SECTIONS
     __mpu_code_end = ABSOLUTE(.);
 
     _eronly = ABSOLUTE(.);
+
+#ifdef CONFIG_RZV2H_RPTUN
+    /* Multi-OS sample maps the resource table directly at 0x42f00000 through
+     * UIO.  Like the Renesas reference linker script, keep the live table
+     * NOLOAD and initialize it from a template during board bring-up.
+     */
+
+    .resource_table (NOLOAD) :
+    {
+        . = ALIGN(8);
+        KEEP(*(.resource_table))
+        . = ALIGN(4);
+    } > RSCTBL
+
+    ASSERT(SIZEOF(.resource_table) <= BOARD_RPTUN_RESOURCE_SIZE,
+           "RZ/V2H resource table exceeds the reserved region")
+#endif
 
     .data :
     {

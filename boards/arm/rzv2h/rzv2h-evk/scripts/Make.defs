@@ -78,3 +78,22 @@ CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(D
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rzv_gen
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis$(DELIM)include$(DELIM)cr
+
+# Generate the raw image U-Boot loads at CONFIG_RAM_START before starting
+# CR8_0 from reset.  Select the SRAM sections explicitly so distant NOLOAD
+# OpenAMP regions can never create padding in the raw binary.  .vectors runs
+# from ITCM, but its load copy is the first thing in RAM and the U-Boot reset
+# trampoline in ITCM jumps to it, so it has to be in the image; without it
+# nuttx_uboot.bin would also start at .text instead of at CONFIG_RAM_START.
+
+ifeq ($(CONFIG_RZV2H_UBOOT_IMAGE),y)
+define POSTBUILD
+	@echo "CP: nuttx_uboot.bin"
+	$(Q) $(OBJCOPY) $(OBJCOPYARGS) -O binary \
+		--only-section=.vectors --only-section=.text \
+		--only-section=.init_section \
+		--only-section=.ARM.extab --only-section=.ARM.exidx \
+		--only-section=.data $(BIN) nuttx_uboot.bin
+	$(Q) echo nuttx_uboot.bin >> nuttx.manifest
+endef
+endif

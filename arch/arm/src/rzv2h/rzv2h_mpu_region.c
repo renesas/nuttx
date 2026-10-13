@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <sys/param.h>
 #include <nuttx/cache.h>
+#include <arch/board/board.h>
 #include "rzv2h_mpu_region.h"
 
 /****************************************************************************
@@ -95,14 +96,11 @@ struct mpu_region_s g_mpu_region_table[] =
 
   /* region 2 for core0 (RCPU-SRAM Cacheable)
    *
-   * Covers .vectors/.text/.data/.bss/IDLE stack/heap
-   * (0x08180000..0x081BFFFF). Data default: read/write and XN.
-   *
-   * Sized at 256 KB, not the full 512 KB RCPU-SRAM span: per the HAL's
-   * MPU table, 0x081C0000..0x08200000 is core1's private SRAM, not
-   * reachable from core0. Covering the full 512 KB here would let the
-   * linker/CONFIG_RAM_SIZE hand out heap/stack into core1's half, and
-   * any access there faults as a bus error reported arbitrarily later.
+   * The SRAM image lives here - .text, .data, .bss, the IDLE stack and the
+   * heap are all inside 0x08180000..0x081FFFFF.  Both build types also keep
+   * the load copy of the vector table here; the table itself runs in ITCM.
+   * This entry is the data default: read/write and XN, so nothing in the
+   * heap, in a stack or in .data can ever be executed.
    *
    * XN is only safe because MPU_REGION_CODE below re-maps the code range as
    * executable, and being a higher-numbered region it wins where the two
@@ -148,8 +146,32 @@ struct mpu_region_s g_mpu_region_table[] =
     MPU_RACR_B | MPU_RACR_XN                           /* attribute */
   },
 
-  /* region 5 (code window: .vectors load image, .text, .rodata,
-   * .init_section, .ARM.exidx)
+#ifdef CONFIG_RZV2H_RPTUN
+  /* region 5 (OpenAMP resource table and MHU shared memory)
+   *
+   * Normal, non-cacheable, shareable memory, matching regions 8 and 9 in
+   * the Renesas CR8_0 reference project.
+   */
+
+  {
+    BOARD_RPTUN_RESOURCE_ADDR,                         /* base address */
+    MPU_SIZE_KB(8),                                    /* size */
+    MPU_RACR_AP_RWRW | MPU_RACR_TEX(1) | MPU_RACR_S |
+    MPU_RACR_XN                                        /* attribute */
+  },
+
+  /* region 6 (OpenAMP vrings and RPMsg buffers) */
+
+  {
+    BOARD_RPTUN_RPMSG_ADDR,                            /* base address */
+    BOARD_RPTUN_RPMSG_MPU_SIZE,                        /* size */
+    MPU_RACR_AP_RWRW | MPU_RACR_TEX(1) | MPU_RACR_S |
+    MPU_RACR_XN                                        /* attribute */
+  },
+#endif
+
+  /* Last region (SRAM code window: .text, .rodata, .init_section,
+   * .ARM.exidx, and the .vectors load image)
    *
    * Read-only and executable.  Base and size are filled in from the link map
    * by rzv2h_mpuinit(); see the note on MPU_REGION_CODE above for why this

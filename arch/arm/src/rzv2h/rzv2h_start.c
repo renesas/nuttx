@@ -60,8 +60,9 @@
  * Private Data
  ****************************************************************************/
 
-extern uint8_t _vector_start[]; /* Beginning of vector block */
-extern uint8_t _vector_end[];   /* End+1 of vector block */
+extern uint8_t _vector_start[]; /* Beginning of vector block (run address) */
+extern uint8_t _vector_end[];   /* End+1 of vector block (run address) */
+extern uint8_t _vector_load[];  /* Load copy of the vector block in RAM */
 
 /****************************************************************************
  * Private function
@@ -112,14 +113,16 @@ inline static void rzv2h_dtcmenable(void)
  * Name: rzv2h_vectorsetup
  *
  * Description:
- *   Copy the ARM exception table into ITCM at VECTOR_ADDRESS.
+ *   Publish the ARM exception table in ITCM at VECTOR_ADDRESS.
  *
  *   CONFIG_ARCH_LOWVECTORS is mandatory here, so the core fetches every
  *   exception vector from 0x00000000 and the table has to be present there
- *   before interrupts or aborts can be taken.  It cannot simply be linked at
- *   0: ITCM is not mapped until rzv2h_itcmenable() runs, which is long after
- *   the debugger has loaded the image, so the linker keeps the table in RAM
- *   and it is copied here.
+ *   before interrupts or aborts can be taken.  Both image types keep a load
+ *   copy of the table in RAM at _vector_load, and this copies it to ITCM.
+ *   _vector_start cannot be the source: in a U-Boot image it is the ITCM
+ *   run address.  In a U-Boot image ITCM only holds the two-word reset
+ *   trampoline U-Boot wrote there (see the board linker script), and this
+ *   copy replaces it with the full table.
  *
  *   Must run before anything that could raise an exception.
  *
@@ -139,8 +142,9 @@ static void rzv2h_vectorsetup(void)
 
   volatile uintptr_t base   = VECTOR_ADDRESS;
   volatile uint32_t *dest   = (volatile uint32_t *)base;
-  const uint32_t    *src    = (const uint32_t *)_vector_start;
-  const uint32_t    *end    = (const uint32_t *)_vector_end;
+  const uint32_t    *src    = (const uint32_t *)_vector_load;
+  const uint32_t    *end    = (const uint32_t *)
+                              (_vector_load + (_vector_end - _vector_start));
 
   while (src < end)
     {
