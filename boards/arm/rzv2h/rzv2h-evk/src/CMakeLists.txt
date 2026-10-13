@@ -51,6 +51,12 @@ if(CONFIG_RZV2H_QSPI)
   list(APPEND SRCS rzv2h_qspi.c)
 endif()
 
+if(CONFIG_RZV2H_RPTUN)
+  list(APPEND SRCS rzv2h_rptun.c rzv2h_rsctable.c)
+endif()
+
+# Peripheral driver initialization
+
 if(CONFIG_RZV2H_ADC)
   list(APPEND SRCS rzv2h_adc.c)
 endif()

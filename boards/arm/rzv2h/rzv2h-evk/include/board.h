@@ -29,6 +29,10 @@
 
 #include <nuttx/config.h>
 
+#ifdef CONFIG_RZV2H_RPTUN
+#  include "rzv2h-rptun.h"
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -76,6 +80,13 @@
 #define LED_PANIC           0
 
 /* Peripheral definitions ***************************************************/
+
+/* OpenAMP/RPMsg layout *****************************************************
+ *
+ * These constants match the RZ/V2H Multi-OS Package v3.3.0 CR8_0 channel 0
+ * and channel 1 UIO layouts.  CA55 physical addresses, CR8 virtual addresses
+ * and OpenAMP device addresses are identical for this board configuration.
+ */
 
 #ifdef CONFIG_RZV2H_SPI_B
 
