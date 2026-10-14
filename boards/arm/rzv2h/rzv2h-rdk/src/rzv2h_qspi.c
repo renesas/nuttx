@@ -384,6 +384,11 @@ int rzv2h_qspi_initialize(void)
     {
       syslog(LOG_ERR, "ERROR: syslog_file_channel() failed\n");
     }
+  else
+    {
+      syslog(LOG_INFO, "syslog file test\n");
+      syslog_flush();
+    }
 #endif
 #endif
 
