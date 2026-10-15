@@ -98,6 +98,8 @@ int rzv2h_bringup(void)
     {
       syslog(LOG_ERR,
              "ERROR: rzv2h_qspi_initialize() failed: %d\n", ret);
+      return ret;
+    }
 #endif
 
 #ifdef CONFIG_RZV2H_RPTUN
