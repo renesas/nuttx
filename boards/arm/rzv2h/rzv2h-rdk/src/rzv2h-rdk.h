@@ -116,7 +116,7 @@ int board_spi_initialize(void);
  * Name: board_sci_spi_initialize
  *
  * Description:
- *   Initialize SCI_B SPI buses
+ *   Initialize SCI SPI buses
  *
  ****************************************************************************/
 

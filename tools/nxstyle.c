@@ -230,6 +230,7 @@ static const char *g_white_prefix[] =
   "R_IOPORT_",       /* Ref:  arch/arm/src/rzv2h */
   "R_ADC_E_",        /* Ref:  arch/arm/src/rzv2h */
   "R_SCI_B_UART_",   /* Ref:  arch/arm/src/rzv2h */
+  "R_SCI_B_I2C_",    /* Ref:  arch/arm/src/rzv2h */
   "R_RIIC_",         /* Ref:  arch/arm/src/rzv2h */
   "R_FSP_",          /* Ref:  arch/arm/src/rzv2h */
   "R_SPI_B_",        /* Ref:  arch/arm/src/rzv2h */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/rzv2h/rzv2h_i2c.c
+ * arch/arm/src/rzv2h/rzv2h_riic_i2c.c
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -53,7 +53,7 @@
 #include "arm_internal.h"
 
 #include "r_riic_master.h"
-#include "rzv2h_i2c.h"
+#include "rzv2h_riic_i2c.h"
 #include "rzv2h_irq.h"
 #include "rzv2h_fsp_err.h"
 #include "r_ioport_api.h"
@@ -80,22 +80,9 @@
 
 /* Configuration ************************************************************/
 
-#ifndef CONFIG_RZV2H_I2C_MERGE_BUFSIZE
-#  define CONFIG_RZV2H_I2C_MERGE_BUFSIZE 16
-#endif
-
-/* Default I2C timeout: 500ms if not configured via Kconfig */
-
-#ifndef CONFIG_RZV2H_I2CTIMEOSEC
-#  define CONFIG_RZV2H_I2CTIMEOSEC 0
-#endif
-
-#ifndef CONFIG_RZV2H_I2CTIMEOMS
-#  define CONFIG_RZV2H_I2CTIMEOMS 500
-#endif
-
-#define RZV2H_I2CTIMEOTICKS \
-  (SEC2TICK(CONFIG_RZV2H_I2CTIMEOSEC) + MSEC2TICK(CONFIG_RZV2H_I2CTIMEOMS))
+#define RZV2H_RIIC_I2C_TIMEOTICKS \
+  (SEC2TICK(CONFIG_RZV2H_RIIC_I2C_TIMEOSEC) + \
+   MSEC2TICK(CONFIG_RZV2H_RIIC_I2C_TIMEOMS))
 
 /* Debug ********************************************************************/
 
@@ -105,10 +92,10 @@
  */
 
 #ifndef CONFIG_I2C_TRACE
-#  define rzv2h_i2c_tracereset(p)
-#  define rzv2h_i2c_tracenew(p,s)
-#  define rzv2h_i2c_traceevent(p,e,a)
-#  define rzv2h_i2c_tracedump(p)
+#  define rzv2h_riic_i2c_tracereset(p)
+#  define rzv2h_riic_i2c_tracenew(p,s)
+#  define rzv2h_riic_i2c_traceevent(p,e,a)
+#  define rzv2h_riic_i2c_tracedump(p)
 #endif
 
 #ifndef CONFIG_I2C_NTRACE
@@ -158,7 +145,7 @@ struct rzv2h_trace_s
 
 /* I2C pins configuration */
 
-struct rzv2h_i2c_pin_config_s
+struct rzv2h_riic_i2c_pin_config_s
 {
   gpio_pinset_t scl_pin;      /* GPIO configuration for SCL */
   gpio_pinset_t sda_pin;      /* GPIO configuration for SDA */
@@ -166,7 +153,7 @@ struct rzv2h_i2c_pin_config_s
 
 /* I2C Device Private Data */
 
-struct rzv2h_i2c_priv_s
+struct rzv2h_riic_i2c_priv_s
 {
   /* Standard I2C operations */
 
@@ -174,7 +161,7 @@ struct rzv2h_i2c_priv_s
 
   /* Pin configuration */
 
-  struct rzv2h_i2c_pin_config_s *pin_config;
+  struct rzv2h_riic_i2c_pin_config_s *pin_config;
 
   /* FSP abstraction */
 
@@ -227,14 +214,14 @@ struct rz_riic_master_bitrate
  * Private Function Prototypes
  ****************************************************************************/
 
-static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv);
-static int rzv2h_i2c_deinit(struct rzv2h_i2c_priv_s *priv);
-static int rzv2h_i2c_irq_attach(struct rzv2h_i2c_priv_s *priv);
-static void rzv2h_i2c_irq_detach(struct rzv2h_i2c_priv_s *priv);
-static int rzv2h_i2c_transfer(struct i2c_master_s *dev,
-                              struct i2c_msg_s *msgs, int count);
+static int rzv2h_riic_i2c_init(struct rzv2h_riic_i2c_priv_s *priv);
+static int rzv2h_riic_i2c_deinit(struct rzv2h_riic_i2c_priv_s *priv);
+static int rzv2h_riic_i2c_irq_attach(struct rzv2h_riic_i2c_priv_s *priv);
+static void rzv2h_riic_i2c_irq_detach(struct rzv2h_riic_i2c_priv_s *priv);
+static int rzv2h_riic_i2c_transfer(struct i2c_master_s *dev,
+                                   struct i2c_msg_s *msgs, int count);
 #ifdef CONFIG_I2C_RESET
-static int rzv2h_i2c_reset(struct i2c_master_s *dev);
+static int rzv2h_riic_i2c_reset(struct i2c_master_s *dev);
 #endif
 
 void riic_master_rxi_isr(void);
@@ -247,7 +234,7 @@ void riic_master_ali_isr(void);
 void riic_master_tmoi_isr(void);
 
 /****************************************************************************
- * Name: rzv2h_i2c_interrupt
+ * Name: rzv2h_riic_i2c_interrupt
  *
  * Description:
  *   Common interrupt handler for all RIIC interrupt sources.
@@ -264,9 +251,9 @@ void riic_master_tmoi_isr(void);
  *
  ****************************************************************************/
 
-static int rzv2h_i2c_interrupt(int irq, void *context, void *arg)
+static int rzv2h_riic_i2c_interrupt(int irq, void *context, void *arg)
 {
-  struct rzv2h_i2c_priv_s *priv = (struct rzv2h_i2c_priv_s *)arg;
+  struct rzv2h_riic_i2c_priv_s *priv = (struct rzv2h_riic_i2c_priv_s *)arg;
   const i2c_master_cfg_t *cfg = priv->i2c_master_hal_inst->p_cfg;
   riic_master_extended_cfg_t *ext =
     (riic_master_extended_cfg_t *)cfg->p_extend;
@@ -324,11 +311,11 @@ static int rzv2h_i2c_interrupt(int irq, void *context, void *arg)
 
 /* I2C interface */
 
-static const struct i2c_ops_s g_rzv2h_i2c_ops =
+static const struct i2c_ops_s g_rzv2h_riic_i2c_ops =
 {
-  .transfer = rzv2h_i2c_transfer
+  .transfer = rzv2h_riic_i2c_transfer
 #ifdef CONFIG_I2C_RESET
-  , .reset  = rzv2h_i2c_reset
+  , .reset  = rzv2h_riic_i2c_reset
 #endif
 };
 
@@ -350,17 +337,17 @@ static const struct i2c_ops_s g_rzv2h_i2c_ops =
 
 static void i2c_rz_riic_callback(i2c_master_callback_args_t *p_args)
 {
-  struct rzv2h_i2c_priv_s *priv =
-    (struct rzv2h_i2c_priv_s *)p_args->p_context;
+  struct rzv2h_riic_i2c_priv_s *priv =
+    (struct rzv2h_riic_i2c_priv_s *)p_args->p_context;
 
   priv->event = p_args->event;
   nxsem_post(&priv->sem_isr);
 }
 
 #ifdef CONFIG_RZV2H_RIIC0
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c0_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c0_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c0_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c0_pin_config =
 {
   .scl_pin    = BOARD_RIIC0_SCL_GPIO,
   .sda_pin    = BOARD_RIIC0_SDA_GPIO,
@@ -389,7 +376,7 @@ static i2c_master_cfg_t g_i2c_master0_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c0_priv,
+  .p_context           = &g_rzv2h_riic_i2c0_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC0_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC0_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC0_TEI,
@@ -404,10 +391,10 @@ i2c_master_instance_t g_i2c_master0_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c0_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c0_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c0_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c0_pin_config,
   .i2c_master_hal_inst = &g_i2c_master0_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC0_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC0_TI,
@@ -431,9 +418,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c0_priv =
 #endif /* CONFIG_RZV2H_RIIC0 */
 
 #ifdef CONFIG_RZV2H_RIIC1
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c1_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c1_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c1_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c1_pin_config =
 {
   .scl_pin    = BOARD_RIIC1_SCL_GPIO,
   .sda_pin    = BOARD_RIIC1_SDA_GPIO,
@@ -462,7 +449,7 @@ static i2c_master_cfg_t g_i2c_master1_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c1_priv,
+  .p_context           = &g_rzv2h_riic_i2c1_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC1_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC1_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC1_TEI,
@@ -477,10 +464,10 @@ i2c_master_instance_t g_i2c_master1_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c1_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c1_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c1_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c1_pin_config,
   .i2c_master_hal_inst = &g_i2c_master1_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC1_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC1_TI,
@@ -504,9 +491,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c1_priv =
 #endif /* CONFIG_RZV2H_RIIC1 */
 
 #ifdef CONFIG_RZV2H_RIIC2
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c2_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c2_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c2_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c2_pin_config =
 {
   .scl_pin    = BOARD_RIIC2_SCL_GPIO,
   .sda_pin    = BOARD_RIIC2_SDA_GPIO,
@@ -535,7 +522,7 @@ static i2c_master_cfg_t g_i2c_master2_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c2_priv,
+  .p_context           = &g_rzv2h_riic_i2c2_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC2_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC2_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC2_TEI,
@@ -550,10 +537,10 @@ i2c_master_instance_t g_i2c_master2_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c2_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c2_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c2_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c2_pin_config,
   .i2c_master_hal_inst = &g_i2c_master2_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC2_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC2_TI,
@@ -577,9 +564,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c2_priv =
 #endif /* CONFIG_RZV2H_RIIC2 */
 
 #ifdef CONFIG_RZV2H_RIIC3
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c3_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c3_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c3_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c3_pin_config =
 {
   .scl_pin    = BOARD_RIIC3_SCL_GPIO,
   .sda_pin    = BOARD_RIIC3_SDA_GPIO,
@@ -608,7 +595,7 @@ static i2c_master_cfg_t g_i2c_master3_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c3_priv,
+  .p_context           = &g_rzv2h_riic_i2c3_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC3_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC3_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC3_TEI,
@@ -623,10 +610,10 @@ i2c_master_instance_t g_i2c_master3_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c3_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c3_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c3_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c3_pin_config,
   .i2c_master_hal_inst = &g_i2c_master3_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC3_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC3_TI,
@@ -650,9 +637,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c3_priv =
 #endif /* CONFIG_RZV2H_RIIC3 */
 
 #ifdef CONFIG_RZV2H_RIIC4
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c4_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c4_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c4_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c4_pin_config =
 {
   .scl_pin    = BOARD_RIIC4_SCL_GPIO,
   .sda_pin    = BOARD_RIIC4_SDA_GPIO,
@@ -681,7 +668,7 @@ static i2c_master_cfg_t g_i2c_master4_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c4_priv,
+  .p_context           = &g_rzv2h_riic_i2c4_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC4_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC4_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC4_TEI,
@@ -696,10 +683,10 @@ i2c_master_instance_t g_i2c_master4_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c4_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c4_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c4_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c4_pin_config,
   .i2c_master_hal_inst = &g_i2c_master4_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC4_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC4_TI,
@@ -723,9 +710,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c4_priv =
 #endif /* CONFIG_RZV2H_RIIC4 */
 
 #ifdef CONFIG_RZV2H_RIIC5
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c5_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c5_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c5_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c5_pin_config =
 {
   .scl_pin    = BOARD_RIIC5_SCL_GPIO,
   .sda_pin    = BOARD_RIIC5_SDA_GPIO,
@@ -754,7 +741,7 @@ static i2c_master_cfg_t g_i2c_master5_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c5_priv,
+  .p_context           = &g_rzv2h_riic_i2c5_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC5_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC5_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC5_TEI,
@@ -769,10 +756,10 @@ i2c_master_instance_t g_i2c_master5_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c5_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c5_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c5_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c5_pin_config,
   .i2c_master_hal_inst = &g_i2c_master5_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC5_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC5_TI,
@@ -796,9 +783,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c5_priv =
 #endif /* CONFIG_RZV2H_RIIC5 */
 
 #ifdef CONFIG_RZV2H_RIIC6
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c6_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c6_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c6_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c6_pin_config =
 {
   .scl_pin    = BOARD_RIIC6_SCL_GPIO,
   .sda_pin    = BOARD_RIIC6_SDA_GPIO,
@@ -827,7 +814,7 @@ static i2c_master_cfg_t g_i2c_master6_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c6_priv,
+  .p_context           = &g_rzv2h_riic_i2c6_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC6_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC6_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC6_TEI,
@@ -842,10 +829,10 @@ i2c_master_instance_t g_i2c_master6_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c6_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c6_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c6_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c6_pin_config,
   .i2c_master_hal_inst = &g_i2c_master6_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC6_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC6_TI,
@@ -869,9 +856,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c6_priv =
 #endif /* CONFIG_RZV2H_RIIC6 */
 
 #ifdef CONFIG_RZV2H_RIIC7
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c7_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c7_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c7_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c7_pin_config =
 {
   .scl_pin    = BOARD_RIIC7_SCL_GPIO,
   .sda_pin    = BOARD_RIIC7_SDA_GPIO,
@@ -900,7 +887,7 @@ static i2c_master_cfg_t g_i2c_master7_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c7_priv,
+  .p_context           = &g_rzv2h_riic_i2c7_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC7_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC7_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC7_TEI,
@@ -915,10 +902,10 @@ i2c_master_instance_t g_i2c_master7_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c7_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c7_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c7_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c7_pin_config,
   .i2c_master_hal_inst = &g_i2c_master7_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC7_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC7_TI,
@@ -942,9 +929,9 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c7_priv =
 #endif /* CONFIG_RZV2H_RIIC7 */
 
 #ifdef CONFIG_RZV2H_RIIC8
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c8_priv;
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c8_priv;
 
-static struct rzv2h_i2c_pin_config_s g_rzv2h_i2c8_pin_config =
+static struct rzv2h_riic_i2c_pin_config_s g_rzv2h_riic_i2c8_pin_config =
 {
   .scl_pin    = BOARD_RIIC8_SCL_GPIO,
   .sda_pin    = BOARD_RIIC8_SDA_GPIO,
@@ -973,7 +960,7 @@ static i2c_master_cfg_t g_i2c_master8_cfg =
   .p_transfer_tx       = NULL,
   .p_transfer_rx       = NULL,
   .p_callback          = i2c_rz_riic_callback,
-  .p_context           = &g_rzv2h_i2c8_priv,
+  .p_context           = &g_rzv2h_riic_i2c8_priv,
   .rxi_irq             = CONFIG_RZV2H_RIIC8_RXI_INTSEL,
   .txi_irq             = CONFIG_RZV2H_RIIC8_TXI_INTSEL,
   .tei_irq             = RZV2H_IRQ_RIIC8_TEI,
@@ -988,10 +975,10 @@ i2c_master_instance_t g_i2c_master8_hal_inst =
   .p_api  = &g_i2c_master_on_iic
 };
 
-static struct rzv2h_i2c_priv_s g_rzv2h_i2c8_priv =
+static struct rzv2h_riic_i2c_priv_s g_rzv2h_riic_i2c8_priv =
 {
-  .ops                 = &g_rzv2h_i2c_ops,
-  .pin_config          = &g_rzv2h_i2c8_pin_config,
+  .ops                 = &g_rzv2h_riic_i2c_ops,
+  .pin_config          = &g_rzv2h_riic_i2c8_pin_config,
   .i2c_master_hal_inst = &g_i2c_master8_hal_inst,
   .rxi_irq_event       = RZV2H_IRQSEL_RIIC8_RI,
   .txi_irq_event       = RZV2H_IRQSEL_RIIC8_TI,
@@ -1039,7 +1026,7 @@ static struct rzv2h_i2c_priv_s g_rzv2h_i2c8_priv =
  *
  ****************************************************************************/
 
-static void calc_riic_master_bitrate(struct rzv2h_i2c_priv_s *priv,
+static void calc_riic_master_bitrate(struct rzv2h_riic_i2c_priv_s *priv,
                                       uint32_t total_brl_brh, uint32_t brh,
                                       uint32_t divider,
                                       struct rz_riic_master_bitrate *result)
@@ -1111,10 +1098,10 @@ static void calc_riic_master_bitrate(struct rzv2h_i2c_priv_s *priv,
  *
  ****************************************************************************/
 
-static void calc_riic_master_clock_setting(struct rzv2h_i2c_priv_s *priv,
-                                            const uint32_t frequency,
-                                            iic_master_clock_settings_t
-                                              *clk_cfg)
+static void
+calc_riic_master_clock_setting(struct rzv2h_riic_i2c_priv_s *priv,
+                               const uint32_t frequency,
+                               iic_master_clock_settings_t *clk_cfg)
 {
   const uint32_t noise_filter_stages = priv->noise_filter_stage;
   const uint32_t requested_duty = priv->duty_cycle_percent;
@@ -1291,7 +1278,7 @@ static void calc_riic_master_clock_setting(struct rzv2h_i2c_priv_s *priv,
 }
 
 /****************************************************************************
- * Name: rzv2h_i2c_irq_attach
+ * Name: rzv2h_riic_i2c_irq_attach
  *
  * Description:
  *   Attach and configure all RIIC interrupt handlers for this channel.
@@ -1306,7 +1293,7 @@ static void calc_riic_master_clock_setting(struct rzv2h_i2c_priv_s *priv,
  *
  ****************************************************************************/
 
-static int rzv2h_i2c_irq_attach(struct rzv2h_i2c_priv_s *priv)
+static int rzv2h_riic_i2c_irq_attach(struct rzv2h_riic_i2c_priv_s *priv)
 {
   const i2c_master_cfg_t *cfg = priv->i2c_master_hal_inst->p_cfg;
   riic_master_extended_cfg_t *ext =
@@ -1351,49 +1338,49 @@ static int rzv2h_i2c_irq_attach(struct rzv2h_i2c_priv_s *priv)
       return ERROR;
     }
 
-  ret = irq_attach(rxi_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(rxi_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_events;
     }
 
-  ret = irq_attach(txi_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(txi_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_rxi;
     }
 
-  ret = irq_attach(tei_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(tei_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_txi;
     }
 
-  ret = irq_attach(naki_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(naki_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_tei;
     }
 
-  ret = irq_attach(spi_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(spi_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_naki;
     }
 
-  ret = irq_attach(sti_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(sti_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_spi;
     }
 
-  ret = irq_attach(ali_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(ali_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_sti;
     }
 
-  ret = irq_attach(tmoi_irq, rzv2h_i2c_interrupt, priv);
+  ret = irq_attach(tmoi_irq, rzv2h_riic_i2c_interrupt, priv);
   if (ret < 0)
     {
       goto errout_ali;
@@ -1426,7 +1413,7 @@ errout_events:
 }
 
 /****************************************************************************
- * Name: rzv2h_i2c_irq_detach
+ * Name: rzv2h_riic_i2c_irq_detach
  *
  * Description:
  *   Detach all RIIC interrupt handlers and release SEL event routing.
@@ -1441,7 +1428,7 @@ errout_events:
  *
  ****************************************************************************/
 
-static void rzv2h_i2c_irq_detach(struct rzv2h_i2c_priv_s *priv)
+static void rzv2h_riic_i2c_irq_detach(struct rzv2h_riic_i2c_priv_s *priv)
 {
   const i2c_master_cfg_t *cfg = priv->i2c_master_hal_inst->p_cfg;
   riic_master_extended_cfg_t *ext =
@@ -1479,7 +1466,7 @@ static void rzv2h_i2c_irq_detach(struct rzv2h_i2c_priv_s *priv)
 }
 
 /****************************************************************************
- * Name: rzv2h_i2c_init
+ * Name: rzv2h_riic_i2c_init
  *
  * Description:
  *   Initialize the I2C hardware for operation.  Configures GPIO pins for
@@ -1494,7 +1481,7 @@ static void rzv2h_i2c_irq_detach(struct rzv2h_i2c_priv_s *priv)
  *
  ****************************************************************************/
 
-static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
+static int rzv2h_riic_i2c_init(struct rzv2h_riic_i2c_priv_s *priv)
 {
   riic_master_extended_cfg_t *hal_extended_cfg =
     (riic_master_extended_cfg_t *)
@@ -1508,7 +1495,7 @@ static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
 
   /* Attach all RIIC IRQs with proper error handling and priority setup */
 
-  ret = rzv2h_i2c_irq_attach(priv);
+  ret = rzv2h_riic_i2c_irq_attach(priv);
   if (ret < 0)
     {
       return ret;
@@ -1523,7 +1510,7 @@ static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
    * TEI/NAKI/SPI/STI/ALI/TMOI vectors already default to the correct
    * type at compile time; RXI/TXI were just recorded as edge
    * type in g_gic_detect_type[] by rzv2h_intsel_connect_event() in
-   * rzv2h_i2c_irq_attach(), so Open() applies the correct type for all
+   * rzv2h_riic_i2c_irq_attach(), so Open() applies the correct type for all
    * 8 IRQs on its own -- no separate up_set_irq_type() pass is needed.
    */
 
@@ -1531,7 +1518,7 @@ static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
                         priv->i2c_master_hal_inst->p_cfg) != FSP_SUCCESS)
     {
       R_RIIC_MASTER_Close(priv->i2c_master_hal_inst->p_ctrl);
-      rzv2h_i2c_irq_detach(priv);
+      rzv2h_riic_i2c_irq_detach(priv);
       return ERROR;
     }
 
@@ -1539,7 +1526,7 @@ static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
 }
 
 /****************************************************************************
- * Name: rzv2h_i2c_deinit
+ * Name: rzv2h_riic_i2c_deinit
  *
  * Description:
  *   Shutdown the I2C hardware.  Closes the FSP RIIC module, detaches all
@@ -1554,7 +1541,7 @@ static int rzv2h_i2c_init(struct rzv2h_i2c_priv_s *priv)
  *
  ****************************************************************************/
 
-static int rzv2h_i2c_deinit(struct rzv2h_i2c_priv_s *priv)
+static int rzv2h_riic_i2c_deinit(struct rzv2h_riic_i2c_priv_s *priv)
 {
   /* Close I2C FSP module */
 
@@ -1565,13 +1552,13 @@ static int rzv2h_i2c_deinit(struct rzv2h_i2c_priv_s *priv)
 
   /* Detach all IRQs and release SEL event routing */
 
-  rzv2h_i2c_irq_detach(priv);
+  rzv2h_riic_i2c_irq_detach(priv);
 
   return OK;
 }
 
 /****************************************************************************
- * Name: rzv2h_i2c_reset
+ * Name: rzv2h_riic_i2c_reset
  *
  * Description:
  *   Perform an I2C bus reset in an attempt to recover a stuck bus.  This
@@ -1588,9 +1575,9 @@ static int rzv2h_i2c_deinit(struct rzv2h_i2c_priv_s *priv)
  ****************************************************************************/
 
 #ifdef CONFIG_I2C_RESET
-static int rzv2h_i2c_reset(struct i2c_master_s *dev)
+static int rzv2h_riic_i2c_reset(struct i2c_master_s *dev)
 {
-  struct rzv2h_i2c_priv_s *priv;
+  struct rzv2h_riic_i2c_priv_s *priv;
   gpio_pinset_t scl_gpio;
   gpio_pinset_t sda_gpio;
   unsigned int clock_count;
@@ -1601,7 +1588,7 @@ static int rzv2h_i2c_reset(struct i2c_master_s *dev)
 
   /* Get I2C private structure */
 
-  priv = (struct rzv2h_i2c_priv_s *)dev;
+  priv = (struct rzv2h_riic_i2c_priv_s *)dev;
 
   /* Our caller must own a ref */
 
@@ -1619,7 +1606,7 @@ static int rzv2h_i2c_reset(struct i2c_master_s *dev)
 
   /* De-init the port (close FSP module, detach IRQs) */
 
-  rzv2h_i2c_deinit(priv);
+  rzv2h_riic_i2c_deinit(priv);
 
   /* Use GPIO configuration to recover the bus.  Build GPIO output
    * pinset from the stored I2C pin's port_pin, with output
@@ -1699,7 +1686,7 @@ static int rzv2h_i2c_reset(struct i2c_master_s *dev)
 
 out:
 
-  if (rzv2h_i2c_init(priv) < 0)
+  if (rzv2h_riic_i2c_init(priv) < 0)
     {
       ret = -EIO;
     }
@@ -1716,7 +1703,7 @@ out:
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rzv2h_i2c_transfer
+ * Name: rzv2h_riic_i2c_transfer
  *
  * Description:
  *   Perform a sequence of I2C transfers.  Merges consecutive same-direction
@@ -1734,10 +1721,10 @@ out:
  *
  ****************************************************************************/
 
-static int rzv2h_i2c_transfer(struct i2c_master_s *dev,
-                               struct i2c_msg_s *msgs, int count)
+static int rzv2h_riic_i2c_transfer(struct i2c_master_s *dev,
+                                   struct i2c_msg_s *msgs, int count)
 {
-  struct rzv2h_i2c_priv_s *priv = (struct rzv2h_i2c_priv_s *)dev;
+  struct rzv2h_riic_i2c_priv_s *priv = (struct rzv2h_riic_i2c_priv_s *)dev;
   riic_master_extended_cfg_t *hal_extended_cfg =
     (riic_master_extended_cfg_t *)
     priv->i2c_master_hal_inst->p_cfg->p_extend;
@@ -1761,7 +1748,7 @@ static int rzv2h_i2c_transfer(struct i2c_master_s *dev,
       int merge_count;
       uint8_t *buf;
       uint32_t len;
-      uint8_t tmpbuf[CONFIG_RZV2H_I2C_MERGE_BUFSIZE];
+      uint8_t tmpbuf[CONFIG_RZV2H_RIIC_I2C_MERGE_BUFSIZE];
       int j;
       bool restart;
 
@@ -1912,7 +1899,7 @@ static int rzv2h_i2c_transfer(struct i2c_master_s *dev,
       /* Wait for callback to return. */
 
       ret = nxsem_tickwait_uninterruptible(&priv->sem_isr,
-                                           RZV2H_I2CTIMEOTICKS);
+                                           RZV2H_RIIC_I2C_TIMEOTICKS);
       if (ret < 0)
         {
           i2cerr("%s: semaphore wait timeout.\n", __func__);
@@ -1954,11 +1941,11 @@ release_bus:
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rzv2h_i2cbus_initialize
+ * Name: rzv2h_riic_i2cbus_initialize
  *
  * Description:
  *   Initialize one I2C bus.  On first call for a given port, initializes
- *   the hardware via rzv2h_i2c_init().  Increments the reference count
+ *   the hardware via rzv2h_riic_i2c_init().  Increments the reference count
  *   on subsequent calls.
  *
  * Input Parameters:
@@ -1969,9 +1956,9 @@ release_bus:
  *
  ****************************************************************************/
 
-struct i2c_master_s *rzv2h_i2cbus_initialize(int port)
+struct i2c_master_s *rzv2h_riic_i2cbus_initialize(int port)
 {
-  struct rzv2h_i2c_priv_s *priv = NULL;
+  struct rzv2h_riic_i2c_priv_s *priv = NULL;
 
   /* Get I2C private structure */
 
@@ -1979,47 +1966,47 @@ struct i2c_master_s *rzv2h_i2cbus_initialize(int port)
     {
 #ifdef CONFIG_RZV2H_RIIC0
     case 0:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c0_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c0_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC1
     case 1:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c1_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c1_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC2
     case 2:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c2_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c2_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC3
     case 3:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c3_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c3_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC4
     case 4:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c4_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c4_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC5
     case 5:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c5_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c5_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC6
     case 6:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c6_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c6_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC7
     case 7:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c7_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c7_priv;
       break;
 #endif
 #ifdef CONFIG_RZV2H_RIIC8
     case 8:
-      priv = (struct rzv2h_i2c_priv_s *)&g_rzv2h_i2c8_priv;
+      priv = (struct rzv2h_riic_i2c_priv_s *)&g_rzv2h_riic_i2c8_priv;
       break;
 #endif
     default:
@@ -2033,7 +2020,7 @@ struct i2c_master_s *rzv2h_i2cbus_initialize(int port)
   nxmutex_lock(&priv->lock);
   if (priv->refs++ == 0)
     {
-      if (rzv2h_i2c_init(priv) < 0)
+      if (rzv2h_riic_i2c_init(priv) < 0)
         {
           priv->refs--;
           nxmutex_unlock(&priv->lock);
@@ -2046,7 +2033,7 @@ struct i2c_master_s *rzv2h_i2cbus_initialize(int port)
 }
 
 /****************************************************************************
- * Name: rzv2h_i2cbus_uninitialize
+ * Name: rzv2h_riic_i2cbus_uninitialize
  *
  * Description:
  *   Uninitialize an I2C bus.  Decrements the reference count and shuts
@@ -2060,9 +2047,9 @@ struct i2c_master_s *rzv2h_i2cbus_initialize(int port)
  *
  ****************************************************************************/
 
-int rzv2h_i2cbus_uninitialize(struct i2c_master_s *dev)
+int rzv2h_riic_i2cbus_uninitialize(struct i2c_master_s *dev)
 {
-  struct rzv2h_i2c_priv_s *priv = (struct rzv2h_i2c_priv_s *)dev;
+  struct rzv2h_riic_i2c_priv_s *priv = (struct rzv2h_riic_i2c_priv_s *)dev;
 
   DEBUGASSERT(dev);
 
@@ -2082,7 +2069,7 @@ int rzv2h_i2cbus_uninitialize(struct i2c_master_s *dev)
 
   /* Shut down the I2C hardware */
 
-  rzv2h_i2c_deinit(priv);
+  rzv2h_riic_i2c_deinit(priv);
   nxmutex_unlock(&priv->lock);
 
   return OK;

@@ -37,10 +37,11 @@ CLOCK       Yes      BSP clock tree init (PLL), internal use only
 GIC         Yes      Interrupt controller init (CPU0 + per-CPU)
 MPU         Yes      Static PMSAv7 region table (ITCM/DTCM/SRAM/code)
 TIMER       Yes      MPCore Private Timer used as the system tick source
-SCI         Yes      Interrupt-driven SCI-B asynchronous UART on channels 0-9
+SCI         Yes      Interrupt-driven SCI asynchronous UART on channels 0-9
 SPI         Yes      Interrupt-driven SPI-B on channels 0-2
 GPIO        Yes      Basic operations (config/read/write), no interrupt support
-I2C         Yes      Interrupt-driven RIIC master on channels 0-8
+RIIC I2C    Yes      Interrupt-driven RIIC master on channels 0-8
+SCI I2C     Yes      Interrupt-driven SCI simple I2C master on channels 0-9
 ADC         Yes      ADC-E unit 0 with 8 analog inputs and group-A scans
 RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
 PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
@@ -80,9 +81,9 @@ SCI
 
 The Serial Communication Interface (SCI) provides multiple serial
 communication modes. NuttX currently supports interrupt-driven UART operation
-on channels 0 through 9 through the SCI-B lower-half driver.
+on channels 0 through 9 through the SCI lower-half driver.
 ``CONFIG_RZV2H_UART_SCI`` enables the driver and
-``CONFIG_RZV2H_SCI_B_UARTn`` selects each required channel. The standard
+``CONFIG_RZV2H_SCI_UARTn`` selects each required channel. The standard
 ``CONFIG_SCIn_*`` options configure the channel and select the console.
 
 The driver supports early console output and registers the selected
@@ -93,6 +94,9 @@ Runtime baud-rate changes are supported through the standard termios
 ``TCGETS`` and ``TCSETS`` operations.
 
 Hardware flow control and DMA are not implemented yet.
+
+An SCI channel can be used for UART or for simple I2C (see SCI I2C
+below), but not for both at once.
 
 GPIO
 ----
@@ -130,14 +134,14 @@ Default SEL IDs
 The 127-line SEL pool (SEL0-SEL126, IRQ 353-479) is conventionally
 partitioned by module, allocated from the top of the range downward:
 
-======  ==================  ================================
-Module  Count                IRQ range (>= 353)
-======  ==================  ================================
-TINT    32 (tint0-tint31)    479-448
-I2C     9 (i2c0-i2c8)        447-430 (txi/rxi only)
-ADC     1 (adc0)             429
-SPI     3 (spi0-spi2)        428-423 (txi/rxi only)
-======  ==================  ================================
+========  ==================  ================================
+Module    Count                IRQ range (>= 353)
+========  ==================  ================================
+TINT      32 (tint0-tint31)    479-448
+RIIC I2C  9 (riic0-riic8)      447-430 (txi/rxi only)
+ADC       1 (adc0)             429
+SPI       3 (spi0-spi2)        428-423 (txi/rxi only)
+========  ==================  ================================
 
 Changing interrupt-select IDs (RIIC2 as an example)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,8 +180,8 @@ kernel RemoteProc to load NuttX. See the
 and :doc:`RDK board guide </platforms/arm/rzv2h/boards/rzv2h-rdk/index>`
 for configuration, boot, Linux peer requirements and RPMsg testing.
 
-I2C
----
+RIIC I2C
+--------
 
 The RIIC driver provides interrupt-driven I2C master
 operation on channels 0 through 8.
@@ -191,6 +195,22 @@ and interrupt priority.
 I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported. The driver
 bit-bangs SCL to clock out stuck slaves, then generates a START+STOP
 sequence to reset slave state machines.
+
+SCI I2C
+-------
+
+The SCI I2C driver provides interrupt-driven I2C master operation (SCI simple
+I2C mode, up to 400 kHz) on channels 0 through 9.
+
+``CONFIG_RZV2H_SCI_I2C`` enables the driver and
+``CONFIG_RZV2H_SCI_I2Cn`` selects each required channel; the channel's
+SCI UART must be disabled. Each channel has independent Kconfig options
+for bus bitrate, SDA output delay, noise filter clock, bit-rate modulation,
+and interrupt priority. Channel ``n`` is registered as
+``/dev/i2c<CONFIG_RZV2H_SCI_I2C_BUS_OFFSET + n>``.
+
+I2C bus reset recovery (``CONFIG_I2C_RESET``) is supported, using the same
+method as RIIC I2C.
 
 ADC
 ---

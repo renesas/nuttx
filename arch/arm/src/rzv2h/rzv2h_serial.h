@@ -46,7 +46,7 @@
 
 void rzv2h_fsp_uart_cb(uart_callback_args_t *args);
 
-#if defined(USE_EARLYSERIALINIT) && defined(CONFIG_RZV2H_SCI_B)
+#if defined(USE_EARLYSERIALINIT) && defined(CONFIG_RZV2H_SCI)
 void rzv2h_earlyserialinit(void);
 #endif
 
