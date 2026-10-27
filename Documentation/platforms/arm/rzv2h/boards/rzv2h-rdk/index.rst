@@ -357,8 +357,8 @@ definitions route SCI0 as follows:
 ======  ========  =======================  ==========
 Signal  Pin       Board definition         J1 header
 ======  ========  =======================  ==========
-TXD0    ``P5_0``  ``BOARD_SCI0_TXD_GPIO``  J1 pin 36
-RXD0    ``P5_1``  ``BOARD_SCI0_RXD_GPIO``  J1 pin 22
+TXD0    ``P5_0``  ``BOARD_SCI0_TXD_GPIO``  J1 pin 22
+RXD0    ``P5_1``  ``BOARD_SCI0_RXD_GPIO``  J1 pin 36
 ======  ========  =======================  ==========
 
 Connect a 3.3 V TTL UART adapter to the J1 header pins listed above.
@@ -369,7 +369,7 @@ Use a 3.3 V TTL UART adapter, not an RS-232 adapter.
 The relevant default options are::
 
    CONFIG_RZV2H_UART_SCI=y
-   CONFIG_RZV2H_SCI_B_UART0=y
+   CONFIG_RZV2H_SCI_UART0=y
    CONFIG_SCI0_SERIAL_CONSOLE=y
    CONFIG_SCI0_BAUD=115200
    CONFIG_SCI0_BITS=8
@@ -443,6 +443,106 @@ log reports the fallback and ``date`` shows the build-time default:
    nsh> date -s "Jul 29 15:30:00 2026"
    nsh> date
    Wed, Jul 29 15:30:01 2026
+
+SCI I2C
+=======
+
+The SCI channels listed below can run as I2C masters in simple I2C mode.
+SCI channel ``n`` is registered as
+``/dev/i2c<CONFIG_RZV2H_SCI_I2C_BUS_OFFSET + n>``. The default offset is
+10, so the SCI I2C buses do not overlap the RIIC I2C buses.
+
+Pin Assignments
+---------------
+
+SDA uses the TXDn pin and SCL uses the RXDn pin of each SCI channel.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Channel
+     - SDA Pin
+     - SCL Pin
+   * - SCI0
+     - ``P5_0``
+     - ``P5_1``
+   * - SCI1
+     - ``P5_2``
+     - ``P5_3``
+   * - SCI4
+     - ``P8_4``
+     - ``P8_5``
+   * - SCI5
+     - ``P7_2``
+     - ``P7_3``
+   * - SCI6
+     - ``P7_4``
+     - ``P7_5``
+   * - SCI7
+     - ``P7_6``
+     - ``P7_7``
+   * - SCI9
+     - ``P8_2``
+     - ``P8_3``
+
+Configuration
+-------------
+
+The relevant options for enabling SCI7 as an example are::
+
+   CONFIG_I2C=y
+   CONFIG_RZV2H_SCI_I2C=y
+   CONFIG_RZV2H_SCI_I2C7=y
+   CONFIG_I2C_RESET=y
+   CONFIG_SYSTEM_I2CTOOL=y
+   CONFIG_I2CTOOL_MAXBUS=19
+
+``CONFIG_I2CTOOL_MAXBUS`` must be at least
+``CONFIG_RZV2H_SCI_I2C_BUS_OFFSET`` plus the SCI channel number, or
+``i2ctool`` rejects the bus number.
+
+Each channel has additional Kconfig options for bit rate, SDA output delay,
+noise filter clock, bit-rate modulation, and interrupt priority. TXI and
+TEI are fixed GIC interrupts, so SCI I2C has no interrupt-select (SEL)
+options.
+
+After boot, verify that the channel is registered::
+
+   nsh> ls /dev
+   /dev:
+    ...
+    i2c17
+    ...
+
+Using the ``i2ctool`` Application
+---------------------------------
+
+The ``sci-i2c`` board configuration (``rzv2h-rdk:sci-i2c``) enables
+SCI7 and the ``i2ctool`` application. Use the ``i2c`` commands with the
+SCI I2C bus number.
+
+List which buses from ``CONFIG_I2CTOOL_MINBUS`` to ``CONFIG_I2CTOOL_MAXBUS``
+exist; bus 17 should be reported as present::
+
+   nsh> i2c bus
+
+Scan for devices on bus 17 from address 0x03 to 0x77::
+
+   nsh> i2c dev -b 17 0x03 0x77
+
+Get the register at address 0x00 from a device at address 0x50 on bus 17::
+
+   nsh> i2c get -b 17 -a 0x50 -r 0x00
+
+Set value 0x5a to the register at address 0x10 of a device at address 0x50
+on bus 17::
+
+   nsh> i2c set -b 17 -a 0x50 -r 0x10 0x5a
+
+Reset bus 17 to recover a slave that holds the bus (requires
+``CONFIG_I2C_RESET``)::
+
+   nsh> i2c reset -b 17
 
 PWM
 ===
@@ -702,7 +802,7 @@ nsh
 ---
 
 NuttShell configuration exercising clock, MPU, interrupt/timer, GPIO, and
-SCI-B UART bring-up on CR8_0. SCI0 provides the default 115200-8N1 NSH
+SCI UART bring-up on CR8_0. SCI0 provides the default 115200-8N1 NSH
 console through J1 pin 22 (RXD0) and J1 pin 36 (TXD0) and is registered
 as ``/dev/console`` and ``/dev/ttyS0``.
 
@@ -741,6 +841,15 @@ pwm
 PWM configuration enabling GPT6 with the ``pwm`` application for
 interactive frequency and duty-cycle testing.  The channel is registered
 as ``/dev/pwm6`` at boot.
+
+sci-i2c
+-------
+
+SCI I2C configuration enabling SCI channel 7 in simple I2C mode with the
+``i2ctool`` application. The channel is registered as ``/dev/i2c17`` at
+boot. SDA is on J1 pin 3 (``P7_6``) and SCL on J1 pin 5 (``P7_7``), which
+have on-board pull-ups. Bus reset recovery (``CONFIG_I2C_RESET``) is
+enabled.
 
 alarm
 -----

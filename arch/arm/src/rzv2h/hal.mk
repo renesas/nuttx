@@ -69,13 +69,17 @@ ifeq ($(CONFIG_DEV_GPIO),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_ioport$(DELIM)r_ioport.c
 endif
 
-ifeq ($(CONFIG_RZV2H_SCI_B),y)
+ifeq ($(CONFIG_RZV2H_SCI),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_sci_b_uart$(DELIM)r_sci_b_uart.c
 endif
 
 ############################################################################
-ifeq ($(CONFIG_RZV2H_I2C),y)
+ifeq ($(CONFIG_RZV2H_RIIC_I2C),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_riic_master$(DELIM)r_riic_master.c
+endif
+
+ifeq ($(CONFIG_RZV2H_SCI_I2C),y)
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_sci_b_i2c$(DELIM)r_sci_b_i2c.c
 endif
 
 ifeq ($(CONFIG_RZV2H_ADC),y)

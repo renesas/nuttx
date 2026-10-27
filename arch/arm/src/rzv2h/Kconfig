@@ -19,16 +19,16 @@ config ARCH_CHIP_R9A09G057
 	select ARCH_HAVE_MPU
 	select ARCH_IRQPRIO
 	select RZV2H_HAVE_ADC
-	select RZV2H_HAVE_SCI_B_UART0
-	select RZV2H_HAVE_SCI_B_UART1
-	select RZV2H_HAVE_SCI_B_UART2
-	select RZV2H_HAVE_SCI_B_UART3
-	select RZV2H_HAVE_SCI_B_UART4
-	select RZV2H_HAVE_SCI_B_UART5
-	select RZV2H_HAVE_SCI_B_UART6
-	select RZV2H_HAVE_SCI_B_UART7
-	select RZV2H_HAVE_SCI_B_UART8
-	select RZV2H_HAVE_SCI_B_UART9
+	select RZV2H_HAVE_SCI0
+	select RZV2H_HAVE_SCI1
+	select RZV2H_HAVE_SCI2
+	select RZV2H_HAVE_SCI3
+	select RZV2H_HAVE_SCI4
+	select RZV2H_HAVE_SCI5
+	select RZV2H_HAVE_SCI6
+	select RZV2H_HAVE_SCI7
+	select RZV2H_HAVE_SCI8
+	select RZV2H_HAVE_SCI9
 	select RZV2H_HAVE_RTC
 	select RZV2H_HAVE_RIIC0
 	select RZV2H_HAVE_RIIC1
@@ -62,15 +62,49 @@ config RZV2H_HAVE_ADC
 	bool
 	default n
 
-config RZV2H_SCI_B
+config RZV2H_SCI
 	bool
 	default n
 
-config RZV2H_HAVE_SCI_B_UART0
+# SCI channels present on the chip (shared by SCI UART and SCI I2C)
+
+config RZV2H_HAVE_SCI0
 	bool
 	default n
 
-config RZV2H_HAVE_SCI_B_UART1
+config RZV2H_HAVE_SCI1
+	bool
+	default n
+
+config RZV2H_HAVE_SCI2
+	bool
+	default n
+
+config RZV2H_HAVE_SCI3
+	bool
+	default n
+
+config RZV2H_HAVE_SCI4
+	bool
+	default n
+
+config RZV2H_HAVE_SCI5
+	bool
+	default n
+
+config RZV2H_HAVE_SCI6
+	bool
+	default n
+
+config RZV2H_HAVE_SCI7
+	bool
+	default n
+
+config RZV2H_HAVE_SCI8
+	bool
+	default n
+
+config RZV2H_HAVE_SCI9
 	bool
 	default n
 
@@ -113,28 +147,37 @@ config RZV2H_HAVE_RIIC8
 menuconfig RZV2H_RIIC_I2C
 	bool "RIIC I2C support"
 	default n
-	select RZV2H_I2C
 	---help---
 		Enable the RZ/V2H RIIC I2C driver. Select this option to
 		configure the individual RIIC I2C channels.
 
 if RZV2H_RIIC_I2C
 
-config RZV2H_I2CTIMEOSEC
+config RZV2H_RIIC_I2C_TIMEOSEC
 	int "RIIC I2C timeout (seconds)"
 	default 0
 	---help---
 		Timeout in seconds for I2C transfer completion. Combined with
-		RZV2H_I2CTIMEOMS to form the total timeout. Set both to 0 to
+		RZV2H_RIIC_I2C_TIMEOMS to form the total timeout. Set to 0 to
 		use only the millisecond component.
 
-config RZV2H_I2CTIMEOMS
+config RZV2H_RIIC_I2C_TIMEOMS
 	int "RIIC I2C timeout (milliseconds)"
 	default 500
 	---help---
 		Timeout in milliseconds for I2C transfer completion. Combined
-		with RZV2H_I2CTIMEOSEC to form the total timeout. Default is
+		with RZV2H_RIIC_I2C_TIMEOSEC to form the total timeout. Default is
 		500 ms.
+
+config RZV2H_RIIC_I2C_MERGE_BUFSIZE
+	int "RIIC I2C message merge stack buffer size (bytes)"
+	default 16
+	range 1 256
+	---help---
+		Consecutive messages with the same direction are merged into a
+		single FSP transfer so that no START or STOP condition is
+		generated between them.  Merged transfers larger than this
+		buffer fail with -ENOMEM.
 
 config RZV2H_RIIC0
 	bool "RIIC 0"
@@ -543,142 +586,106 @@ endif #RZV2H_RIIC8
 
 endif # RZV2H_RIIC_I2C
 
-config RZV2H_I2C
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART2
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART3
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART4
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART5
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART6
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART7
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART8
-	bool
-	default n
-
-config RZV2H_HAVE_SCI_B_UART9
-	bool
-	default n
-
 menuconfig RZV2H_UART_SCI
-	bool "SCI-B UART support"
+	bool "SCI UART support"
 	default y
-	select RZV2H_SCI_B
+	select RZV2H_SCI
 	select ARCH_HAVE_SERIAL_TERMIOS
 	---help---
-		Enable the RZ/V2H SCI-B UART driver. Select this option to
-		configure the individual SCI-B UART channels.
+		Enable the RZ/V2H SCI UART driver. Select this option to
+		configure the individual SCI UART channels.
 
 if RZV2H_UART_SCI
 
-config RZV2H_SCI_B_IRQ_PRIORITY
-	int "SCI-B interrupt priority"
+config RZV2H_SCI_IRQ_PRIORITY
+	int "SCI interrupt priority"
 	range 0 15
 	default 12
 	---help---
-		Set the GIC interrupt priority used by all enabled SCI-B UART
+		Set the GIC interrupt priority used by all enabled SCI UART
 		channels. Zero is the highest priority and 15 is the lowest.
 
-menu "SCI-B UART optional features"
+menu "SCI UART optional features"
 
-config RZV2H_SCI_B_FLOW_CONTROL
+config RZV2H_SCI_FLOW_CONTROL
 	bool "Flow control support (not implemented)"
 	default n
 	---help---
-		Configuration support for SCI-B CTS/RTS hardware flow
+		Configuration support for SCI CTS/RTS hardware flow
 		control.
 
-config RZV2H_SCI_B_DMA
+config RZV2H_SCI_DMA
 	bool "DMA transfer support (not implemented)"
 	default n
 	---help---
-		Configuration support for SCI-B DMA transfers.
+		Configuration support for SCI DMA transfers.
 
-config RZV2H_SCI_B_FIFO
+config RZV2H_SCI_FIFO
 	bool "FIFO support (not implemented)"
 	default n
 	---help---
-		Configuration support for SCI-B hardware FIFOs.
+		Configuration support for SCI hardware FIFOs.
 
-endmenu # "SCI-B UART optional features"
+endmenu # "SCI UART optional features"
 
-config RZV2H_SCI_B_UART0
-	bool "SCI_B UART 0"
+config RZV2H_SCI_UART0
+	bool "SCI UART 0"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART0
+	depends on RZV2H_HAVE_SCI0
 	select SCI0_SERIALDRIVER
 
-config RZV2H_SCI_B_UART1
-	bool "SCI_B UART 1"
+config RZV2H_SCI_UART1
+	bool "SCI UART 1"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART1
+	depends on RZV2H_HAVE_SCI1
 	select SCI1_SERIALDRIVER
 
-config RZV2H_SCI_B_UART2
-	bool "SCI_B UART 2"
+config RZV2H_SCI_UART2
+	bool "SCI UART 2"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART2
+	depends on RZV2H_HAVE_SCI2
 	select SCI2_SERIALDRIVER
 
-config RZV2H_SCI_B_UART3
-	bool "SCI_B UART 3"
+config RZV2H_SCI_UART3
+	bool "SCI UART 3"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART3
+	depends on RZV2H_HAVE_SCI3
 	select SCI3_SERIALDRIVER
 
-config RZV2H_SCI_B_UART4
-	bool "SCI_B UART 4"
+config RZV2H_SCI_UART4
+	bool "SCI UART 4"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART4
+	depends on RZV2H_HAVE_SCI4
 	select SCI4_SERIALDRIVER
 
-config RZV2H_SCI_B_UART5
-	bool "SCI_B UART 5"
+config RZV2H_SCI_UART5
+	bool "SCI UART 5"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART5
+	depends on RZV2H_HAVE_SCI5
 	select SCI5_SERIALDRIVER
 
-config RZV2H_SCI_B_UART6
-	bool "SCI_B UART 6"
+config RZV2H_SCI_UART6
+	bool "SCI UART 6"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART6
+	depends on RZV2H_HAVE_SCI6
 	select SCI6_SERIALDRIVER
 
-config RZV2H_SCI_B_UART7
-	bool "SCI_B UART 7"
+config RZV2H_SCI_UART7
+	bool "SCI UART 7"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART7
+	depends on RZV2H_HAVE_SCI7
 	select SCI7_SERIALDRIVER
 
-config RZV2H_SCI_B_UART8
-	bool "SCI_B UART 8"
+config RZV2H_SCI_UART8
+	bool "SCI UART 8"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART8
+	depends on RZV2H_HAVE_SCI8
 	select SCI8_SERIALDRIVER
 
-config RZV2H_SCI_B_UART9
-	bool "SCI_B UART 9"
+config RZV2H_SCI_UART9
+	bool "SCI UART 9"
 	default n
-	depends on RZV2H_HAVE_SCI_B_UART9
+	depends on RZV2H_HAVE_SCI9
 	select SCI9_SERIALDRIVER
 
 endif # RZV2H_UART_SCI
@@ -691,6 +698,462 @@ config RZV2H_QSPI
 		NuttX's generic QSPI interface (struct qspi_dev_s).  The attached
 		flash type, wiring and partitioning are board properties and are
 		configured in the board's Kconfig.
+
+menuconfig RZV2H_SCI_I2C
+	bool "SCI I2C support"
+	default n
+	---help---
+		Enable the RZ/V2H SCI simple I2C master driver. An SCI channel
+		can be used either as a UART or as an I2C master, not both.
+
+if RZV2H_SCI_I2C
+
+config RZV2H_SCI_I2C_TIMEOSEC
+	int "SCI I2C timeout (seconds)"
+	default 0
+	---help---
+		Timeout in seconds for I2C transfer completion. Combined with
+		RZV2H_SCI_I2C_TIMEOMS to form the total timeout. Set to 0 to
+		use only the millisecond component.
+
+config RZV2H_SCI_I2C_TIMEOMS
+	int "SCI I2C timeout (milliseconds)"
+	default 500
+	---help---
+		Timeout in milliseconds for I2C transfer completion. Combined
+		with RZV2H_SCI_I2C_TIMEOSEC to form the total timeout. Default is
+		500 ms.
+
+config RZV2H_SCI_I2C_MERGE_BUFSIZE
+	int "SCI I2C message merge stack buffer size (bytes)"
+	default 16
+	range 1 256
+	---help---
+		Messages with I2C_M_NOSTART are merged with the previous message
+		into a single FSP transfer so that no START or STOP condition is
+		generated between them.  Larger merged transfers use a heap
+		buffer.
+
+config RZV2H_SCI_I2C_BUS_OFFSET
+	int "SCI I2C bus number offset"
+	default 10
+	range 0 245
+	---help---
+		The board logic registers SCI channel n as /dev/i2c<offset+n>.
+		The default offset of 10 keeps the SCI I2C buses away from the
+		RIIC buses (/dev/i2c0 to /dev/i2c8).
+
+config RZV2H_SCI_I2C0
+	bool "SCI I2C 0"
+	default n
+	depends on RZV2H_HAVE_SCI0 && !RZV2H_SCI_UART0
+
+if RZV2H_SCI_I2C0
+
+config RZV2H_SCI_I2C0_BITRATE
+	int "SCI0 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C0_SDA_DELAY
+	int "SCI0 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C0_NF_CLK
+	int "SCI0 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C0_BITRATE_MODULATION
+	bool "SCI0 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C0_IRQ_PRIORITY
+	int "SCI0 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C0
+
+config RZV2H_SCI_I2C1
+	bool "SCI I2C 1"
+	default n
+	depends on RZV2H_HAVE_SCI1 && !RZV2H_SCI_UART1
+
+if RZV2H_SCI_I2C1
+
+config RZV2H_SCI_I2C1_BITRATE
+	int "SCI1 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C1_SDA_DELAY
+	int "SCI1 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C1_NF_CLK
+	int "SCI1 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C1_BITRATE_MODULATION
+	bool "SCI1 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C1_IRQ_PRIORITY
+	int "SCI1 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C1
+
+config RZV2H_SCI_I2C2
+	bool "SCI I2C 2"
+	default n
+	depends on RZV2H_HAVE_SCI2 && !RZV2H_SCI_UART2
+
+if RZV2H_SCI_I2C2
+
+config RZV2H_SCI_I2C2_BITRATE
+	int "SCI2 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C2_SDA_DELAY
+	int "SCI2 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C2_NF_CLK
+	int "SCI2 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C2_BITRATE_MODULATION
+	bool "SCI2 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C2_IRQ_PRIORITY
+	int "SCI2 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C2
+
+config RZV2H_SCI_I2C3
+	bool "SCI I2C 3"
+	default n
+	depends on RZV2H_HAVE_SCI3 && !RZV2H_SCI_UART3
+
+if RZV2H_SCI_I2C3
+
+config RZV2H_SCI_I2C3_BITRATE
+	int "SCI3 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C3_SDA_DELAY
+	int "SCI3 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C3_NF_CLK
+	int "SCI3 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C3_BITRATE_MODULATION
+	bool "SCI3 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C3_IRQ_PRIORITY
+	int "SCI3 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C3
+
+config RZV2H_SCI_I2C4
+	bool "SCI I2C 4"
+	default n
+	depends on RZV2H_HAVE_SCI4 && !RZV2H_SCI_UART4
+
+if RZV2H_SCI_I2C4
+
+config RZV2H_SCI_I2C4_BITRATE
+	int "SCI4 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C4_SDA_DELAY
+	int "SCI4 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C4_NF_CLK
+	int "SCI4 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C4_BITRATE_MODULATION
+	bool "SCI4 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C4_IRQ_PRIORITY
+	int "SCI4 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C4
+
+config RZV2H_SCI_I2C5
+	bool "SCI I2C 5"
+	default n
+	depends on RZV2H_HAVE_SCI5 && !RZV2H_SCI_UART5
+
+if RZV2H_SCI_I2C5
+
+config RZV2H_SCI_I2C5_BITRATE
+	int "SCI5 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C5_SDA_DELAY
+	int "SCI5 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C5_NF_CLK
+	int "SCI5 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C5_BITRATE_MODULATION
+	bool "SCI5 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C5_IRQ_PRIORITY
+	int "SCI5 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C5
+
+config RZV2H_SCI_I2C6
+	bool "SCI I2C 6"
+	default n
+	depends on RZV2H_HAVE_SCI6 && !RZV2H_SCI_UART6
+
+if RZV2H_SCI_I2C6
+
+config RZV2H_SCI_I2C6_BITRATE
+	int "SCI6 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C6_SDA_DELAY
+	int "SCI6 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C6_NF_CLK
+	int "SCI6 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C6_BITRATE_MODULATION
+	bool "SCI6 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C6_IRQ_PRIORITY
+	int "SCI6 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C6
+
+config RZV2H_SCI_I2C7
+	bool "SCI I2C 7"
+	default n
+	depends on RZV2H_HAVE_SCI7 && !RZV2H_SCI_UART7
+
+if RZV2H_SCI_I2C7
+
+config RZV2H_SCI_I2C7_BITRATE
+	int "SCI7 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C7_SDA_DELAY
+	int "SCI7 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C7_NF_CLK
+	int "SCI7 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C7_BITRATE_MODULATION
+	bool "SCI7 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C7_IRQ_PRIORITY
+	int "SCI7 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C7
+
+config RZV2H_SCI_I2C8
+	bool "SCI I2C 8"
+	default n
+	depends on RZV2H_HAVE_SCI8 && !RZV2H_SCI_UART8
+
+if RZV2H_SCI_I2C8
+
+config RZV2H_SCI_I2C8_BITRATE
+	int "SCI8 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C8_SDA_DELAY
+	int "SCI8 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C8_NF_CLK
+	int "SCI8 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C8_BITRATE_MODULATION
+	bool "SCI8 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C8_IRQ_PRIORITY
+	int "SCI8 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C8
+
+config RZV2H_SCI_I2C9
+	bool "SCI I2C 9"
+	default n
+	depends on RZV2H_HAVE_SCI9 && !RZV2H_SCI_UART9
+
+if RZV2H_SCI_I2C9
+
+config RZV2H_SCI_I2C9_BITRATE
+	int "SCI9 Bus Bit Rate"
+	default 100000
+	range 200 400000
+
+config RZV2H_SCI_I2C9_SDA_DELAY
+	int "SCI9 SDA output delay (ns)"
+	default 300
+	range 0 300
+	---help---
+		Delay of the SDA output relative to the falling edge of SCL.
+
+config RZV2H_SCI_I2C9_NF_CLK
+	int "SCI9 noise filter clock select (1-4)"
+	default 1
+	range 1 4
+	---help---
+		Digital noise filter sampling clock (CCR1.NFCS): the baud rate
+		generator source clock divided by 1, 2, 4 or 8 for values 1 to 4.
+
+config RZV2H_SCI_I2C9_BITRATE_MODULATION
+	bool "SCI9 bit rate modulation"
+	default y
+	---help---
+		Use the MDDR bit rate modulation function to reduce the error
+		between the requested and the actual bit rate.
+
+config RZV2H_SCI_I2C9_IRQ_PRIORITY
+	int "SCI9 I2C interrupt priority"
+	range 0 15
+	default 12
+
+endif # RZV2H_SCI_I2C9
+
+endif # RZV2H_SCI_I2C
 
 menuconfig RZV2H_ADC
 	bool "ADC-E support"

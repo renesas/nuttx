@@ -58,7 +58,7 @@ endif
 # rzv2h-specific C source files
 CHIP_CSRCS += rzv2h_start.c rzv2h_irq.c rzv2h_timerisr.c rzv2h_lowputc.c rzv2h_clockconfig.c rzv2h_mpu_region.c rzv2h_fsp_err.c
 
-ifeq ($(CONFIG_RZV2H_SCI_B),y)
+ifeq ($(CONFIG_RZV2H_SCI),y)
 CHIP_CSRCS += rzv2h_serial.c
 endif
 
@@ -70,8 +70,12 @@ ifeq ($(CONFIG_RZV2H_SPI_B),y)
 CHIP_CSRCS += rzv2h_spi.c
 endif
 
-ifeq ($(CONFIG_RZV2H_I2C),y)
-CHIP_CSRCS += rzv2h_i2c.c
+ifeq ($(CONFIG_RZV2H_RIIC_I2C),y)
+CHIP_CSRCS += rzv2h_riic_i2c.c
+endif
+
+ifeq ($(CONFIG_RZV2H_SCI_I2C),y)
+CHIP_CSRCS += rzv2h_sci_i2c.c
 endif
 
 ifeq ($(CONFIG_RZV2H_ADC),y)

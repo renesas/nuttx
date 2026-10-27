@@ -1,5 +1,5 @@
 /****************************************************************************
- * arch/arm/src/rzv2h/rzv2h_i2c.h
+ * arch/arm/src/rzv2h/rzv2h_riic_i2c.h
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,8 +20,8 @@
  *
  ****************************************************************************/
 
-#ifndef __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H
-#define __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H
+#ifndef __ARCH_ARM_SRC_RZV2H_RZV2H_RIIC_I2C_H
+#define __ARCH_ARM_SRC_RZV2H_RZV2H_RIIC_I2C_H
 
 /****************************************************************************
  * Included Files
@@ -43,11 +43,11 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rzv2h_i2cbus_initialize
+ * Name: rzv2h_riic_i2cbus_initialize
  *
  * Description:
  *   Initialize one I2C bus.  On first call for a given port, initializes
- *   the hardware via rzv2h_i2c_init().  Increments the reference count
+ *   the hardware via rzv2h_riic_i2c_init().  Increments the reference count
  *   on subsequent calls.
  *
  * Input Parameters:
@@ -58,10 +58,10 @@
  *
  ****************************************************************************/
 
-struct i2c_master_s *rzv2h_i2cbus_initialize(int port);
+struct i2c_master_s *rzv2h_riic_i2cbus_initialize(int port);
 
 /****************************************************************************
- * Name: rzv2h_i2cbus_uninitialize
+ * Name: rzv2h_riic_i2cbus_uninitialize
  *
  * Description:
  *   Uninitialize an I2C bus.  Decrements the reference count and shuts
@@ -75,6 +75,6 @@ struct i2c_master_s *rzv2h_i2cbus_initialize(int port);
  *
  ****************************************************************************/
 
-int rzv2h_i2cbus_uninitialize(struct i2c_master_s *dev);
+int rzv2h_riic_i2cbus_uninitialize(struct i2c_master_s *dev);
 
-#endif /* __ARCH_ARM_SRC_RZV2H_RZV2H_I2C_H */
+#endif /* __ARCH_ARM_SRC_RZV2H_RZV2H_RIIC_I2C_H */

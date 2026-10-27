@@ -62,7 +62,7 @@
 #define RZV2H_UART_BAUD_ERROR 3000
 #define RZV2H_NUARTS          10
 
-/* FSP SPI-relative SCI-B interrupt layout. */
+/* FSP SPI-relative SCI interrupt layout. */
 
 #define RZV2H_SCI_IRQ_BASE              SCI0_ERI_IRQn
 #define RZV2H_SCI_IRQ_CHANNEL_OFFSET    6
@@ -163,7 +163,7 @@ static const struct uart_ops_s g_uart_ops =
   .txempty      = up_txempty,
 };
 
-#ifdef CONFIG_RZV2H_SCI_B_UART0
+#ifdef CONFIG_RZV2H_SCI_UART0
 static char g_uart0rxbuffer[CONFIG_SCI0_RXBUFSIZE];
 static char g_uart0txbuffer[CONFIG_SCI0_TXBUFSIZE];
 static struct up_dev_s g_uart0priv;
@@ -203,13 +203,13 @@ static uart_cfg_t g_fsp_uart0_cfg =
   .p_extend = &g_fsp_uart0_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(0),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(0),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(0),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(0),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart0priv,
@@ -245,7 +245,7 @@ static struct uart_dev_s g_uart0port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART1
+#ifdef CONFIG_RZV2H_SCI_UART1
 static char g_uart1rxbuffer[CONFIG_SCI1_RXBUFSIZE];
 static char g_uart1txbuffer[CONFIG_SCI1_TXBUFSIZE];
 static struct up_dev_s g_uart1priv;
@@ -285,13 +285,13 @@ static uart_cfg_t g_fsp_uart1_cfg =
   .p_extend = &g_fsp_uart1_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(1),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(1),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(1),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(1),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart1priv,
@@ -327,7 +327,7 @@ static struct uart_dev_s g_uart1port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART2
+#ifdef CONFIG_RZV2H_SCI_UART2
 static char g_uart2rxbuffer[CONFIG_SCI2_RXBUFSIZE];
 static char g_uart2txbuffer[CONFIG_SCI2_TXBUFSIZE];
 static struct up_dev_s g_uart2priv;
@@ -367,13 +367,13 @@ static uart_cfg_t g_fsp_uart2_cfg =
   .p_extend = &g_fsp_uart2_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(2),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(2),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(2),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(2),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart2priv,
@@ -409,7 +409,7 @@ static struct uart_dev_s g_uart2port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART3
+#ifdef CONFIG_RZV2H_SCI_UART3
 static char g_uart3rxbuffer[CONFIG_SCI3_RXBUFSIZE];
 static char g_uart3txbuffer[CONFIG_SCI3_TXBUFSIZE];
 static struct up_dev_s g_uart3priv;
@@ -449,13 +449,13 @@ static uart_cfg_t g_fsp_uart3_cfg =
   .p_extend = &g_fsp_uart3_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(3),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(3),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(3),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(3),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart3priv,
@@ -491,7 +491,7 @@ static struct uart_dev_s g_uart3port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART4
+#ifdef CONFIG_RZV2H_SCI_UART4
 static char g_uart4rxbuffer[CONFIG_SCI4_RXBUFSIZE];
 static char g_uart4txbuffer[CONFIG_SCI4_TXBUFSIZE];
 static struct up_dev_s g_uart4priv;
@@ -531,13 +531,13 @@ static uart_cfg_t g_fsp_uart4_cfg =
   .p_extend = &g_fsp_uart4_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(4),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(4),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(4),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(4),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart4priv,
@@ -573,7 +573,7 @@ static struct uart_dev_s g_uart4port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART5
+#ifdef CONFIG_RZV2H_SCI_UART5
 static char g_uart5rxbuffer[CONFIG_SCI5_RXBUFSIZE];
 static char g_uart5txbuffer[CONFIG_SCI5_TXBUFSIZE];
 static struct up_dev_s g_uart5priv;
@@ -613,13 +613,13 @@ static uart_cfg_t g_fsp_uart5_cfg =
   .p_extend = &g_fsp_uart5_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(5),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(5),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(5),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(5),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart5priv,
@@ -655,7 +655,7 @@ static struct uart_dev_s g_uart5port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART6
+#ifdef CONFIG_RZV2H_SCI_UART6
 static char g_uart6rxbuffer[CONFIG_SCI6_RXBUFSIZE];
 static char g_uart6txbuffer[CONFIG_SCI6_TXBUFSIZE];
 static struct up_dev_s g_uart6priv;
@@ -695,13 +695,13 @@ static uart_cfg_t g_fsp_uart6_cfg =
   .p_extend = &g_fsp_uart6_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(6),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(6),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(6),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(6),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart6priv,
@@ -737,7 +737,7 @@ static struct uart_dev_s g_uart6port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART7
+#ifdef CONFIG_RZV2H_SCI_UART7
 static char g_uart7rxbuffer[CONFIG_SCI7_RXBUFSIZE];
 static char g_uart7txbuffer[CONFIG_SCI7_TXBUFSIZE];
 static struct up_dev_s g_uart7priv;
@@ -777,13 +777,13 @@ static uart_cfg_t g_fsp_uart7_cfg =
   .p_extend = &g_fsp_uart7_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(7),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(7),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(7),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(7),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart7priv,
@@ -819,7 +819,7 @@ static struct uart_dev_s g_uart7port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART8
+#ifdef CONFIG_RZV2H_SCI_UART8
 static char g_uart8rxbuffer[CONFIG_SCI8_RXBUFSIZE];
 static char g_uart8txbuffer[CONFIG_SCI8_TXBUFSIZE];
 static struct up_dev_s g_uart8priv;
@@ -859,13 +859,13 @@ static uart_cfg_t g_fsp_uart8_cfg =
   .p_extend = &g_fsp_uart8_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(8),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(8),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(8),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(8),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart8priv,
@@ -901,7 +901,7 @@ static struct uart_dev_s g_uart8port =
 };
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART9
+#ifdef CONFIG_RZV2H_SCI_UART9
 static char g_uart9rxbuffer[CONFIG_SCI9_RXBUFSIZE];
 static char g_uart9txbuffer[CONFIG_SCI9_TXBUFSIZE];
 static struct up_dev_s g_uart9priv;
@@ -941,13 +941,13 @@ static uart_cfg_t g_fsp_uart9_cfg =
   .p_extend = &g_fsp_uart9_cfg_extend,
   .p_transfer_tx = NULL,
   .p_transfer_rx = NULL,
-  .rxi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .rxi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .rxi_irq = RZV2H_SCI_RXI_IRQ(9),
-  .txi_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .txi_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .txi_irq = RZV2H_SCI_TXI_IRQ(9),
-  .tei_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .tei_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .tei_irq = RZV2H_SCI_TEI_IRQ(9),
-  .eri_ipl = CONFIG_RZV2H_SCI_B_IRQ_PRIORITY,
+  .eri_ipl = CONFIG_RZV2H_SCI_IRQ_PRIORITY,
   .eri_irq = RZV2H_SCI_ERI_IRQ(9),
   .p_callback = rzv2h_fsp_uart_cb,
   .p_context = &g_uart9priv,
@@ -985,67 +985,67 @@ static struct uart_dev_s g_uart9port =
 
 static struct uart_dev_s *const g_uart_devs[] =
 {
-#ifdef CONFIG_RZV2H_SCI_B_UART0
+#ifdef CONFIG_RZV2H_SCI_UART0
   &g_uart0port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART1
+#ifdef CONFIG_RZV2H_SCI_UART1
   &g_uart1port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART2
+#ifdef CONFIG_RZV2H_SCI_UART2
   &g_uart2port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART3
+#ifdef CONFIG_RZV2H_SCI_UART3
   &g_uart3port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART4
+#ifdef CONFIG_RZV2H_SCI_UART4
   &g_uart4port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART5
+#ifdef CONFIG_RZV2H_SCI_UART5
   &g_uart5port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART6
+#ifdef CONFIG_RZV2H_SCI_UART6
   &g_uart6port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART7
+#ifdef CONFIG_RZV2H_SCI_UART7
   &g_uart7port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART8
+#ifdef CONFIG_RZV2H_SCI_UART8
   &g_uart8port,
 #endif
-#ifdef CONFIG_RZV2H_SCI_B_UART9
+#ifdef CONFIG_RZV2H_SCI_UART9
   &g_uart9port,
 #endif
 };
 
 #if defined(CONFIG_SCI0_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART0)
+      defined(CONFIG_RZV2H_SCI_UART0)
 #  define CONSOLE_DEV (&g_uart0port)
 #elif defined(CONFIG_SCI1_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART1)
+      defined(CONFIG_RZV2H_SCI_UART1)
 #  define CONSOLE_DEV (&g_uart1port)
 #elif defined(CONFIG_SCI2_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART2)
+      defined(CONFIG_RZV2H_SCI_UART2)
 #  define CONSOLE_DEV (&g_uart2port)
 #elif defined(CONFIG_SCI3_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART3)
+      defined(CONFIG_RZV2H_SCI_UART3)
 #  define CONSOLE_DEV (&g_uart3port)
 #elif defined(CONFIG_SCI4_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART4)
+      defined(CONFIG_RZV2H_SCI_UART4)
 #  define CONSOLE_DEV (&g_uart4port)
 #elif defined(CONFIG_SCI5_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART5)
+      defined(CONFIG_RZV2H_SCI_UART5)
 #  define CONSOLE_DEV (&g_uart5port)
 #elif defined(CONFIG_SCI6_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART6)
+      defined(CONFIG_RZV2H_SCI_UART6)
 #  define CONSOLE_DEV (&g_uart6port)
 #elif defined(CONFIG_SCI7_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART7)
+      defined(CONFIG_RZV2H_SCI_UART7)
 #  define CONSOLE_DEV (&g_uart7port)
 #elif defined(CONFIG_SCI8_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART8)
+      defined(CONFIG_RZV2H_SCI_UART8)
 #  define CONSOLE_DEV (&g_uart8port)
 #elif defined(CONFIG_SCI9_SERIAL_CONSOLE) && \
-      defined(CONFIG_RZV2H_SCI_B_UART9)
+      defined(CONFIG_RZV2H_SCI_UART9)
 #  define CONSOLE_DEV (&g_uart9port)
 #endif
 
@@ -1064,7 +1064,7 @@ static const char *const g_tty_paths[RZV2H_NUARTS] =
  * Name: rzv2h_fsp_uart_baud_calculate
  *
  * Description:
- *   Calculate the FSP baud-rate settings for an SCI-B UART.
+ *   Calculate the FSP baud-rate settings for an SCI UART.
  *
  ****************************************************************************/
 
@@ -1082,7 +1082,7 @@ static int rzv2h_fsp_uart_baud_calculate(
  * Name: rzv2h_fsp_uart_open
  *
  * Description:
- *   Configure and open an SCI-B UART instance through the FSP API.
+ *   Configure and open an SCI UART instance through the FSP API.
  *
  ****************************************************************************/
 
@@ -1136,7 +1136,7 @@ static int rzv2h_fsp_uart_open(struct up_dev_s *ctx)
  * Name: rzv2h_fsp_uart_close
  *
  * Description:
- *   Close an SCI-B UART instance through the FSP API.
+ *   Close an SCI UART instance through the FSP API.
  *
  ****************************************************************************/
 
@@ -1168,7 +1168,7 @@ static int rzv2h_fsp_uart_close(struct up_dev_s *ctx)
  * Name: rzv2h_fsp_uart_set_baud
  *
  * Description:
- *   Change the baud rate of an open SCI-B UART instance.
+ *   Change the baud rate of an open SCI UART instance.
  *
  ****************************************************************************/
 
@@ -1217,7 +1217,7 @@ static int rzv2h_fsp_uart_set_baud(struct up_dev_s *ctx, uint32_t baud)
  * Name: rzv2h_fsp_uart_rxint
  *
  * Description:
- *   Enable or disable receive interrupt delivery for an SCI-B UART.
+ *   Enable or disable receive interrupt delivery for an SCI UART.
  *
  ****************************************************************************/
 
@@ -1275,7 +1275,7 @@ static void rzv2h_fsp_uart_rx_rearm(struct up_dev_s *ctx)
  * Name: rzv2h_fsp_uart_txint
  *
  * Description:
- *   Enable or disable transmit processing for an SCI-B UART.
+ *   Enable or disable transmit processing for an SCI UART.
  *
  ****************************************************************************/
 
@@ -1331,7 +1331,7 @@ static int rzv2h_fsp_uart_send_byte(struct up_dev_s *ctx, uint8_t ch)
  *
  * Description:
  *   Translate a NuttX GIC interrupt into an FSP interrupt context and call
- *   the corresponding SCI-B interrupt handler.
+ *   the corresponding SCI interrupt handler.
  *
  ****************************************************************************/
 
@@ -1494,7 +1494,7 @@ void rzv2h_fsp_uart_cb(uart_callback_args_t *args)
  * Name: up_setup
  *
  * Description:
- *   Configure the pins and initialize the SCI-B UART instance.
+ *   Configure the pins and initialize the SCI UART instance.
  *
  ****************************************************************************/
 
@@ -1580,7 +1580,7 @@ static int up_attach(struct uart_dev_s *dev)
   tei_irq = RZV2H_FSP_TO_GIC_IRQ(cfg->tei_irq);
 
   /* arm_gic0_initialize() resets every SPI to level-sensitive.  Restore
-   * the trigger modes required by SCI-B after NuttX initializes the GIC:
+   * the trigger modes required by SCI after NuttX initializes the GIC:
    * ERI/TEI are level-sensitive and RXI/TXI are edge-sensitive.
    */
 
@@ -1608,10 +1608,10 @@ static int up_attach(struct uart_dev_s *dev)
       return ret;
     }
 
-  up_prioritize_irq(eri_irq, CONFIG_RZV2H_SCI_B_IRQ_PRIORITY << 4);
-  up_prioritize_irq(rxi_irq, CONFIG_RZV2H_SCI_B_IRQ_PRIORITY << 4);
-  up_prioritize_irq(txi_irq, CONFIG_RZV2H_SCI_B_IRQ_PRIORITY << 4);
-  up_prioritize_irq(tei_irq, CONFIG_RZV2H_SCI_B_IRQ_PRIORITY << 4);
+  up_prioritize_irq(eri_irq, CONFIG_RZV2H_SCI_IRQ_PRIORITY << 4);
+  up_prioritize_irq(rxi_irq, CONFIG_RZV2H_SCI_IRQ_PRIORITY << 4);
+  up_prioritize_irq(txi_irq, CONFIG_RZV2H_SCI_IRQ_PRIORITY << 4);
+  up_prioritize_irq(tei_irq, CONFIG_RZV2H_SCI_IRQ_PRIORITY << 4);
 
   ret = irq_attach(eri_irq, rzv2h_uart_interrupt, dev);
   if (ret < 0)
@@ -1655,7 +1655,7 @@ static int up_attach(struct uart_dev_s *dev)
  * Name: up_detach
  *
  * Description:
- *   Disable and detach all interrupts for an SCI-B UART instance.
+ *   Disable and detach all interrupts for an SCI UART instance.
  *
  ****************************************************************************/
 
@@ -1906,7 +1906,7 @@ static int up_receive(struct uart_dev_s *dev, unsigned int *status)
 
   /* uart_recvchars() still consumes a hardware byte when its software
    * receive ring is full.  Count that discarded byte separately from an
-   * SCI-B hardware overrun.
+   * SCI hardware overrun.
    */
 
   if (nexthead == dev->recv.tail)
@@ -2022,58 +2022,58 @@ static bool up_txempty(struct uart_dev_s *dev)
  * Name: rzv2h_serial_setup
  *
  * Description:
- *   Configure the board-selected pins for each enabled SCI-B UART channel.
+ *   Configure the board-selected pins for each enabled SCI UART channel.
  *
  ****************************************************************************/
 
 void rzv2h_serial_setup(void)
 {
-#ifdef CONFIG_RZV2H_SCI_B_UART0
+#ifdef CONFIG_RZV2H_SCI_UART0
   rzv2h_configgpio(BOARD_SCI0_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI0_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART1
+#ifdef CONFIG_RZV2H_SCI_UART1
   rzv2h_configgpio(BOARD_SCI1_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI1_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART2
+#ifdef CONFIG_RZV2H_SCI_UART2
   rzv2h_configgpio(BOARD_SCI2_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI2_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART3
+#ifdef CONFIG_RZV2H_SCI_UART3
   rzv2h_configgpio(BOARD_SCI3_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI3_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART4
+#ifdef CONFIG_RZV2H_SCI_UART4
   rzv2h_configgpio(BOARD_SCI4_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI4_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART5
+#ifdef CONFIG_RZV2H_SCI_UART5
   rzv2h_configgpio(BOARD_SCI5_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI5_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART6
+#ifdef CONFIG_RZV2H_SCI_UART6
   rzv2h_configgpio(BOARD_SCI6_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI6_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART7
+#ifdef CONFIG_RZV2H_SCI_UART7
   rzv2h_configgpio(BOARD_SCI7_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI7_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART8
+#ifdef CONFIG_RZV2H_SCI_UART8
   rzv2h_configgpio(BOARD_SCI8_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI8_RXD_GPIO);
 #endif
 
-#ifdef CONFIG_RZV2H_SCI_B_UART9
+#ifdef CONFIG_RZV2H_SCI_UART9
   rzv2h_configgpio(BOARD_SCI9_TXD_GPIO);
   rzv2h_configgpio(BOARD_SCI9_RXD_GPIO);
 #endif
@@ -2083,7 +2083,7 @@ void rzv2h_serial_setup(void)
  * Name: rzv2h_earlyserialinit
  *
  * Description:
- *   Initialize the selected SCI-B serial console during early boot.
+ *   Initialize the selected SCI serial console during early boot.
  *
  ****************************************************************************/
 
@@ -2100,7 +2100,7 @@ void rzv2h_earlyserialinit(void)
  * Name: arm_serialinit
  *
  * Description:
- *   Register the enabled SCI-B UART devices with the serial framework.
+ *   Register the enabled SCI UART devices with the serial framework.
  *
  ****************************************************************************/
 

@@ -33,12 +33,16 @@ if(CONFIG_DEV_GPIO)
   list(APPEND SRCS rzv2h_gpio.c)
 endif()
 
-if(CONFIG_RZV2H_SCI_B)
+if(CONFIG_RZV2H_SCI)
   list(APPEND SRCS rzv2h_serial.c)
 endif()
 
-if(CONFIG_RZV2H_I2C)
-  list(APPEND SRCS rzv2h_i2c.c)
+if(CONFIG_RZV2H_RIIC_I2C)
+  list(APPEND SRCS rzv2h_riic_i2c.c)
+endif()
+
+if(CONFIG_RZV2H_SCI_I2C)
+  list(APPEND SRCS rzv2h_sci_i2c.c)
 endif()
 
 if(CONFIG_RZV2H_ADC)
