@@ -105,3 +105,7 @@ endif
 ifeq ($(CONFIG_RZV2H_RPTUN),y)
 CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_mhu_b_ns$(DELIM)r_mhu_b_ns.c
 endif
+
+ifeq ($(CONFIG_RZV2H_CANFD),y)
+CHIP_CSRCS += $(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)src$(DELIM)rzv$(DELIM)r_canfd$(DELIM)r_canfd.c
+endif

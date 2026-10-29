@@ -47,6 +47,7 @@ RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
 PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 QSPI        Yes      xSPI controller in QSPI mode, manual-command transfers only
 OpenAMP     Yes      RPTUN/RPMsg transport using shared memory and MHU-B (Mailbox)
+CAN         Yes      CAN-FD on channels 0-5
 ==========  =======  ============================================================
 
 CLOCK
@@ -141,6 +142,7 @@ TINT      32 (tint0-tint31)    479-448
 RIIC I2C  9 (riic0-riic8)      447-430 (txi/rxi only)
 ADC       1 (adc0)             429
 SPI       3 (spi0-spi2)        428-423 (txi/rxi only)
+CAN       6 (can0-can5)        419-400 (gerr/grecc, rec/trx/err)
 ========  ==================  ================================
 
 Changing interrupt-select IDs (RIIC2 as an example)
@@ -354,6 +356,28 @@ exceed the requested frequency.
 
 See :doc:`the RZV2H-EVK board documentation <boards/rzv2h-evk/index>` for
 board-level bring-up, partitioning, and configuration details.
+
+CAN
+------
+
+The CAN-FD driver supports CAN FD operation on channels 0 through 5.
+
+``CONFIG_RZV2H_CANFD`` enables the driver and ``CONFIG_RZV2H_CANFDn``
+selects each required channel. Each channel has independent Kconfig
+options for the nominal and data bit rates (computed from the rates and
+sample point, or set manually), delay compensation, the receive FIFO,
+the number of TX message buffers, channel error interrupts, REC/TRX/ERR
+interrupt-select (SEL) IRQ numbers, and interrupt priority.
+
+Error reporting (``CONFIG_CAN_ERRORS``) is supported.
+
+With ``CONFIG_CAN_LOOPBACK``, each channel enters internal or external
+loopback mode when opened, as selected by
+``CONFIG_RZV2H_CANFD_LOOPBACK_INTERNAL`` or
+``CONFIG_RZV2H_CANFD_LOOPBACK_EXTERNAL``.
+
+With ``CONFIG_RZV2H_CANFD_SOCKET``, the channels are SocketCAN network
+interfaces (``can0`` to ``can5``) instead of character devices.
 
 Supported Boards
 ================

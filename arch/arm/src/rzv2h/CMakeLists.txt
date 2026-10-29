@@ -65,4 +65,8 @@ if(CONFIG_RZV2H_RPTUN)
   list(APPEND SRCS rzv2h_rptun.c)
 endif()
 
+if(CONFIG_RZV2H_CANFD)
+  list(APPEND SRCS rzv2h_canfd.c)
+endif()
+
 target_sources(arch PRIVATE ${SRCS})
