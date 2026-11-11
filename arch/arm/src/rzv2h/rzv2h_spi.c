@@ -333,6 +333,7 @@ static spi_b_extended_cfg_t g_spi0_ext_cfg =
   .transmit_fifo_threshold = 0,
   .receive_fifo_threshold = 0,
   .receive_data_ready_detect_adjustment = 0,
+  .p_reg = (void *)R_SPI_B0,
 };
 
 static spi_cfg_t g_spi0_cfg =
@@ -460,6 +461,7 @@ static spi_b_extended_cfg_t g_spi1_ext_cfg =
   .transmit_fifo_threshold = 0,
   .receive_fifo_threshold = 0,
   .receive_data_ready_detect_adjustment = 0,
+  .p_reg = (void *)R_SPI_B1,
 };
 
 static spi_cfg_t g_spi1_cfg =
@@ -587,6 +589,7 @@ static spi_b_extended_cfg_t g_spi2_ext_cfg =
   .transmit_fifo_threshold = 0,
   .receive_fifo_threshold = 0,
   .receive_data_ready_detect_adjustment = 0,
+  .p_reg = (void *)R_SPI_B2,
 };
 
 static spi_cfg_t g_spi2_cfg =
@@ -691,7 +694,7 @@ static int rzv2h_spi_calculate_bitrate(struct rzv2h_spi_priv_s *priv,
       return -ENOTSUP;
     }
 
-  source = R_FSP_SystemClockHzGet(BSP_FEATURE_SPI_CLK);
+  source = R_FSP_SystemClockHzGet(BSP_FEATURE_SPI_PCLK);
   if (source == 0)
     {
       return -EIO;

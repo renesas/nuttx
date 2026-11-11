@@ -20,33 +20,9 @@
 #
 ############################################################################
 
-# External hal renesas
-HAL_EXDIR := $(TOPDIR)$(DELIM)..$(DELIM)external$(DELIM)hal_renesas
-HAL_DRIVER_EXDIR := $(HAL_EXDIR)$(DELIM)drivers
-HAL_NUTTX_EXDIR := $(HAL_EXDIR)$(DELIM)nuttx
+# Renesas HAL (fetched by the common Renesas Make.defs)
 
-# Hal renesas in the arch tree
-HAL_INNDIR := $(TOPDIR)$(DELIM)arch$(DELIM)arm$(DELIM)src$(DELIM)rzv2h$(DELIM)hal_renesas
-HAL_DRIVER_INNDIR := $(HAL_INNDIR)$(DELIM)drivers
-HAL_NUTTX_INNDIR := $(HAL_INNDIR)$(DELIM)nuttx
-
-# Tool copy
-TOOL_CP :=$(TOPDIR)$(DELIM)tools$(DELIM)copydir.sh
-
-# Remove Renesas HAL
-distclean::
-	@rm -rf "$(HAL_INNDIR)"
-
-# Copy Renesas HAL
-hal_cp:
-	@echo "[INFOR]: Copy Renesas HAL into arch tree"
-	@rm -rf "$(HAL_INNDIR)"
-	@mkdir -p "$(HAL_INNDIR)"
-	@$(TOOL_CP) "$(HAL_DRIVER_EXDIR)" "$(HAL_DRIVER_INNDIR)"
-	@$(TOOL_CP) "$(HAL_NUTTX_EXDIR)" "$(HAL_NUTTX_INNDIR)"
-
-context:: hal_cp
-
+include common/renesas/Make.defs
 include chip/hal.mk
 CFLAGS += $(INCLUDES)
 CFLAGS += -Wno-undef

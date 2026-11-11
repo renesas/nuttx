@@ -190,6 +190,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart0_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI0,
 };
 
 static uart_cfg_t g_fsp_uart0_cfg =
@@ -272,6 +273,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart1_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI1,
 };
 
 static uart_cfg_t g_fsp_uart1_cfg =
@@ -354,6 +356,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart2_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI2,
 };
 
 static uart_cfg_t g_fsp_uart2_cfg =
@@ -436,6 +439,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart3_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI3,
 };
 
 static uart_cfg_t g_fsp_uart3_cfg =
@@ -518,6 +522,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart4_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI4,
 };
 
 static uart_cfg_t g_fsp_uart4_cfg =
@@ -600,6 +605,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart5_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI5,
 };
 
 static uart_cfg_t g_fsp_uart5_cfg =
@@ -682,6 +688,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart6_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI6,
 };
 
 static uart_cfg_t g_fsp_uart6_cfg =
@@ -764,6 +771,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart7_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI7,
 };
 
 static uart_cfg_t g_fsp_uart7_cfg =
@@ -846,6 +854,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart8_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI8,
 };
 
 static uart_cfg_t g_fsp_uart8_cfg =
@@ -928,6 +937,7 @@ static sci_b_uart_extended_cfg_t g_fsp_uart9_cfg_extend =
     {
       .enable = 0,
     },
+  .p_reg = (void *)R_SCI9,
 };
 
 static uart_cfg_t g_fsp_uart9_cfg =

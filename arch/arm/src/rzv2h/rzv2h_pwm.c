@@ -112,6 +112,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt0_pwm_priv =
   .channel   = 0,
   .pin_cfg   = BOARD_GPT0_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT0_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT0,
+  },
 };
 #endif
 
@@ -122,6 +126,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt1_pwm_priv =
   .channel   = 1,
   .pin_cfg   = BOARD_GPT1_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT1_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT1,
+  },
 };
 #endif
 
@@ -132,6 +140,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt2_pwm_priv =
   .channel   = 2,
   .pin_cfg   = BOARD_GPT2_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT2_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT2,
+  },
 };
 #endif
 
@@ -142,6 +154,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt3_pwm_priv =
   .channel   = 3,
   .pin_cfg   = BOARD_GPT3_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT3_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT3,
+  },
 };
 #endif
 
@@ -152,6 +168,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt4_pwm_priv =
   .channel   = 4,
   .pin_cfg   = BOARD_GPT4_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT4_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT4,
+  },
 };
 #endif
 
@@ -162,6 +182,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt5_pwm_priv =
   .channel   = 5,
   .pin_cfg   = BOARD_GPT5_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT5_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT5,
+  },
 };
 #endif
 
@@ -172,6 +196,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt6_pwm_priv =
   .channel   = 6,
   .pin_cfg   = BOARD_GPT6_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT6_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT6,
+  },
 };
 #endif
 
@@ -182,6 +210,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt7_pwm_priv =
   .channel   = 7,
   .pin_cfg   = BOARD_GPT7_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT7_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT7,
+  },
 };
 #endif
 
@@ -192,6 +224,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt8_pwm_priv =
   .channel   = 8,
   .pin_cfg   = BOARD_GPT8_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT8_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT10,
+  },
 };
 #endif
 
@@ -202,6 +238,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt9_pwm_priv =
   .channel   = 9,
   .pin_cfg   = BOARD_GPT9_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT9_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT11,
+  },
 };
 #endif
 
@@ -212,6 +252,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt10_pwm_priv =
   .channel   = 10,
   .pin_cfg   = BOARD_GPT10_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT10_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT12,
+  },
 };
 #endif
 
@@ -222,6 +266,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt11_pwm_priv =
   .channel   = 11,
   .pin_cfg   = BOARD_GPT11_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT11_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT13,
+  },
 };
 #endif
 
@@ -232,6 +280,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt12_pwm_priv =
   .channel   = 12,
   .pin_cfg   = BOARD_GPT12_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT12_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT14,
+  },
 };
 #endif
 
@@ -242,6 +294,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt13_pwm_priv =
   .channel   = 13,
   .pin_cfg   = BOARD_GPT13_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT13_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT15,
+  },
 };
 #endif
 
@@ -252,6 +308,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt14_pwm_priv =
   .channel   = 14,
   .pin_cfg   = BOARD_GPT14_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT14_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT16,
+  },
 };
 #endif
 
@@ -262,6 +322,10 @@ static struct rzv2h_gpt_pwm_priv_s g_gpt15_pwm_priv =
   .channel   = 15,
   .pin_cfg   = BOARD_GPT15_GTIOC_GPIO,
   .is_gtioca = BOARD_GPT15_USE_GTIOCA,
+  .ext_cfg   =
+  {
+    .p_reg   = (void *)R_GPT17,
+  },
 };
 #endif
 

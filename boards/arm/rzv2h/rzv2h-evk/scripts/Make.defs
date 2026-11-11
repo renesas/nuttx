@@ -59,7 +59,7 @@ HOSTCFLAGS = -Wall -Wstrict-prototypes -Wshadow -Wundef -g -pipe
 HOSTLDFLAGS =
 
 #hal renesas include
-HAL_INDIR = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)chip$(DELIM)hal_renesas
+HAL_INDIR = $(TOPDIR)$(DELIM)arch$(DELIM)$(CONFIG_ARCH)$(DELIM)src$(DELIM)common$(DELIM)renesas$(DELIM)hal_renesas
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)inc
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)inc$(DELIM)instances
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)drivers$(DELIM)rz$(DELIM)fsp$(DELIM)inc$(DELIM)instances$(DELIM)rzv
@@ -75,7 +75,6 @@ CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rz_cfg$(DEL
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rz_cfg$(DELIM)fsp_cfg$(DELIM)rzv
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv$(DELIM)cr
-CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rzv_gen
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis
 CFLAGS += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis$(DELIM)include$(DELIM)cr
 

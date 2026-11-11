@@ -72,6 +72,13 @@
 
 static mhu_b_ns_instance_ctrl_t g_rzv2h_rptun_mhu_ctrl;
 
+/* Register block of MHU channel RZV2H_RPTUN_MHU_CHANNEL (3) */
+
+static const mhu_b_ns_extended_cfg_t g_rzv2h_rptun_mhu_extend =
+{
+  .p_reg = (void *)R_MHU_NS3,
+};
+
 static const mhu_cfg_t g_rzv2h_rptun_mhu_cfg =
 {
   .channel         = RZV2H_RPTUN_MHU_CHANNEL,
@@ -80,6 +87,7 @@ static const mhu_cfg_t g_rzv2h_rptun_mhu_cfg =
   .p_callback      = NULL,
   .p_shared_memory = NULL,
   .p_context       = NULL,
+  .p_extend        = &g_rzv2h_rptun_mhu_extend,
 };
 
 static const mhu_instance_t g_rzv2h_rptun_mhu =

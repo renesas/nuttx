@@ -365,6 +365,7 @@ static riic_master_extended_cfg_t g_i2c_master0_extend =
   .sti_irq = RZV2H_IRQ_RIIC0_STI,
   .ali_irq = RZV2H_IRQ_RIIC0_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC0_TMOI,
+  .p_reg = (void *)R_RIIC0,
 };
 
 static i2c_master_cfg_t g_i2c_master0_cfg =
@@ -438,6 +439,7 @@ static riic_master_extended_cfg_t g_i2c_master1_extend =
   .sti_irq = RZV2H_IRQ_RIIC1_STI,
   .ali_irq = RZV2H_IRQ_RIIC1_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC1_TMOI,
+  .p_reg = (void *)R_RIIC1,
 };
 
 static i2c_master_cfg_t g_i2c_master1_cfg =
@@ -511,6 +513,7 @@ static riic_master_extended_cfg_t g_i2c_master2_extend =
   .sti_irq = RZV2H_IRQ_RIIC2_STI,
   .ali_irq = RZV2H_IRQ_RIIC2_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC2_TMOI,
+  .p_reg = (void *)R_RIIC2,
 };
 
 static i2c_master_cfg_t g_i2c_master2_cfg =
@@ -584,6 +587,7 @@ static riic_master_extended_cfg_t g_i2c_master3_extend =
   .sti_irq = RZV2H_IRQ_RIIC3_STI,
   .ali_irq = RZV2H_IRQ_RIIC3_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC3_TMOI,
+  .p_reg = (void *)R_RIIC3,
 };
 
 static i2c_master_cfg_t g_i2c_master3_cfg =
@@ -657,6 +661,7 @@ static riic_master_extended_cfg_t g_i2c_master4_extend =
   .sti_irq = RZV2H_IRQ_RIIC4_STI,
   .ali_irq = RZV2H_IRQ_RIIC4_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC4_TMOI,
+  .p_reg = (void *)R_RIIC4,
 };
 
 static i2c_master_cfg_t g_i2c_master4_cfg =
@@ -730,6 +735,7 @@ static riic_master_extended_cfg_t g_i2c_master5_extend =
   .sti_irq = RZV2H_IRQ_RIIC5_STI,
   .ali_irq = RZV2H_IRQ_RIIC5_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC5_TMOI,
+  .p_reg = (void *)R_RIIC5,
 };
 
 static i2c_master_cfg_t g_i2c_master5_cfg =
@@ -803,6 +809,7 @@ static riic_master_extended_cfg_t g_i2c_master6_extend =
   .sti_irq = RZV2H_IRQ_RIIC6_STI,
   .ali_irq = RZV2H_IRQ_RIIC6_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC6_TMOI,
+  .p_reg = (void *)R_RIIC6,
 };
 
 static i2c_master_cfg_t g_i2c_master6_cfg =
@@ -876,6 +883,7 @@ static riic_master_extended_cfg_t g_i2c_master7_extend =
   .sti_irq = RZV2H_IRQ_RIIC7_STI,
   .ali_irq = RZV2H_IRQ_RIIC7_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC7_TMOI,
+  .p_reg = (void *)R_RIIC7,
 };
 
 static i2c_master_cfg_t g_i2c_master7_cfg =
@@ -949,6 +957,7 @@ static riic_master_extended_cfg_t g_i2c_master8_extend =
   .sti_irq = RZV2H_IRQ_RIIC8_STI,
   .ali_irq = RZV2H_IRQ_RIIC8_ALI,
   .tmoi_irq = RZV2H_IRQ_RIIC8_TMOI,
+  .p_reg = (void *)R_RIIC8,
 };
 
 static i2c_master_cfg_t g_i2c_master8_cfg =
