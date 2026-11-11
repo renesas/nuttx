@@ -1085,6 +1085,7 @@ static canfd_extended_cfg_t g_canfd0_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd0_cfg =
@@ -1185,6 +1186,7 @@ static canfd_extended_cfg_t g_canfd1_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd1_cfg =
@@ -1285,6 +1287,7 @@ static canfd_extended_cfg_t g_canfd2_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd2_cfg =
@@ -1385,6 +1388,7 @@ static canfd_extended_cfg_t g_canfd3_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd3_cfg =
@@ -1485,6 +1489,7 @@ static canfd_extended_cfg_t g_canfd4_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd4_cfg =
@@ -1585,6 +1590,7 @@ static canfd_extended_cfg_t g_canfd5_extend_cfg =
 #endif
   .p_global_cfg          = &g_canfd_global_cfg,
   .txmb_merge_mode_enable = CANFD_TXMB_MERGE_MODE_DISABLE,
+  .p_reg                 = (void *)R_CANFD,
 };
 
 static can_cfg_t g_canfd5_cfg =

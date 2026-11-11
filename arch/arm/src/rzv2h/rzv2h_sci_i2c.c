@@ -224,6 +224,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c0_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C0_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI0,
   },
   .cfg                =
   {
@@ -274,6 +275,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c1_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C1_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI1,
   },
   .cfg                =
   {
@@ -324,6 +326,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c2_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C2_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI2,
   },
   .cfg                =
   {
@@ -374,6 +377,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c3_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C3_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI3,
   },
   .cfg                =
   {
@@ -424,6 +428,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c4_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C4_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI4,
   },
   .cfg                =
   {
@@ -474,6 +479,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c5_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C5_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI5,
   },
   .cfg                =
   {
@@ -524,6 +530,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c6_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C6_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI6,
   },
   .cfg                =
   {
@@ -574,6 +581,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c7_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C7_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI7,
   },
   .cfg                =
   {
@@ -624,6 +632,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c8_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C8_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI8,
   },
   .cfg                =
   {
@@ -674,6 +683,7 @@ static struct rzv2h_sci_i2c_priv_s g_rzv2h_sci_i2c9_priv =
       .snfr_value     = CONFIG_RZV2H_SCI_I2C9_NF_CLK,
       .clock_source   = SCI_B_I2C_CLOCK_SOURCE_SCISPICLK,
     },
+    .p_reg            = (void *)R_SCI9,
   },
   .cfg                =
   {

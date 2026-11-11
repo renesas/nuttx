@@ -23,7 +23,7 @@
 ############################################################################
 # Define hal paths
 ############################################################################
-HAL_INDIR := chip$(DELIM)hal_renesas
+HAL_INDIR := common$(DELIM)renesas$(DELIM)hal_renesas
 
 ############################################################################
 # Include header paths of BSP
@@ -44,7 +44,6 @@ INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rz_cfg$(D
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rz_cfg$(DELIM)fsp_cfg$(DELIM)rzv
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)portable$(DELIM)rzv$(DELIM)cr
-INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)rz$(DELIM)rzv_gen
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis
 INCLUDES += $(INCDIR_PREFIX)$(HAL_INDIR)$(DELIM)nuttx$(DELIM)cmsis$(DELIM)include$(DELIM)cr
 

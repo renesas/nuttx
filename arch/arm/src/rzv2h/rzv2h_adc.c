@@ -196,6 +196,7 @@ static const adc_e_extended_cfg_t g_rzv2h_adc_extend =
 #endif
   .window_b_irq                = FSP_INVALID_VECTOR,
   .window_b_ipl                = 0,
+  .p_reg                       = (void *)R_ADC_E0,
 };
 
 static const adc_cfg_t g_rzv2h_adc_cfg =

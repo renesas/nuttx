@@ -1,0 +1,78 @@
+############################################################################
+# arch/arm/src/common/renesas/Make.defs
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.  The
+# ASF licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance with the
+# License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+############################################################################
+
+############################################################################
+# Renesas HAL (hal_renesas) for all Renesas Arm chips
+############################################################################
+
+# The HAL is fetched into this directory when the context target runs.  Chips
+# that use it (rzv2h, ...) include this file and then add the include paths
+# and sources of the HAL modules they need (see rzv2h/hal.mk).
+#
+# RENESAS_HAL_URL and RENESAS_HAL_VERSION can be overridden from the
+# environment, e.g. RENESAS_HAL_URL=../external/hal_renesas make
+
+RENESAS_HAL_REPO = hal_renesas
+
+# Renesas FSP 4.2.0, branch RAZBSP-1125_Nuttx_Support_RZ_FSP_V420.
+
+ifndef RENESAS_HAL_URL
+	RENESAS_HAL_URL = https://gitlab.global.renesas.com/nuttx-dev/hal_renesas.git
+endif
+
+ifndef RENESAS_HAL_VERSION
+	RENESAS_HAL_VERSION = 6e44ba4f9f0d9a9f3ea8c87115001eccf748460e
+endif
+
+RENESAS_HAL_DIR = common$(DELIM)renesas$(DELIM)$(RENESAS_HAL_REPO)
+
+# Only these paths of the repository are needed (the rest is Zephyr and
+# other non NuttX content, and the FSP sources of the other families
+# rza, rzg, rzn and rzt).  Non-cone mode is used so that a single family
+# below drivers/rz/fsp/src can be selected.
+#
+# rz[agnt] is a glob matching the RZ families to exclude: rza, rzg, rzn and
+# rzt (rzv is the only family kept).
+
+RENESAS_HAL_SPARSE = /nuttx /drivers/rz/fsp/inc /drivers/rz/fsp/src/rzv
+RENESAS_HAL_SPARSE += '!/drivers/rz/fsp/inc/instances/rz[agnt]'
+RENESAS_HAL_SPARSE += '!/nuttx/rz/portable/rz[agnt]'
+RENESAS_HAL_SPARSE += '!/nuttx/rz/rz_cfg/fsp_cfg/rz[agnt]'
+RENESAS_HAL_SPARSE += '!/nuttx/rz/rz_cfg/fsp_cfg/bsp/rz[agnt]*'
+
+$(RENESAS_HAL_DIR):
+	$(Q) echo "Cloning Renesas HAL"
+	$(Q) git clone --quiet --no-checkout $(RENESAS_HAL_URL) $(RENESAS_HAL_DIR)
+	$(Q) git -C $(RENESAS_HAL_DIR) sparse-checkout set --no-cone $(RENESAS_HAL_SPARSE)
+	$(Q) echo "Renesas HAL: $(RENESAS_HAL_VERSION)"
+	$(Q) git -C $(RENESAS_HAL_DIR) checkout --quiet $(RENESAS_HAL_VERSION)
+
+# Re-clone when the pinned version is not part of the existing checkout
+
+renesas_hal_check:
+	$(Q) $(call CHECK_COMMITSHA,$(RENESAS_HAL_DIR),$(RENESAS_HAL_VERSION))
+
+context:: renesas_hal_check
+context:: $(RENESAS_HAL_DIR)
+
+distclean::
+	$(call DELDIR, $(RENESAS_HAL_DIR))

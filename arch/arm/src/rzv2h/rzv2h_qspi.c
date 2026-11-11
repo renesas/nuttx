@@ -878,6 +878,7 @@ struct qspi_dev_s *rzv2h_qspibus_initialize(int intf,
       priv->extend.pre_init          = rzv2h_qspi_pre_init;
       priv->extend.post_init         = NULL;
       priv->extend.stop_on_close     = false;
+      priv->extend.p_reg             = (void *)R_XSPI0;
 
       priv->cfg.spi_protocol   = SPI_FLASH_PROTOCOL_1S_1S_1S;
       priv->cfg.read_mode      = SPI_FLASH_READ_MODE_STANDARD;
