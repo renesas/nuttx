@@ -45,9 +45,9 @@
 struct noterpmsg_driver_s
 {
   struct note_driver_s  driver;
+  FAR uint8_t          *buffer;
   volatile size_t       head;
   volatile size_t       tail;
-  uint8_t               buffer[CONFIG_DRIVERS_NOTERPMSG_BUFSIZE];
   struct work_s         work;
   struct rpmsg_endpoint ept;
   spinlock_t            lock;
@@ -63,6 +63,8 @@ static void noterpmsg_add(FAR struct note_driver_s *driver,
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+
+static uint8_t g_noterpmsg_buffer[CONFIG_DRIVERS_NOTERPMSG_BUFSIZE];
 
 static const struct note_driver_ops_s g_noterpmsg_ops =
 {
@@ -85,6 +87,7 @@ struct noterpmsg_driver_s g_noterpmsg_driver =
 #endif
     &g_noterpmsg_ops
   },
+  g_noterpmsg_buffer
 };
 
 /****************************************************************************
@@ -122,7 +125,7 @@ static inline void noterpmsg_remove(FAR struct noterpmsg_driver_s *drv)
   uint8_t notelen = drv->buffer[tail];
 
   DEBUGASSERT(notelen <= noterpmsg_length(drv));
-  drv->tail = noterpmsg_next(drv, tail, notelen);
+  drv->tail = noterpmsg_next(drv, tail, NOTE_ALIGN(notelen));
 }
 
 static bool noterpmsg_transfer(FAR struct noterpmsg_driver_s *drv,
@@ -131,19 +134,28 @@ static bool noterpmsg_transfer(FAR struct noterpmsg_driver_s *drv,
   for (; ; )
     {
       FAR uint8_t *buffer;
+      irqstate_t flags;
       uint32_t space;
       size_t len;
 
-      len = noterpmsg_length(drv);
-      if (len == 0)
+      if (!is_rpmsg_ept_ready(&drv->ept))
         {
-          return true;
+          return false;
         }
 
       buffer = rpmsg_get_tx_payload_buffer(&drv->ept, &space, wait);
       if (buffer == NULL)
         {
           return false;
+        }
+
+      flags = spin_lock_irqsave_notrace(&drv->lock);
+      len = noterpmsg_length(drv);
+      if (len == 0)
+        {
+          spin_unlock_irqrestore_notrace(&drv->lock, flags);
+          rpmsg_release_tx_buffer(&drv->ept, buffer);
+          return true;
         }
 
       if (space < len)
@@ -154,10 +166,10 @@ static bool noterpmsg_transfer(FAR struct noterpmsg_driver_s *drv,
           uint8_t notelen = drv->buffer[pos];
 
           len = 0;
-          while (len + notelen <= space)
+          while (len + NOTE_ALIGN(notelen) <= space)
             {
-              pos = noterpmsg_next(drv, pos, notelen);
-              len += notelen;
+              pos = noterpmsg_next(drv, pos, NOTE_ALIGN(notelen));
+              len += NOTE_ALIGN(notelen);
               notelen = drv->buffer[pos];
             }
         }
@@ -173,22 +185,20 @@ static bool noterpmsg_transfer(FAR struct noterpmsg_driver_s *drv,
           rpmsg_release_tx_buffer(&drv->ept, buffer);
         }
 
-      drv->tail = noterpmsg_next(drv, drv->tail, len);
+      drv->tail = noterpmsg_next(drv, drv->tail, NOTE_ALIGN(len));
+      spin_unlock_irqrestore_notrace(&drv->lock, flags);
     }
 }
 
 static void noterpmsg_work(FAR void *priv)
 {
   FAR struct noterpmsg_driver_s *drv = priv;
-  irqstate_t flags = spin_lock_irqsave_notrace(&drv->lock);
 
   if (!noterpmsg_transfer(drv, false))
     {
       work_queue(HPWORK, &drv->work, noterpmsg_work, drv,
                  NOTE_RPMSG_WORK_DELAY);
     }
-
-  spin_unlock_irqrestore_notrace(&drv->lock, flags);
 }
 
 static void noterpmsg_add(FAR struct note_driver_s *driver,
@@ -196,19 +206,23 @@ static void noterpmsg_add(FAR struct note_driver_s *driver,
 {
   FAR struct noterpmsg_driver_s *drv =
     (FAR struct noterpmsg_driver_s *)driver;
+  bool sent = false;
   irqstate_t flags;
   size_t space;
 
   flags = spin_lock_irqsave_notrace(&drv->lock);
 
   space = CONFIG_DRIVERS_NOTERPMSG_BUFSIZE - noterpmsg_length(drv);
-  if (space < notelen)
+  if (space < NOTE_ALIGN(notelen))
     {
       if (!up_interrupt_context() && !sched_idletask())
         {
-          noterpmsg_transfer(drv, true);
+          spin_unlock_irqrestore_notrace(&drv->lock, flags);
+          sent = noterpmsg_transfer(drv, true);
+          flags = spin_lock_irqsave_notrace(&drv->lock);
         }
-      else
+
+      if (!sent)
         {
           /* Overwrite */
 
@@ -218,7 +232,7 @@ static void noterpmsg_add(FAR struct note_driver_s *driver,
               space = CONFIG_DRIVERS_NOTERPMSG_BUFSIZE -
                       noterpmsg_length(drv);
             }
-          while (space < notelen);
+          while (space < NOTE_ALIGN(notelen));
         }
     }
 
@@ -228,15 +242,14 @@ static void noterpmsg_add(FAR struct note_driver_s *driver,
   memcpy(drv->buffer + drv->head, note, space);
   memcpy(drv->buffer, note + space, notelen - space);
 
-  drv->head = noterpmsg_next(drv, drv->head, notelen);
+  drv->head = noterpmsg_next(drv, drv->head, NOTE_ALIGN(notelen));
+  spin_unlock_irqrestore_notrace(&drv->lock, flags);
 
   if (work_available(&drv->work))
     {
       work_queue(HPWORK, &drv->work, noterpmsg_work, drv,
                  NOTE_RPMSG_WORK_DELAY);
     }
-
-  spin_unlock_irqrestore_notrace(&drv->lock, flags);
 }
 
 static int noterpmsg_ept_cb(FAR struct rpmsg_endpoint *ept,

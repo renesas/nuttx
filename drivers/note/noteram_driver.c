@@ -157,7 +157,7 @@ static const struct file_operations g_noteram_fops =
 
 static
 #ifdef DRIVERS_NOTERAM_SECTION
-locate_data(DRIVERS_NOTERAM_SECTION)
+locate_data(CONFIG_DRIVERS_NOTERAM_SECTION)
 #endif
 uint8_t g_ramnote_buffer[CONFIG_DRIVERS_NOTERAM_BUFSIZE];
 
@@ -403,10 +403,6 @@ static ssize_t noteram_get(FAR struct noteram_driver_s *drv,
 
   if (buflen < notelen)
     {
-      /* Skip the large note so that we do not get constipated. */
-
-      drv->ni_read = noteram_next(drv, read, NOTE_ALIGN(notelen));
-
       /* and return an error */
 
       return -EFBIG;
@@ -496,9 +492,23 @@ static ssize_t noteram_read(FAR struct file *filep, FAR char *buffer,
   if (ctx->mode == NOTERAM_MODE_READ_BINARY)
 #endif
     {
+      size_t nread = 0;
+
       flags = spin_lock_irqsave_notrace(&drv->lock);
-      ret = noteram_get(drv, (FAR uint8_t *)buffer, buflen);
+      while (nread < buflen)
+        {
+          ret = noteram_get(drv, (FAR uint8_t *)buffer + nread,
+                            buflen - nread);
+          if (ret <= 0)
+            {
+              break;
+            }
+
+          nread += ret;
+        }
+
       spin_unlock_irqrestore_notrace(&drv->lock, flags);
+      return nread;
     }
 #ifdef CONFIG_DRIVERS_NOTERAM_TEXT_DUMP
   else
@@ -509,7 +519,7 @@ static ssize_t noteram_read(FAR struct file *filep, FAR char *buffer,
 
       do
         {
-          uint8_t note[256];
+          aligned_data(sizeof(uintptr_t)) uint8_t note[256];
 
           /* Get the next note (removing it from the buffer) */
 
@@ -947,8 +957,6 @@ static int noteram_dump_printf(FAR struct lib_outstream_s *s,
         }
 
       ret += lib_bsprintf(s, fmt, note->npt_data);
-      lib_stream_putc(s, '\n');
-      ret++;
     }
 
   return ret;
@@ -1212,8 +1220,10 @@ static int noteram_dump_one(FAR uint8_t *p, FAR struct lib_outstream_s *s,
 
           npt = (FAR struct note_printf_s *)p;
           ret += noteram_dump_header(s, &npt->npt_cmn, ctx);
-          ret += lib_sprintf(s, "tracing_mark_write: ");
+          ret += lib_sprintf(s, "tracing_mark_write: I|%d|", pid);
           ret += noteram_dump_printf(s, npt);
+          lib_stream_putc(s, '\n');
+          ret++;
         }
         break;
       case NOTE_DUMP_BEGIN:
@@ -1292,8 +1302,8 @@ static int noteram_dump_one(FAR uint8_t *p, FAR struct lib_outstream_s *s,
             };
 
           ret += noteram_dump_header(s, &nmm->nhp_cmn, ctx);
-          ret += lib_sprintf(s, "tracing_mark_write: C|%d|Heap Usage|%d|%s"
-                             ": heap: %p size:%" PRIiPTR ", address: %p\n",
+          ret += lib_sprintf(s, "tracing_mark_write: C|%d|Heap Usage|%zu|%s"
+                             ": heap: %p size:%zu, address: %p\n",
                              pid, nmm->used,
                              name[note->nc_type - NOTE_HEAP_ADD],
                              nmm->heap, nmm->size, nmm->mem);

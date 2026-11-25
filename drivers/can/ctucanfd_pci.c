@@ -82,14 +82,6 @@
 
 /* SocketCAN specific */
 
-#ifdef CONFIG_CAN_CTUCANFD_SOCKET
-#  define CTUCANFD_TX_QUOTA   CTUCANFD_TXBUF_CNT
-#  define CTUCANFD_RX_QUOTA   1
-#  if CONFIG_IOB_NBUFFERS < (CTUCANFD_RX_QUOTA + CTUCANFD_TX_QUOTA)
-#    error CONFIG_IOB_NBUFFERS must be > (CTUCANFD_RX_QUOTA + CTUCANFD_TX_QUOTA)
-#  endif
-#endif /* CONFIG_CAN_CTUCANFD_SOCKET */
-
 #ifndef CONFIG_NET_CAN_ERRORS
 #  define CTUCANFD_SOCK_RXINT (CTUCANFD_INT_RBNEI)
 #else
@@ -247,7 +239,6 @@ static const struct netdev_ops_s g_ctucanfd_net_ops =
   .ifdown   = ctucanfd_sock_ifdown,
   .transmit = ctucanfd_sock_transmit,
   .receive  = ctucanfd_sock_recv,
-  .reclaim  = ctucanfd_sock_reclaim,
 #ifdef CONFIG_NETDEV_IOCTL
   .ioctl    = ctucanfd_sock_ioctl,
 #endif
@@ -1165,6 +1156,13 @@ static int ctucanfd_sock_transmit(FAR struct netdev_lowerhalf_s *dev,
   int                         wirelen;
 #endif
 
+  /* Release the TXT buffers the hardware has finished with, so that a
+   * buffer freed since the last TX-done interrupt can be used right away
+   * instead of making the upper half wait for the next one.
+   */
+
+  ctucanfd_sock_reclaim(dev);
+
   /* Get TX empty buffer */
 
   regval = ctucanfd_getreg(priv, CTUCANFD_TXSTAT);
@@ -1651,10 +1649,13 @@ static void ctucanfd_sock_interrupt(FAR struct ctucanfd_driver_s *priv)
           netdev_lower_rxready(&priv->devs[i].dev);
         }
 
-      /* Frame transmitted, the upper half reclaims the TXT buffers */
+      /* Frame transmitted: release the TXT buffers the hardware is done
+       * with, then let the upper half offer the next packet.
+       */
 
       if (stat & CTUCANFD_INT_TXI)
         {
+          ctucanfd_sock_reclaim(&priv->devs[i].dev);
           netdev_lower_txdone(&priv->devs[i].dev);
         }
 
@@ -1914,8 +1915,6 @@ static int ctucanfd_probe(FAR struct pci_device_s *dev)
 
       /* Register the network device */
 
-      netdev->quota[NETPKT_TX] = CTUCANFD_TX_QUOTA;
-      netdev->quota[NETPKT_RX] = CTUCANFD_RX_QUOTA;
       netdev->ops = &g_ctucanfd_net_ops;
 
       /* Register the network interface. */
@@ -2056,9 +2055,7 @@ int ctucanfd_register(uintptr_t base, int irq, uint32_t id)
 #endif
 
 #ifdef CONFIG_CAN_CTUCANFD_SOCKET
-  dev->dev.quota[NETPKT_TX] = CTUCANFD_TX_QUOTA;
-  dev->dev.quota[NETPKT_RX] = CTUCANFD_RX_QUOTA;
-  dev->dev.ops              = &g_ctucanfd_net_ops;
+  dev->dev.ops = &g_ctucanfd_net_ops;
 
   snprintf(dev->dev.netdev.d_ifname, IFNAMSIZ, "can%" PRIu32, id);
 

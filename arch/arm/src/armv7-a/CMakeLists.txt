@@ -38,9 +38,7 @@ list(
   arm_cpuinfo.c
   arm_gicv2.c
   arm_gicv2_dump.c
-  arm_initialstate.c
   arm_mmu.c
-  arm_undefinedinsn.c
   arm_perf.c
   cp15_cacheops.c)
 
@@ -57,14 +55,7 @@ if(CONFIG_ARMV7A_L2CC_PL310)
 endif()
 
 if(CONFIG_LEGACY_PAGING)
-  list(
-    APPEND
-    SRCS
-    arm_allocpage.c
-    arm_checkmapping.c
-    arm_pginitialize.c
-    arm_va2pte.c
-    arm_pghead.S)
+  list(APPEND SRCS arm_pginitialize.c arm_va2pte.c arm_pghead.S)
 else()
   list(APPEND SRCS arm_head.S)
 endif()
@@ -105,7 +96,7 @@ if(CONFIG_ARCH_FPU)
 endif()
 
 if(CONFIG_SMP)
-  list(APPEND SRCS arm_cpustart.c arm_smpcall.c arm_cpuidlestack.c arm_scu.c)
+  list(APPEND SRCS arm_cpustart.c arm_smpcall.c arm_scu.c)
 endif()
 
 if(CONFIG_ARM_PSCI)

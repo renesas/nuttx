@@ -59,8 +59,6 @@ typedef void (*mempool_callback_t)(FAR struct mempool_s *pool,
  * Private Data
  ****************************************************************************/
 
-static mutex_t g_mempool_init_lock = NXMUTEX_INITIALIZER;
-
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -85,8 +83,7 @@ mempool_remove_queue(FAR struct mempool_s *pool, FAR sq_queue_t *queue)
 
   if (ret)
     {
-      queue->head = ret->flink;
-      if (!queue->head)
+      if (!ret->flink)
         {
           queue->tail = NULL;
         }
@@ -97,6 +94,7 @@ mempool_remove_queue(FAR struct mempool_s *pool, FAR sq_queue_t *queue)
           pool->check(pool, addr);
         }
 
+      queue->head = ret->flink;
       ret->flink = NULL;
     }
 
@@ -331,6 +329,7 @@ static void mempool_check_callback(FAR struct mempool_s *pool,
 
 int mempool_init(FAR struct mempool_s *pool)
 {
+  static mutex_t g_mempool_init_lock = NXMUTEX_INITIALIZER;
   size_t blocksize = MEMPOOL_REALBLOCKSIZE(pool->blocksize);
 
   if (pool->init)
@@ -556,6 +555,38 @@ retry:
 }
 
 /****************************************************************************
+ * Name: mempool_zallocate
+ *
+ * Description:
+ *   Allocate an block from a specific memory pool and zero the allocated
+ *   block.
+ *
+ *   If there isn't enough memory blocks, This function will expand memory
+ *   pool if expandsize isn't zero.
+ *
+ * Input Parameters:
+ *   pool    - Address of the memory pool to be used.
+ *   timeout - The maximum time (ms) to wait for a buffer to become
+ *             available.
+ *
+ * Returned Value:
+ *   The pointer to the allocated block on success; NULL on any failure.
+ *
+ ****************************************************************************/
+
+FAR void *mempool_zallocate(FAR struct mempool_s *pool, unsigned int timeout)
+{
+  FAR void *blk = mempool_allocate(pool, timeout);
+
+  if (blk != NULL)
+    {
+      memset(blk, 0, pool->blocksize);
+    }
+
+  return blk;
+}
+
+/****************************************************************************
  * Name: mempool_release
  *
  * Description:
@@ -607,7 +638,7 @@ void mempool_release(FAR struct mempool_s *pool, FAR void *blk)
   spin_unlock_irqrestore(&pool->lock, flags);
   if (mempool_can_wait(pool))
     {
-      int semcount;
+      int semcount = 0;
 
       nxsem_get_value(&pool->waitsem, &semcount);
       if (semcount < 1)
@@ -685,7 +716,7 @@ int mempool_info(FAR struct mempool_s *pool, FAR struct mempoolinfo_s *info)
   info->sizeblks = blocksize;
   if (mempool_can_wait(pool))
     {
-      int semcount;
+      int semcount = 0;
 
       nxsem_get_value(&pool->waitsem, &semcount);
       info->nwaiter = -semcount;
@@ -726,8 +757,13 @@ mempool_info_task(FAR struct mempool_s *pool,
     }
   else if (task->pid == PID_MM_ALLOC)
     {
-      info.aordblks += pool->nalloc;
-      info.uordblks += pool->nalloc * blocksize;
+      irqstate_t flags = spin_lock_irqsave(&pool->lock);
+      size_t nalloc = pool->nalloc;
+
+      spin_unlock_irqrestore(&pool->lock, flags);
+
+      info.aordblks += nalloc;
+      info.uordblks += nalloc * blocksize;
     }
 #if CONFIG_MM_BACKTRACE >= 0
   else

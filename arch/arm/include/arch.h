@@ -38,11 +38,20 @@
 #endif
 
 #include <arch/barriers.h>
+#if defined(CONFIG_ARCH_ARMV7A) || defined(CONFIG_ARCH_ARMV7R) || \
+    defined(CONFIG_ARCH_ARMV8R)
+#  include <arch/arm_a_r/arch.h>
+#endif
+
+#if defined(CONFIG_ARCH_ARM_A_R)
+#  include <arch/arm_a_r/arch.h>
+#endif
 
 /****************************************************************************
  * Pre-processor Prototypes
  ****************************************************************************/
 
+#ifndef __ASSEMBLY__
 #ifdef CONFIG_PIC
 
 /* This identifies the register that is used by the processor as the PIC base
@@ -121,6 +130,7 @@ static inline void up_fdpic_invoke(uintptr_t arg, uintptr_t entry,
 #endif /* CONFIG_FDPIC */
 
 #endif /* CONFIG_PIC */
+#endif /* __ASSEMBLY__ */
 
 #ifdef CONFIG_ARCH_ADDRENV
 #if CONFIG_MM_PGSIZE != 4096
@@ -183,6 +193,7 @@ static inline void up_fdpic_invoke(uintptr_t arg, uintptr_t entry,
  * Public Types
  ****************************************************************************/
 
+#ifndef __ASSEMBLY__
 #ifdef CONFIG_ARCH_ADDRENV
 /* The task group resources are retained in a single structure, task_group_s
  * that is defined in the header file nuttx/include/nuttx/sched.h. The type
@@ -221,6 +232,7 @@ struct arch_addrenv_s
 
 typedef struct arch_addrenv_s arch_addrenv_t;
 #endif
+#endif /* __ASSEMBLY__ */
 
 /****************************************************************************
  * Public Data

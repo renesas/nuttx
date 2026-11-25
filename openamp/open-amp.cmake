@@ -88,6 +88,16 @@ if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/open-amp)
       ${CMAKE_CURRENT_LIST_DIR}/0024-virtio-restore-the-virtio_dev_name-declaration.patch
       && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
       ${CMAKE_CURRENT_LIST_DIR}/0025-rpmsg_virtio-add-priority-in-the-rpmsg-virtio-config.patch
+      && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+      ${CMAKE_CURRENT_LIST_DIR}/0026-rpmsg_virtio-hold-the-endpoint-across-the-ns-bound-c.patch
+      && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+      ${CMAKE_CURRENT_LIST_DIR}/0027-rpmsg-extract-the-name-service-handling-into-a-commo.patch
+      && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+      ${CMAKE_CURRENT_LIST_DIR}/0028-rpmsg-take-the-ns-endpoint-reference-just-once.patch
+      && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+      ${CMAKE_CURRENT_LIST_DIR}/0029-rpmsg-let-a-reference-outlive-the-endpoint-s-registr.patch
+      && patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+      ${CMAKE_CURRENT_LIST_DIR}/0030-rpmsg-export-rpmsg_unregister_endpoint.patch
     DOWNLOAD_NO_PROGRESS true
     TIMEOUT 30)
 

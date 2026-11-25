@@ -586,11 +586,10 @@ static const struct netdev_ops_s g_netdev_ops =
   NULL,          /* rmmac */
 #endif
 #ifdef CONFIG_NETDEV_IOCTL
-  mpfs_ioctl,    /* ioctl */
+  mpfs_ioctl     /* ioctl */
 #else
-  NULL,          /* ioctl */
+  NULL           /* ioctl */
 #endif
-  NULL           /* reclaim */
 };
 
 /****************************************************************************
@@ -2508,11 +2507,6 @@ int mpfs_can_init(int ncan, uint32_t bitrate)
 
   dev = &priv->dev;
   dev->ops = &g_netdev_ops;  /* Lower-half operations */
-
-  /* Set quotas for TX/RX buffers */
-
-  dev->quota[NETPKT_TX] = CAN_TX_BUFFER;
-  dev->quota[NETPKT_RX] = CAN_RX_BUFFER;
 
   ninfo("CAN driver init done for CAN controller %d\n", ncan);
 

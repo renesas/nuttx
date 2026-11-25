@@ -1,6 +1,8 @@
 /****************************************************************************
  * arch/arm/include/barriers.h
  *
+ * SPDX-License-Identifier: Apache-2.0
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
@@ -31,8 +33,7 @@
 #  include <arch/armv7-r/barriers.h>
 #elif defined(CONFIG_ARCH_ARMV8R)
 #  include <arch/armv8-r/barriers.h>
-#elif defined(CONFIG_ARCH_ARMV6M) || defined(CONFIG_ARCH_ARMV7M) || \
-      defined(CONFIG_ARCH_ARMV8M)
+#elif defined(CONFIG_ARCH_ARM_M)
 #  include <arch/arm_m/barriers.h>
 #else
 #  include <arch/arm/barriers.h>

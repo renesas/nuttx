@@ -188,13 +188,13 @@ struct mm_heap_s
  * Private Data
  ****************************************************************************/
 
-static struct mm_heap_s g_heap;
+static struct mm_heap_s g_sim_heap;
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-struct mm_heap_s *g_mmheap = &g_heap;
+struct mm_heap_s *g_mmheap = &g_sim_heap;
 
 #ifdef CONFIG_MM_RECORD_SEQNO
 unsigned long g_mm_seqno;
@@ -209,8 +209,8 @@ static void update_stats(struct mm_heap_s *heap, void *mem, size_t size,
 {
   struct mm_allocnode_s *node;
   irqstate_t flags;
-  size_t uordblks;
-  size_t usmblks;
+  int uordblks;
+  int usmblks;
 
   node = (struct mm_allocnode_s *)((uintptr_t)mem - MM_ALLOCNODE_SIZE);
   flags = spin_lock_irqsave(&heap->lock);
@@ -232,6 +232,14 @@ static void update_stats(struct mm_heap_s *heap, void *mem, size_t size,
             }
         }
       while (!atomic_try_cmpxchg(&heap->usmblks, &usmblks, uordblks));
+
+      if (uordblks > SIM_HEAP_SIZE)
+        {
+          merr("WARNING: Heap usage %d exceeds limit %d\n",
+                uordblks, SIM_HEAP_SIZE);
+
+          DEBUGPANIC();
+        }
     }
   else
     {

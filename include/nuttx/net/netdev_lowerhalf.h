@@ -129,12 +129,6 @@ struct netdev_lowerhalf_s
   FAR const struct wireless_ops_s *iw_ops;
 #endif
 
-  /* Max # of buffer held by driver */
-
-  FAR atomic_t *quota_ptr; /* Shared quota, ignore `quota` if ptr is set */
-  atomic_t quota[NETPKT_TYPENUM];
-  bool txdone;
-
   uint8_t rxtype;
   uint8_t priority;
 
@@ -191,20 +185,14 @@ struct netdev_ops_s
   CODE int (*ioctl)(FAR struct netdev_lowerhalf_s *dev, int cmd,
                     unsigned long arg);
 #endif
-
-  /* reclaim - try to reclaim packets sent by netdev. */
-
-  CODE void (*reclaim)(FAR struct netdev_lowerhalf_s *dev);
-
 #ifdef CONFIG_NET_NETPOLL
-  /* txpoll - Complete pending transmissions and free the finished TX
-   *          packets, so their TX quota can be reused.
+  /* txpoll - Complete the pending transmissions and release the finished
+   *          TX packets.
    *
    *   Used only by netpoll, which may run with interrupts disabled and
    *   without the network stack (e.g. on the panic path), where the
    *   driver's TX-done interrupt cannot run.  It must not depend on
-   *   interrupts or on the upper half.  It is separate from reclaim,
-   *   which is called by the upper half in normal context.
+   *   interrupts or on the upper half.
    */
 
   CODE void (*txpoll)(FAR struct netdev_lowerhalf_s *dev);
@@ -374,20 +362,6 @@ void netdev_lower_rxready(FAR struct netdev_lowerhalf_s *dev);
 void netdev_lower_txdone(FAR struct netdev_lowerhalf_s *dev);
 
 /****************************************************************************
- * Name: netdev_lower_quota_load
- *
- * Description:
- *   Fetch the quota, use this interface when device is running.
- *
- * Input Parameters:
- *   dev  - The lower half device driver structure
- *   type - Whether get quota for TX or RX
- *
- ****************************************************************************/
-
-#define netdev_lower_quota_load(dev, type) atomic_read(&(dev)->quota_ptr[type])
-
-/****************************************************************************
  * Name: netdev_lower_vlan_add
  *
  * Description:
@@ -478,6 +452,21 @@ void netdev_lower_input(FAR struct netdev_lowerhalf_s *dev,
 struct bridge_port_s;
 void netdev_lower_bridge_set(FAR struct netdev_lowerhalf_s *dev,
                              FAR struct bridge_port_s *port);
+
+/****************************************************************************
+ * Name: netdev_lower_bridge_get
+ *
+ * Description:
+ *   Return the bridge port of the device, or NULL when the device is not a
+ *   port of any bridge.
+ *
+ * Input Parameters:
+ *   dev - The lower half device driver structure
+ *
+ ****************************************************************************/
+
+FAR struct bridge_port_s *
+netdev_lower_bridge_get(FAR struct netdev_lowerhalf_s *dev);
 #endif
 
 /****************************************************************************

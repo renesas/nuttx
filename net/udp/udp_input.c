@@ -55,10 +55,11 @@
 #include <nuttx/net/netstats.h>
 
 #include "devif/devif.h"
-#include "utils/utils.h"
-#include "udp/udp.h"
 #include "icmp/icmp.h"
 #include "icmpv6/icmpv6.h"
+#include "socket/socket.h"
+#include "udp/udp.h"
+#include "utils/utils.h"
 
 /****************************************************************************
  * Private Functions
@@ -103,6 +104,7 @@ static bool udp_is_broadcast(FAR struct net_driver_s *dev)
 #  endif
     {
       FAR struct ipv6_hdr_s *ipv6 = IPv6BUF;
+
       return net_is_addr_mcast(ipv6->destipaddr);
     }
 #endif
@@ -220,6 +222,52 @@ static int udp_input(FAR struct net_driver_s *dev, unsigned int iplen)
   uint16_t chksum = 0;
 #endif
   int ret = OK;
+
+#ifdef CONFIG_NET_TIMESTAMP
+  /* Handle TX timestamp: if the IOB was tagged with a connection on the
+   * send path, queue it to that connection's error-ahead buffer for
+   * MSG_ERRQUEUE.  Skip checksum and normal RX processing entirely.
+   */
+
+  if (dev->d_iob->io_conn != NULL)
+    {
+      udp_conn_list_lock();
+
+      /* Validate that the connection is still in the active list.
+       * The connection may have been closed and freed between the
+       * send path (where io_conn was set) and now.
+       */
+
+      for (conn = udp_nextconn(NULL); conn != NULL;
+           conn = udp_nextconn(conn))
+        {
+          if (&conn->sconn == dev->d_iob->io_conn)
+            {
+              break;
+            }
+        }
+
+      if (conn != NULL)
+        {
+          /* Move dev->d_iob directly into the error-ahead queue
+           * (zero-copy), then prepare a fresh iob for the device.
+           */
+
+          iob_add_queue(dev->d_iob, &conn->sconn.s_errahead);
+
+          /* Notify all waiters (poll and blocking recvfrom)
+           * through the standard callback chain.
+           */
+
+          udp_callback(dev, conn, UDP_NEWDATA);
+          netdev_iob_clear(dev);
+        }
+
+      dev->d_len = 0;
+      udp_conn_list_unlock();
+      return OK;
+    }
+#endif
 
   /* Update the count of UDP packets received */
 
@@ -381,7 +429,7 @@ static int udp_input(FAR struct net_driver_s *dev, unsigned int iplen)
 #  endif /* CONFIG_NET_IPv4 */
 #  ifdef CONFIG_NET_IPv6
 #    ifdef CONFIG_NET_IPv4
-           else
+          else
 #    endif
             {
 #    ifdef CONFIG_NET_ICMPv6

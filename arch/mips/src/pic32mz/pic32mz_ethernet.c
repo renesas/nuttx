@@ -407,9 +407,7 @@ struct pic32mz_driver_s
 
   /* The packet being sent by each TX descriptor, kept in the descriptor
    * that holds the end of the packet.  It is held until that descriptor is
-   * reclaimed.  A packet takes one TX quota unit per descriptor, so that
-   * the network stack never queues more packets than there are free
-   * descriptors: pd_txfrags is the number of descriptors of the packet.
+   * reclaimed.  pd_txfrags is the number of descriptors of the packet.
    */
 
   netpkt_t  *pd_txpkt[CONFIG_PIC32MZ_ETH_NTXDESC];
@@ -500,7 +498,6 @@ static int pic32mz_ifup(struct netdev_lowerhalf_s *dev);
 static int pic32mz_ifdown(struct netdev_lowerhalf_s *dev);
 static int pic32mz_transmit(struct netdev_lowerhalf_s *dev, netpkt_t *pkt);
 static netpkt_t *pic32mz_receive(struct netdev_lowerhalf_s *dev);
-static void pic32mz_reclaim(struct netdev_lowerhalf_s *dev);
 
 #ifdef CONFIG_NET_MCASTGROUP
 static int pic32mz_addmac(struct netdev_lowerhalf_s *dev,
@@ -528,7 +525,6 @@ static const struct netdev_ops_s g_pic32mz_ops =
 #if defined(CONFIG_NETDEV_IOCTL) && defined(PIC32MZ_HAVE_PHY)
   .ioctl    = pic32mz_ioctl,
 #endif
-  .reclaim  = pic32mz_reclaim,
 };
 
 /* PHY initialization functions */
@@ -1115,8 +1111,7 @@ static struct pic32mz_rxdesc_s *pic32mz_rxdesc(struct pic32mz_driver_s *priv)
  * Function: pic32mz_txrelease
  *
  * Description:
- *   Release the packet held by a TX descriptor, with the TX quota of all
- *   the descriptors of the packet.
+ *   Release the packet held by a TX descriptor.
  *
  * Input Parameters:
  *   priv - Reference to the driver state structure
@@ -1133,15 +1128,7 @@ static void pic32mz_txrelease(struct pic32mz_driver_s *priv, int idx)
 
   if (pkt != NULL)
     {
-      int extra = priv->pd_txfrags[idx] - 1;
-
       priv->pd_txpkt[idx] = NULL;
-
-      if (extra > 0)
-        {
-          atomic_add(&priv->pd_dev.quota_ptr[NETPKT_TX], extra);
-        }
-
       netpkt_free(&priv->pd_dev, pkt, NETPKT_TX);
     }
 }
@@ -1420,14 +1407,19 @@ static int pic32mz_transmit(struct netdev_lowerhalf_s *dev, netpkt_t *pkt)
       goto errout;
     }
 
-  /* Find the next available TX descriptor.  The TX quota is the number of
-   * descriptors, so there is one unless the interface was reset.
+  /* Reap the descriptors the hardware has finished with, so that a
+   * descriptor freed since the last TX-done interrupt can be used right
+   * away instead of making the upper half wait for the next one.
    */
+
+  pic32mz_txreap(priv);
+
+  /* Find the next available TX descriptor */
 
   txdesc = pic32mz_txdesc(priv);
   if (txdesc == NULL)
     {
-      ret = -EAGAIN;
+      ret = -EBUSY;
       goto errout;
     }
 
@@ -1516,18 +1508,11 @@ static int pic32mz_transmit(struct netdev_lowerhalf_s *dev, netpkt_t *pkt)
                       (uintptr_t)txdesc + sizeof(union pic32mz_txdesc_u));
     }
 
-  /* Hold the packet until its last descriptor is reclaimed.  The
-   * descriptors after the first take TX quota too.
-   */
+  /* Hold the packet until its last descriptor is reclaimed */
 
   last                  = (idx + nfrags - 1) % CONFIG_PIC32MZ_ETH_NTXDESC;
   priv->pd_txpkt[last]  = pkt;
   priv->pd_txfrags[last] = nfrags;
-
-  if (nfrags > 1)
-    {
-      atomic_sub(&priv->pd_dev.quota_ptr[NETPKT_TX], nfrags - 1);
-    }
 
   /* Update the index to the next descriptor to use in the Tx ring */
 
@@ -1697,29 +1682,6 @@ static netpkt_t *pic32mz_receive(struct netdev_lowerhalf_s *dev)
 
   nxmutex_unlock(&priv->pd_lock);
   return pkt;
-}
-
-/****************************************************************************
- * Function: pic32mz_reclaim
- *
- * Description:
- *   NuttX Callback: reclaim the TX descriptors that were already sent.
- *
- * Input Parameters:
- *   dev - Reference to the lower half driver state structure
- *
- * Returned Value:
- *   None
- *
- ****************************************************************************/
-
-static void pic32mz_reclaim(struct netdev_lowerhalf_s *dev)
-{
-  struct pic32mz_driver_s *priv = (struct pic32mz_driver_s *)dev;
-
-  nxmutex_lock(&priv->pd_lock);
-  pic32mz_txreap(priv);
-  nxmutex_unlock(&priv->pd_lock);
 }
 
 /****************************************************************************
@@ -3593,13 +3555,6 @@ static inline int pic32mz_ethinitialize(int intf)
   priv->pd_dev.ops = &g_pic32mz_ops;
   nxmutex_init(&priv->pd_lock);
 
-  /* The TX quota is the number of TX descriptors: a packet is held by the
-   * driver until its descriptor is reclaimed.  The RX packets are handed
-   * over to the network stack as soon as they are copied.
-   */
-
-  priv->pd_dev.quota[NETPKT_TX] = CONFIG_PIC32MZ_ETH_NTXDESC;
-  priv->pd_dev.quota[NETPKT_RX] = CONFIG_PIC32MZ_ETH_NRXDESC;
   priv->pd_dev.rxtype           = NETDEV_RX_WORK;
   priv->pd_dev.priority         = ETHWORK;
 

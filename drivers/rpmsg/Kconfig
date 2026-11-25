@@ -57,6 +57,7 @@ config RPMSG_WQUEUE_PRIORITY
 
 config RPMSG_WQUEUE_STACKSIZE
 	int "rpmsg work queue stack size"
+	default 8192 if ARCH_64BIT && DEFAULT_TASK_STACKSIZE < 8192
 	default DEFAULT_TASK_STACKSIZE
 
 config RPMSG_WQUEUE_NUMBER
@@ -69,12 +70,13 @@ config RPMSG_WQUEUE_NUMBER
 
 config RPMSG_RECURSIVE_LIMIT
 	int "rpmsg recursive limit"
+	default 8 if ARCH_SIM
 	default 2 if RPMSG_WQUEUE_STACKSIZE <= 4096
-	default 3 if RPMSG_WQUEUE_STACKSIZE <= 6144
-	default 4 if RPMSG_WQUEUE_STACKSIZE <= 8192
-	default 5 if RPMSG_WQUEUE_STACKSIZE <= 10240
-	default 6 if RPMSG_WQUEUE_STACKSIZE <= 12288
-	default 7 if RPMSG_WQUEUE_STACKSIZE <= 14336
+	default 3 if RPMSG_WQUEUE_STACKSIZE <= 5120
+	default 4 if RPMSG_WQUEUE_STACKSIZE <= 6144
+	default 5 if RPMSG_WQUEUE_STACKSIZE <= 7168
+	default 6 if RPMSG_WQUEUE_STACKSIZE <= 8192
+	default 7 if RPMSG_WQUEUE_STACKSIZE <= 9216
 	default 8
 	---help---
 		This macro sets the maximum recursion depth allowed in the
@@ -137,17 +139,18 @@ config RPMSG_HEAP
 		This is for rpmsg heap manage, it can be used to allocate/free
 		shm for slave.
 
-config RPMSG_PANIC_DUMP_LEVEL
-	int "rpmsg panic dump level"
-	default 1 if DEFAULT_SMALL
-	default 2 if !DEFAULT_SMALL
+config RPMSG_DUMP_LEVEL
+	int "rpmsg dump level"
+	default 2 if DEFAULT_SMALL
+	default 3
+	range 0 3
 	---help---
-		Control rpmsg auto dump behavior on panic at
-		PANIC_KERNEL_FINAL stage:
-		  0 - Disable: no dump on panic
-		  1 - Info: brief dump on panic
-		  2 - Verbose: full dump on panic
-		Manual rpmsg dump command is not affected.
+		Control what rpmsg can dump:
+		  0 - Disable: no dump support, RPMSGIOC_DUMP returns -ENOTTY
+		  1 - Manual: dump on request only (RPMSGIOC_DUMP)
+		  2 - Panic info: also a brief dump on panic, at the
+		      PANIC_KERNEL_FINAL stage
+		  3 - Panic verbose: also a full dump on panic
 
 config RPMSG_POOL_COUNT
 	int "rpmsg pool buffer count"

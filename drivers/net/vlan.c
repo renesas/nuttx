@@ -76,7 +76,6 @@ static int vlan_rmmac(FAR struct netdev_lowerhalf_s *dev,
 static int vlan_ioctl(FAR struct netdev_lowerhalf_s *dev, int cmd,
                       unsigned long arg);
 #endif
-static void vlan_reclaim(FAR struct netdev_lowerhalf_s *dev);
 #ifdef CONFIG_NET_NETPOLL
 static void vlan_txpoll(FAR struct netdev_lowerhalf_s *dev);
 #endif
@@ -98,7 +97,6 @@ static const struct netdev_ops_s g_vlan_ops =
 #ifdef CONFIG_NETDEV_IOCTL
   vlan_ioctl,    /* ioctl */
 #endif
-  vlan_reclaim,  /* reclaim */
 #ifdef CONFIG_NET_NETPOLL
   vlan_txpoll,   /* txpoll */
 #endif
@@ -271,21 +269,6 @@ static int vlan_ioctl(FAR struct netdev_lowerhalf_s *dev, int cmd,
 }
 #endif
 
-/****************************************************************************
- * Name: vlan_reclaim
- ****************************************************************************/
-
-static void vlan_reclaim(FAR struct netdev_lowerhalf_s *dev)
-{
-  FAR struct vlan_device_s      *vlan = (FAR struct vlan_device_s *)dev;
-  FAR struct netdev_lowerhalf_s *real = vlan->real;
-
-  if (real->ops->reclaim != NULL)
-    {
-      real->ops->reclaim(real);
-    }
-}
-
 #ifdef CONFIG_NET_NETPOLL
 static void vlan_txpoll(FAR struct netdev_lowerhalf_s *dev)
 {
@@ -355,13 +338,12 @@ int vlan_register(FAR struct netdev_lowerhalf_s *real, uint16_t vid,
   /* Init the VLAN device */
 
   spin_lock_init(&vlan->rxlock);
-  vlan->tci           = (vid & VLAN_VID_MASK) |
-                        ((prio << VLAN_PRIO_SHIFT) & VLAN_PRIO_MASK);
-  vlan->real          = real;
-  vlan->dev.quota_ptr = real->quota_ptr;
-  vlan->dev.rxtype    = real->rxtype;
-  vlan->dev.priority  = real->priority;
-  vlan->dev.ops       = &g_vlan_ops;
+  vlan->tci          = (vid & VLAN_VID_MASK) |
+                       ((prio << VLAN_PRIO_SHIFT) & VLAN_PRIO_MASK);
+  vlan->real         = real;
+  vlan->dev.rxtype   = real->rxtype;
+  vlan->dev.priority = real->priority;
+  vlan->dev.ops      = &g_vlan_ops;
 
   /* Copy MTU from the real device */
 

@@ -150,6 +150,7 @@ static int rpmsg_dev_ioctl_(FAR struct rpmsg_s *rpmsg, int cmd,
           }
 
         break;
+#if CONFIG_RPMSG_DUMP_LEVEL > RPMSG_DUMP_DISABLE
       case RPMSGIOC_DUMP:
         if (rpmsg->ops->dump)
           {
@@ -158,6 +159,7 @@ static int rpmsg_dev_ioctl_(FAR struct rpmsg_s *rpmsg, int cmd,
           }
 
         break;
+#endif
 #ifdef CONFIG_RPMSG_PING
       case RPMSGIOC_PING:
         ret = rpmsg_ping(&rpmsg->ping, (FAR const struct rpmsg_ping_s *)arg);
@@ -202,7 +204,7 @@ static int rpmsg_dev_ioctl_(FAR struct rpmsg_s *rpmsg, int cmd,
   return ret;
 }
 
-#if CONFIG_RPMSG_PANIC_DUMP_LEVEL > RPMSG_PANIC_DUMP_DISABLE
+#if CONFIG_RPMSG_DUMP_LEVEL > RPMSG_DUMP_MANUAL
 /****************************************************************************
  * Name: rpmsg_panic_notifier
  ****************************************************************************/
@@ -216,7 +218,7 @@ static int rpmsg_panic_notifier(FAR struct notifier_block *nb,
   if (action == PANIC_KERNEL_FINAL)
     {
       ret = rpmsg_dev_ioctl_(rpmsg, RPMSGIOC_DUMP,
-              CONFIG_RPMSG_PANIC_DUMP_LEVEL >= RPMSG_PANIC_DUMP_VERBOSE);
+              CONFIG_RPMSG_DUMP_LEVEL >= RPMSG_DUMP_PANIC_VERBOSE);
     }
 
   return ret;
@@ -320,6 +322,54 @@ static int rpmsg_create_wqueues(FAR struct rpmsg_wqueue_s *wqueues,
     }
 
   return ret;
+}
+
+/****************************************************************************
+ * Name: rpmsg_bind_alloc / rpmsg_bind_free
+ *
+ * Description:
+ *   Allocate/free a name-service bind record.  When the rpmsg pool is
+ *   enabled (RPMSG_POOL_COUNT > 0) and its block size is large enough to
+ *   hold a struct rpmsg_bind_s, the record is taken from the rpmsg pool to
+ *   avoid heap allocation.  Otherwise it falls back to the heap.
+ *
+ *   The choice is a compile-time constant, so alloc and free always use the
+ *   same allocator within a build.  When RPMSG_POOL_COUNT <= 0 the rpmsg
+ *   pool degenerates into alloca() and must not be used for these long-lived
+ *   list nodes, so the heap is used unconditionally.
+ *
+ ****************************************************************************/
+
+static inline_function FAR void *rpmsg_bind_alloc(void)
+{
+  FAR void *bind;
+
+#if CONFIG_RPMSG_POOL_COUNT > 0
+  if (CONFIG_RPMSG_POOL_SIZE >= sizeof(struct rpmsg_bind_s))
+    {
+      bind = rpmsg_pool_alloc(sizeof(struct rpmsg_bind_s));
+    }
+  else
+#endif
+    {
+      bind = kmm_malloc(sizeof(struct rpmsg_bind_s));
+    }
+
+  return bind;
+}
+
+static inline_function void rpmsg_bind_free(FAR void *bind)
+{
+#if CONFIG_RPMSG_POOL_COUNT > 0
+  if (CONFIG_RPMSG_POOL_SIZE >= sizeof(struct rpmsg_bind_s))
+    {
+      rpmsg_pool_free(bind);
+    }
+  else
+#endif
+    {
+      kmm_free(bind);
+    }
 }
 
 /****************************************************************************
@@ -589,7 +639,7 @@ int rpmsg_register_callback(FAR void *priv,
                       nxrmutex_unlock(&rpmsg->lock);
                       ns_bind(rdev, priv, bind->name, bind->dest);
 
-                      kmm_free(bind);
+                      rpmsg_bind_free(bind);
                       again = true;
 
                       nxrmutex_lock(&rpmsg->lock);
@@ -675,7 +725,7 @@ void rpmsg_ns_bind(FAR struct rpmsg_device *rdev,
 
   if (!matched)
     {
-      bind = kmm_malloc(sizeof(struct rpmsg_bind_s));
+      bind = rpmsg_bind_alloc();
       if (bind != NULL)
         {
           bind->dest = dest;
@@ -702,7 +752,7 @@ void rpmsg_ns_unbind(FAR struct rpmsg_device *rdev,
       if (bind->dest == dest && !strncmp(bind->name, name, RPMSG_NAME_SIZE))
         {
           list_delete(&bind->node);
-          kmm_free(bind);
+          rpmsg_bind_free(bind);
           break;
         }
     }
@@ -774,7 +824,7 @@ void rpmsg_device_destroy(FAR struct rpmsg_s *rpmsg)
                             struct rpmsg_bind_s, node)
     {
       list_delete(&bind->node);
-      kmm_free(bind);
+      rpmsg_bind_free(bind);
     }
 
   nxrmutex_unlock(&rpmsg->lock);
@@ -803,7 +853,23 @@ void rpmsg_device_destroy(FAR struct rpmsg_s *rpmsg)
       ept = container_of(node, struct rpmsg_endpoint, node);
       if (ept->ns_unbind_cb)
         {
-          ept->ns_unbind_cb(ept);
+          /* Unregister first so ept->rdev cannot outlive the device.
+           * Without release_cb the callback may free ept, so it is not
+           * touched afterwards.
+           */
+
+          if (ept->release_cb)
+            {
+              rpmsg_ept_incref(ept);
+              rpmsg_unregister_endpoint(ept);
+              ept->ns_unbind_cb(ept);
+              rpmsg_ept_decref(ept);
+            }
+          else
+            {
+              rpmsg_unregister_endpoint(ept);
+              ept->ns_unbind_cb(ept);
+            }
         }
       else
         {
@@ -850,7 +916,7 @@ int rpmsg_register(FAR const char *path, FAR struct rpmsg_s *rpmsg,
               list_add_tail(&g_rpmsg, &rpmsg->node);
               up_write(&g_rpmsg_lock);
 
-#if CONFIG_RPMSG_PANIC_DUMP_LEVEL > RPMSG_PANIC_DUMP_DISABLE
+#if CONFIG_RPMSG_DUMP_LEVEL > RPMSG_DUMP_MANUAL
               rpmsg->nbpanic.notifier_call = rpmsg_panic_notifier;
               rpmsg->nbpanic.priority = INT_MIN + 2;
               panic_notifier_chain_register(&rpmsg->nbpanic);
@@ -875,7 +941,7 @@ int rpmsg_register(FAR const char *path, FAR struct rpmsg_s *rpmsg,
 
 void rpmsg_unregister(FAR const char *path, FAR struct rpmsg_s *rpmsg)
 {
-#if CONFIG_RPMSG_PANIC_DUMP_LEVEL > RPMSG_PANIC_DUMP_DISABLE
+#if CONFIG_RPMSG_DUMP_LEVEL > RPMSG_DUMP_MANUAL
   panic_notifier_chain_unregister(&rpmsg->nbpanic);
 #endif
 
@@ -890,6 +956,7 @@ void rpmsg_unregister(FAR const char *path, FAR struct rpmsg_s *rpmsg)
   metal_finish();
 }
 
+#if CONFIG_RPMSG_DUMP_LEVEL > RPMSG_DUMP_DISABLE
 /****************************************************************************
  * Name: rpmsg_dump_epts
  ****************************************************************************/
@@ -904,11 +971,12 @@ void rpmsg_dump_epts(FAR struct rpmsg_device *rdev)
     {
       ept = container_of(node, struct rpmsg_endpoint, node);
       syslog(LOG_EMERG, "    ept %s %p: addr=%" PRIu32 " "
-             "dest=%" PRIu32 " refcnt=%" PRIu32 " priority=%" PRIu8
+             "dest=%" PRIu32 " refcnt=%u priority=%" PRIu8
              " priv=%p\n", ept->name, ept, ept->addr, ept->dest_addr,
-             ept->refcnt, ept->priority, ept->priv);
+             atomic_load(&ept->refcnt), ept->priority, ept->priv);
     }
 }
+#endif
 
 static int rpmsg_ioctl_foreach_cb(FAR struct rpmsg_s *rpmsg, FAR void *arg)
 {

@@ -401,7 +401,6 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
               if (!noassign)
                 {
                   tv = next_arg_width(varg, vabuf, FAR char *, width);
-                  tv[0] = '\0';
                 }
 
               /* Skip over white space */
@@ -461,7 +460,6 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
               if (!noassign)
                 {
                   tv = next_arg_width(varg, vabuf, FAR char *, width);
-                  tv[0] = '\0';
                 }
 
               /* But we only perform the data conversion is we still have
@@ -518,7 +516,6 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
               if (!noassign)
                 {
                   tv = next_arg_width(varg, vabuf, FAR char *, width);
-                  tv[0] = '\0';
                 }
 
               /* But we only perform the data conversion is we still have
@@ -571,6 +568,32 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
             {
               bool sign;
 
+              /* A pointer is converted as an unsigned integer of its own
+               * size.  Select the length before the argument is fetched.
+               */
+
+              if (fmt_char(fmt) == 'p')
+                {
+                  if (sizeof(void *) == sizeof(unsigned short))
+                    {
+                      modifier = H_MOD;
+                    }
+                  else if (sizeof(void *) == sizeof(unsigned long))
+                    {
+                      modifier = L_MOD;
+                    }
+#if defined(CONFIG_HAVE_LONG_LONG) && ULLONG_MAX != ULONG_MAX
+                  else if (sizeof(void *) == sizeof(unsigned long long))
+                    {
+                      modifier = LL_MOD;
+                    }
+#endif
+                  else
+                    {
+                      modifier = NO_MOD;
+                    }
+                }
+
               /* Get a pointer to the integer value.  We need to do this even
                * if we have reached the end of the input data in order to
                * update the 'ap' variable.
@@ -586,29 +609,24 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
                     {
                       case HH_MOD:
                         pchar = next_arg(varg, vabuf, FAR unsigned char *);
-                        *pchar = 0;
                         break;
 
                       case H_MOD:
                         pshort = next_arg(varg, vabuf, FAR unsigned short *);
-                        *pshort = 0;
                         break;
 
                       case NO_MOD:
                         pint = next_arg(varg, vabuf, FAR unsigned int *);
-                        *pint = 0;
                         break;
 
                       default:
                       case L_MOD:
                         plong = next_arg(varg, vabuf, FAR unsigned long *);
-                        *plong = 0;
                         break;
 
                       case LL_MOD:
                         plonglong = next_arg(varg, vabuf,
                                              FAR unsigned long long *);
-                        *plonglong = 0;
                         break;
                     }
                 }
@@ -957,7 +975,6 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
                   if (modifier == LL_MOD)
                     {
                       pld = next_arg(varg, vabuf, FAR long double *);
-                      *pld = 0.0;
                     }
                   else
 #endif
@@ -965,14 +982,12 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
                   if (modifier >= L_MOD)
                     {
                       pd = next_arg(varg, vabuf, FAR double *);
-                      *pd = 0.0;
                     }
                   else
 #endif
 #ifdef CONFIG_HAVE_FLOAT
                     {
                       pf = next_arg(varg, vabuf, FAR float *);
-                      *pf = 0.0;
                     }
 #endif
                 }
@@ -1212,6 +1227,15 @@ static int vscanf_internal(FAR struct lib_instream_s *stream, FAR int *lastc,
             }
           else if (fmt_char(fmt) == '%')
             {
+              /* In the C Standard "%%" is a "conversion specification" and
+               * the rule about consuming whitespace applies.
+               */
+
+              while (isspace(c))
+                {
+                  c = lib_stream_getc(stream);
+                }
+
               if (c != '%')
                 {
                   break;

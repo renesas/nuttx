@@ -61,7 +61,6 @@ static int esp_wlan_ifup(struct netdev_lowerhalf_s *dev);
 static int esp_wlan_ifdown(struct netdev_lowerhalf_s *dev);
 static int esp_wlan_transmit(struct netdev_lowerhalf_s *dev, netpkt_t *pkt);
 static netpkt_t *esp_wlan_receive(struct netdev_lowerhalf_s *dev);
-static void esp_wlan_reclaim(struct netdev_lowerhalf_s *dev);
 static int esp_wlan_ioctl(struct netdev_lowerhalf_s *dev, int cmd,
                           unsigned long arg);
 
@@ -131,7 +130,6 @@ static const struct netdev_ops_s g_netdev_ops =
     .transmit = esp_wlan_transmit,
     .receive = esp_wlan_receive,
     .ioctl = esp_wlan_ioctl,
-    .reclaim = esp_wlan_reclaim,
 };
 
 /* Wireless operations */
@@ -388,25 +386,6 @@ static int esp_wlan_ioctl(struct netdev_lowerhalf_s *dev, int cmd,
   return -ENOSYS;
 }
 #endif
-
-/****************************************************************************
- * Name: esp_wlan_reclaim
- *
- * Description:
- *   Reclaim function required by the netdev ops.
- *
- * Input Parameters:
- *   dev - The network device.
- *
- * Returned Value:
- *   None.
- *
- ****************************************************************************/
-
-static void esp_wlan_reclaim(struct netdev_lowerhalf_s *dev)
-{
-  /* TODO: Implement reclaim logic */
-}
 
 /* Skeleton implementations for wireless_ops_s functions */
 
@@ -1204,7 +1183,7 @@ static int esp_wlan_initialize(uint32_t mode)
         ret = esp_wifi_sta_read_mac(mac);
 #endif
         break;
-        case IW_MODE_MASTER:
+      case IW_MODE_MASTER:
 #ifdef ESP_WLAN_HAS_SOFTAP
         wlinfo("INFO: Initialize Wi-Fi SoftAP\n");
         priv = &g_wlan_softap;
@@ -1232,8 +1211,6 @@ static int esp_wlan_initialize(uint32_t mode)
 
   /* Set the number of RX and TX buffers. */
 
-  priv->dev.quota[NETPKT_RX] = RX_BUF_COUNT;
-  priv->dev.quota[NETPKT_TX] = TX_BUF_COUNT;
   priv->dev.rxtype           = NETDEV_RX_THREAD;
   priv->dev.priority         = 100;
 
@@ -1306,6 +1283,7 @@ static int esp_wlan_initialize(uint32_t mode)
 void esp_wlan_sta_connect_success_hook(void)
 {
   struct esp_wlan_priv_s *priv = &g_wlan_sta;
+
   netdev_lower_carrier_on(&priv->dev);
 }
 #endif
@@ -1328,6 +1306,7 @@ void esp_wlan_sta_connect_success_hook(void)
 void esp_wlan_sta_disconnect_hook(void)
 {
   struct esp_wlan_priv_s *priv = &g_wlan_sta;
+
   netdev_lower_carrier_off(&priv->dev);
 }
 #endif
@@ -1350,6 +1329,7 @@ void esp_wlan_sta_disconnect_hook(void)
 void esp_wlan_softap_connect_success_hook(void)
 {
   struct esp_wlan_priv_s *priv = &g_wlan_softap;
+
   netdev_lower_carrier_on(&priv->dev);
 }
 #endif
@@ -1372,6 +1352,7 @@ void esp_wlan_softap_connect_success_hook(void)
 void esp_wlan_softap_disconnect_hook(void)
 {
   struct esp_wlan_priv_s *priv = &g_wlan_softap;
+
   netdev_lower_carrier_off(&priv->dev);
 }
 #endif

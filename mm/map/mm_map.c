@@ -24,6 +24,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/nuttx.h>
 #include <nuttx/mm/map.h>
 #include <nuttx/pgalloc.h>
 #include <nuttx/addrenv.h>
@@ -145,6 +146,8 @@ void mm_map_initialize(FAR struct mm_map_s *mm, bool kernel)
 void mm_map_destroy(FAR struct mm_map_s *mm)
 {
   FAR struct mm_map_entry_s *entry;
+  FAR struct task_group_s *group = container_of(
+                                       mm, struct task_group_s, tg_mm_map);
 
   while ((entry = (FAR struct mm_map_entry_s *)sq_remfirst(&mm->mm_map_sq)))
     {
@@ -158,14 +161,11 @@ void mm_map_destroy(FAR struct mm_map_s *mm)
 
       if (entry->munmap)
         {
-          if (entry->munmap(NULL, entry, entry->vaddr, entry->length) < 0)
-            {
-              /* This would be an error in the driver. It has defined munmap,
-               * but is not able to munmap the full area which it has mapped
-               */
+          /* There would be an error in the driver. It has defined munmap,
+           * but is not able to munmap the full area which it has mapped
+           */
 
-              merr("Driver munmap failed\n");
-            }
+          entry->munmap(group, entry, entry->vaddr, entry->length);
         }
 
       mm->map_count--;
@@ -173,7 +173,7 @@ void mm_map_destroy(FAR struct mm_map_s *mm)
       kmm_free(entry);
     }
 
-  DEBUGASSERT(mm->map_count == 0);
+  DEBUGASSERT(mm->map_count == 0u);
 
   nxrmutex_destroy(&mm->mm_map_mutex);
 
@@ -301,6 +301,45 @@ FAR struct mm_map_entry_s *mm_map_find(FAR struct mm_map_s *mm,
     }
 
   return found_entry;
+}
+
+/****************************************************************************
+ * Name: mm_map_exist
+ *
+ * Description:
+ *   Return whether any existing mapping overlaps the address range
+ *   [vaddr, vaddr + length).
+ *
+ ****************************************************************************/
+
+bool mm_map_exist(FAR struct mm_map_s *mm, FAR const void *vaddr,
+                  size_t length)
+{
+  FAR struct mm_map_entry_s *entry;
+  FAR const char *start = vaddr;
+  FAR const char *end = start + length;
+  bool exist = false;
+
+  if (nxrmutex_lock(&mm->mm_map_mutex) == OK)
+    {
+      for (entry = (FAR struct mm_map_entry_s *)sq_peek(&mm->mm_map_sq);
+           entry != NULL;
+           entry = (FAR struct mm_map_entry_s *)sq_next((sq_entry_t *)entry))
+        {
+          FAR const char *e_start = entry->vaddr;
+          FAR const char *e_end = e_start + entry->length;
+
+          if (start < e_end && e_start < end)
+            {
+              exist = true;
+              break;
+            }
+        }
+
+      nxrmutex_unlock(&mm->mm_map_mutex);
+    }
+
+  return exist;
 }
 
 /****************************************************************************

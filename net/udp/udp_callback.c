@@ -84,6 +84,14 @@ static uint16_t udp_datahandler(FAR struct net_driver_s *dev,
 #if CONFIG_NET_RECV_BUFSIZE > 0
   if (conn->readahead && conn->readahead->io_pktlen > conn->rcvbufs)
     {
+      /* The read-ahead buffer is full, drop the datagram. */
+
+      ninfo("Dropped %d bytes\n", dev->d_len);
+
+#ifdef CONFIG_NET_STATISTICS
+      g_netstats.udp.drop++;
+#endif
+
       conn_unlock(&conn->sconn);
       netdev_iob_release(dev);
       return 0;
@@ -296,7 +304,11 @@ uint32_t udp_callback(FAR struct net_driver_s *dev,
       conn_lock(&conn->sconn);
       flags = devif_conn_event(dev, flags, conn->sconn.s_list);
 
-      if ((flags & UDP_NEWDATA) != 0)
+      if ((flags & UDP_NEWDATA) != 0
+#ifdef CONFIG_NET_TIMESTAMP
+          && dev->d_iob->io_conn == NULL
+#endif
+         )
         {
           /* Data was not handled.. dispose of it appropriately */
 
