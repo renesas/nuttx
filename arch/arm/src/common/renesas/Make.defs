@@ -40,10 +40,23 @@ ifndef RENESAS_HAL_URL
 endif
 
 ifndef RENESAS_HAL_VERSION
-	RENESAS_HAL_VERSION = 6e44ba4f9f0d9a9f3ea8c87115001eccf748460e
+	RENESAS_HAL_VERSION = cf48c5d6cdf34e1aa253626c3f7bcbdfcfe796f2
 endif
 
 RENESAS_HAL_DIR = common$(DELIM)renesas$(DELIM)$(RENESAS_HAL_REPO)
+
+STORAGETMP = $(if $(wildcard $(NXTMPDIR)/.*),y,)
+
+ifeq ($(STORAGETMP),y)
+define CLONE_RENESAS_HAL_REPO
+	$(call CHECK_COMMITSHA,$(NXTMPDIR)/$(RENESAS_HAL_REPO),$(RENESAS_HAL_VERSION))
+	$(call CLONE,$(RENESAS_HAL_URL),$(RENESAS_HAL_DIR),$(NXTMPDIR)/$(RENESAS_HAL_REPO))
+endef
+else
+define CLONE_RENESAS_HAL_REPO
+	$(call CLONE,$(RENESAS_HAL_URL),$(RENESAS_HAL_DIR))
+endef
+endif
 
 # Only these paths of the repository are needed (the rest is Zephyr and
 # other non NuttX content, and the FSP sources of the other families
@@ -61,7 +74,7 @@ RENESAS_HAL_SPARSE += '!/nuttx/rz/rz_cfg/fsp_cfg/bsp/rz[agnt]*'
 
 $(RENESAS_HAL_DIR):
 	$(Q) echo "Cloning Renesas HAL"
-	$(Q) git clone --quiet --no-checkout $(RENESAS_HAL_URL) $(RENESAS_HAL_DIR)
+	$(Q) $(call CLONE_RENESAS_HAL_REPO)
 	$(Q) git -C $(RENESAS_HAL_DIR) sparse-checkout set --no-cone $(RENESAS_HAL_SPARSE)
 	$(Q) echo "Renesas HAL: $(RENESAS_HAL_VERSION)"
 	$(Q) git -C $(RENESAS_HAL_DIR) checkout --quiet $(RENESAS_HAL_VERSION)
