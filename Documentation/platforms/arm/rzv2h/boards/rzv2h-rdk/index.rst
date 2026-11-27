@@ -1003,8 +1003,204 @@ table.
 The read-only code region (``__mpu_code_start`` to ``__mpu_code_end``)
 is padded to a power of two for its MPU region.
 
+.. _rzv2h-rdk-ethernet:
+
+Ethernet
+========
+
+The ``rzv2h-rdk:netnsh`` configuration provides ``eth0`` on GBETH0 with the
+KSZ9131 PHY at MDIO address 0. The RDK sets the PHY's RGMII RX and TX
+clock skew to 1400 ps. Give NuttX exclusive access to GBETH0 and its PHY.
+
+The defaults are MAC ``02:00:00:00:00:01``, IP ``192.168.10.2/24`` and
+gateway ``192.168.10.1``. The RDK uses the same defaults. Assign
+distinct MAC and IP addresses before using both boards on one network.
+
+Ethernet setup
+--------------
+
+Build and load ``nuttx``.
+
+.. code-block:: console
+
+   $ ./tools/configure.sh -l rzv2h-rdk:netnsh
+   $ make -j4
+
+Connect GBETH0 to the Raspberry Pi's wired Ethernet port. Configure the
+Pi's interface as ``192.168.10.1/24``. Wait for ``RUNNING`` before sending
+traffic.
+
+.. code-block:: text
+
+   nsh> ifconfig eth0
+   nsh> ping -c 5 -s 1472 192.168.10.1
+
+To change the board address:
+
+.. code-block:: text
+
+   nsh> ifdown eth0
+   nsh> ifconfig eth0 192.168.10.3 netmask 255.255.255.0 hw 02:00:00:00:00:02
+   nsh> ifup eth0
+
+Ethernet tests
+--------------
+
+Run one test at a time and start the receiver first. Stop the Raspberry Pi
+server with Ctrl-C after each test where it is the receiver. Restart the
+RDK TCP server for each connection.
+
+.. list-table:: Manual TCP/UDP throughput tests
+   :header-rows: 1
+   :widths: 16 38 46
+
+   * - Direction
+     - RDK command
+     - Raspberry Pi command
+   * - TCP Pi -> RDK
+     - ``iperf -s -i 1 &``
+     - ``iperf -c 192.168.10.2 -t 60 -i 1 -w 1M``
+   * - TCP RDK -> Pi
+     - ``iperf -c 192.168.10.1 -t 60 -i 1 &``
+     - ``iperf -s -i 1 -w 1M``
+   * - UDP RDK -> Pi
+     - ``iperf -c 192.168.10.1 -u -t 60 -i 1 &``
+     - ``iperf -s -u -i 1 -w 8M``
+   * - UDP Pi -> RDK
+     - ``iperf -s -u -i 1 -t 60 &``
+     - ``iperf -c 192.168.10.2 -u -b 1000M -l 1470 -w 4M -t 60 -i 1``
+
+The NuttX UDP sender uses 1472-byte payloads. The ``-b``, ``-l``,
+``-w`` and ``-P`` options apply to iperf2 on the Raspberry Pi.
+High offered UDP rates can lose packets; record receiver goodput and
+loss as well as sender rate. Sample CPU load during the test and
+capture interface/stack counters before and after:
+
+.. code-block:: text
+
+   nsh> cat /proc/cpuload
+   nsh> cat /proc/net/eth0
+   nsh> cat /proc/net/stat
+
+Interface counters are hexadecimal and cumulative. Compare deltas;
+CPU busy percentage alone does not identify the limiting function.
+For initialization timeouts, retain the clock/reset/PHY diagnostic.
+For ``RUNNING`` without traffic, check IP/MAC uniqueness, physical NIC
+routes, firewall and ARP. Under RX load, inspect IOB availability,
+ring/socket capacity and reader/worker priorities.
+
+.. _rzv2h-rdk-ethernet-test-log:
+
+Ethernet test log
+-----------------
+
+The RDK console reported NuttX, a local address of
+``192.168.10.2`` and a 1000 Mbit/s full-duplex GBETH0 link.
+The peer address was ``192.168.10.1``.
+
+TCP and UDP throughput
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table:: RDK application throughput and CPU load
+   :header-rows: 1
+   :widths: 12 38 31 19
+
+   * - Test
+     - RDK command
+     - RDK throughput
+     - RDK CPU load samples
+   * - TCP RX
+     - ``iperf -s -i 1 &``
+     - 907.97 to 958.93 Mbit/s across 59 one-second reports
+     - 100.0%, 99.6%, 99.1%
+   * - TCP TX
+     - ``iperf -c 192.168.10.1 -t 60 -i 1 &``
+     - 705.52 Mbit/s over 60.06 s
+     - 95.5%, 96.5%, 96.4%
+   * - UDP RX
+     - ``iperf -s -u -i 1 -t 60 &``
+     - 932.57 Mbit/s over 60.06 s
+     - 100.0%
+   * - UDP TX
+     - ``iperf -c 192.168.10.1 -u -t 60 -i 1 &``
+     - 507.61 Mbit/s over 60.06 s
+     - 100.0%, 100.0%, 100.0%
+
+The TCP RX server exited when the peer closed the connection, so the
+log contains interval reports with no aggregate. CPU load values are
+individual samples read from ``/proc/cpuload`` during each test.
+
+3,000 pings with a 1472-byte payload
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The RDK received all 3,000 replies in 303 seconds with a requested
+interval of 100 ms.
+
+.. code-block:: text
+
+   nsh> ping -c 3000 -i 100 -s 1472 192.168.10.1
+   PING 192.168.10.1 1472 bytes of data
+   ...
+   1472 bytes from 192.168.10.1: icmp_seq=2999 time=0.0 ms
+   3000 packets transmitted, 3000 received, 0% packet loss, time 303000 ms
+
+Interface restart
+~~~~~~~~~~~~~~~~~
+
+The log shows one down/up cycle. With ``eth0`` down, all five sends
+returned ``ENETUNREACH`` (101). After ``ifup eth0`` and PHY link recovery at
+1000 Mbit/s full duplex, all five probes received replies.
+
+.. code-block:: text
+
+   nsh> ifdown eth0
+   ifdown eth0...OK
+   nsh> ping -c 5 -s 1472 192.168.10.1
+   PING 192.168.10.1 1472 bytes of data
+   ERROR: sendto failed at seqno 0: 101
+   ...
+   5 packets transmitted, 0 received, 100% packet loss, time 5005 ms
+   nsh> ifup eth0
+   GBETH0 link not ready: PHY status -100, BMSR=7949, MDIO status 0
+   ifup eth0...OK
+   ...
+   GBETH0 link up: 1000 Mbps full duplex
+   ...
+   nsh> ping -c 5 -s 1472 192.168.10.1
+   PING 192.168.10.1 1472 bytes of data
+   ...
+   5 packets transmitted, 5 received, 0% packet loss, time 5005 ms
+
+
 Configurations
 ==============
+
+netnsh
+------
+
+NuttShell configuration with the native GBETH0 driver, KSZ9131 PHY support,
+static network initialization, and the ``ping``, ``iperf``, ``wget``,
+``renew`` and ``netdb`` network test commands.
+
+The preset uses 8 TX descriptors, 32 RX descriptors, 75 I/O buffers of
+1536 bytes and 22 preallocated UDP write-buffer chain heads. Descriptors
+reside in non-cacheable SRAM ``.dma``. RX I/O buffers, TX buffers and the
+flat frame buffer reside in DTCM. Selected network code runs from ITCM.
+D-cache is enabled after MPU setup. The supported IPv4 RX path uses
+zero-copy DMA into an I/O buffer, and TX copies into DMA-owned slots.
+
+The dedicated GBETH worker runs at priority 100 and processes up to
+16 RX descriptors per batch. RX interrupt coalescing uses 16 descriptors
+and a watchdog count of 64. TX completion requests an interrupt every
+eighth descriptor. Checksum offload is enabled when the MAC reports
+support.
+
+The IGMP stack is enabled through ``CONFIG_NET_IGMP=y``. GBETH uses a
+reference count per multicast hash entry and restores the filter after
+interface restart. The ``igmp`` test command is disabled in this preset.
+
+See the :ref:`Ethernet section <rzv2h-rdk-ethernet>` for setup and the
+:ref:`Ethernet test log <rzv2h-rdk-ethernet-test-log>` for recorded results.
 
 nsh
 ---

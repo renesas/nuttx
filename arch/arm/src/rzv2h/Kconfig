@@ -50,6 +50,30 @@ config RZV2H_CORTEXR8_0
 		Build for the CR8_0 core of the RZV2H.
 		This is the default core for the EVK-RZV2H board.
 
+config RZV2H_DCACHE
+	bool "Enable the L1 D-cache after the MPU is configured"
+	default n
+	depends on ARM_MPU
+	---help---
+		rzv2h_mpuinit() turns on the D-cache once the MPU map is in
+		place (MMIO Device, SRAM write-back).  ARMV7R_DCACHE_DISABLE stays
+		set so that __start does not enable it earlier. DMA memory must
+		be non-cacheable or maintained by its driver. GBETH keeps its
+		descriptor rings in the non-cacheable .dma region; its packet
+		buffers are either cacheable SRAM, which the driver cleans and
+		invalidates itself, or DTCM, which is not cached.
+
+config RZV2H_ITCM_HOTCODE
+	bool "Run the hot network code from ITCM"
+	default n
+	---help---
+		Link the code of the GBETH driver, the IPv4/UDP/TCP receive path,
+		the I/O buffers, memcpy, semaphores and work queues into the
+		.itcm section and copy it from its load image in SRAM to ITCM in
+		arm_boot(), before the MPU makes ITCM read-only.  ITCM runs at
+		core speed without I-cache misses.  Requires the .itcm section in
+		the board linker script.
+
 config RZV2H_GPIO
 	bool "GPIO support"
 	default y
@@ -7463,5 +7487,200 @@ endif # RZV2H_CANFD5
 endmenu # Channels
 
 endif # RZV2H_CANFD
+
+config RZV2H_GBETH
+	bool "RZ/V2H native GBETH Ethernet"
+	depends on ARCH_BOARD_RZV2H_RDK || ARCH_BOARD_RZV2H_EVK
+	depends on NET && NET_ETHERNET && MDIO_BUS && SCHED_LPWORK
+	select ARCH_HAVE_NETDEV_STATISTICS
+	select NET_KSZ9131
+	select NETDEV_LATEINIT
+	---help---
+	  Enable the single-queue native GBETH0 MAC driver. The KSZ9131 PHY
+	  is handled by the common drivers/net/ksz9131.c driver over MDIO.
+	  The DMA descriptor rings live in the .dma linker
+	  section, which the MPU maps Normal non-cacheable; the cacheable packet
+	  buffers are cleaned and invalidated by the driver.  This
+	  takes one extra MPU region (ARM_MPU_NREGIONS).
+
+menu "RZ/V2H GBETH options"
+	depends on RZV2H_GBETH
+
+config RZV2H_GBETH_NTXDESC
+	int "Number of GBETH0 TX descriptors"
+	range 2 32
+	default 8
+	---help---
+	  Number of TX DMA descriptors and packet buffers in the single
+	  GBETH0 TX ring. Increasing this value uses more R8 SRAM, or more
+	  DTCM with RZV2H_GBETH_TXBUF_DTCM.
+
+config RZV2H_GBETH_NRXDESC
+	int "Number of GBETH0 RX descriptors"
+	range 2 64
+	default 8
+	---help---
+	  Number of RX DMA descriptors and packet buffers in the single
+	  GBETH0 RX ring. Increasing this value uses more R8 SRAM.
+
+config RZV2H_GBETH_RX_COAL_FRAMES
+	int "GBETH0 RX frames per interrupt"
+	range 1 32
+	default 1
+	---help---
+	  Only every Nth RX descriptor requests an interrupt on completion
+	  (IOC), so that one interrupt and one work run handle a batch of
+	  frames under load.  Frames in the other descriptors are signalled
+	  by the RX interrupt watchdog (RZV2H_GBETH_RX_WATCHDOG).  Ignored
+	  (every descriptor interrupts) while the watchdog is 0.
+
+config RZV2H_GBETH_RX_WATCHDOG
+	int "GBETH0 RX interrupt watchdog count (RIWT)"
+	range 0 255
+	default 0
+	---help---
+	  DMA_CH0_RX_Interrupt_Watchdog_Timer: a received frame whose
+	  descriptor has no IOC raises the RX interrupt after this many
+	  units of 256 GBETH clock cycles.  It bounds the extra latency of
+	  RZV2H_GBETH_RX_COAL_FRAMES.  0 disables the watchdog and RX
+	  coalescing.
+
+config RZV2H_GBETH_RX_ZEROCOPY
+	bool "GBETH0 RX DMA straight into I/O buffers"
+	default n
+	depends on NET_IPv4 && IOB_SECTION = ".dtcm.gbeth"
+	---help---
+	  Give each RX descriptor an I/O buffer (IOB) of the network stack
+	  and let the DMA write the frame straight into it: a received IPv4
+	  frame goes to ipv4_input() without being copied, and the descriptor
+	  gets a fresh IOB (the frame is dropped if none is free). The IOB
+	  pool must be in DTCM (CONFIG_IOB_SECTION=".dtcm.gbeth"), where the
+	  DMA reaches it through the AXI alias and the CPU needs no cache
+	  maintenance; CONFIG_IOB_BUFSIZE must hold a whole RX buffer (1536
+	  bytes). The RZV2H_GBETH_NRXDESC IOBs in the ring are not available
+	  to the stack. TX buffers are in SRAM unless RZV2H_GBETH_TXBUF_DTCM
+	  is set.
+
+config RZV2H_GBETH_TXBUF_DTCM
+	bool "GBETH0 TX buffers and frame buffer in DTCM"
+	default n
+	---help---
+	  Place the TX packet buffers and the stack's flat frame buffer in
+	  DTCM instead of cacheable SRAM. The driver copies each frame into
+	  DTCM without a D-cache clean, and the DMA reads it through the DTCM
+	  AXI alias. The buffers take (RZV2H_GBETH_NTXDESC + 1) x 1536 bytes
+	  of the 128 KB DTCM, which also holds the IOB pool when
+	  CONFIG_IOB_SECTION=".dtcm.gbeth", so CONFIG_IOB_NBUFFERS may need
+	  lowering. Fewer IOBs leave less room for the TCP receive window and
+	  write buffers.
+
+config RZV2H_GBETH_RX_BUDGET
+	int "GBETH0 RX frames per work run"
+	range 0 256
+	default 0
+	---help---
+	  Maximum number of frames one run of the RX work handles. When the
+	  budget runs out with frames still in the ring, the work keeps the
+	  interrupt masked and queues itself again. After every run that
+	  received frames the work yields, so that ready threads of the same
+	  priority (typically the application reading the socket, see
+	  RZV2H_GBETH_WQ_PRIORITY) run between batches. Keep it at or below
+	  the number of frames that fit the socket receive buffer
+	  (NET_RECV_BUFSIZE). 0 handles every waiting frame.
+
+config RZV2H_GBETH_TX_COAL_FRAMES
+	int "GBETH0 TX frames per TX interrupt"
+	range 1 32
+	default 1
+	---help---
+	  Only every Nth TX descriptor requests the TX interrupt on
+	  completion; the others are reclaimed by the next work run. Must
+	  not exceed RZV2H_GBETH_NTXDESC, so that a full TX ring always
+	  contains a descriptor that interrupts.
+
+config RZV2H_GBETH_LINK_POLL_MS
+	int "PHY link polling interval (milliseconds)"
+	range 100 10000
+	default 1000
+	---help---
+	  Interval between KSZ9131 link-status checks. A shorter interval
+	  detects link changes sooner but performs more MDIO transactions.
+
+choice
+	prompt "GBETH0 maximum advertised link speed"
+	default RZV2H_GBETH_SPEED_1000
+	---help---
+	  Highest speed the PHY advertises. Lowering it to 100 Mbps is useful
+	  to separate RGMII 1000 Mbps timing problems from other link issues.
+
+config RZV2H_GBETH_SPEED_1000
+	bool "1000 Mbps"
+
+config RZV2H_GBETH_SPEED_100
+	bool "100 Mbps"
+
+config RZV2H_GBETH_SPEED_10
+	bool "10 Mbps"
+
+endchoice
+
+config RZV2H_GBETH_MAX_SPEED
+	int
+	default 1000 if RZV2H_GBETH_SPEED_1000
+	default 100 if RZV2H_GBETH_SPEED_100
+	default 10 if RZV2H_GBETH_SPEED_10
+
+config RZV2H_GBETH_CSUM_OFFLOAD
+	bool "GBETH0 hardware checksum offload"
+	default n
+	---help---
+	  Let the GBETH insert IPv4 header and TCP/UDP/ICMP checksums on
+	  transmit and verify IPv4/TCP/UDP checksums on receive, so that
+	  the network stack skips them (NETDEV_TX_CSUM, NETDEV_RX_CSUM).
+	  Frames the hardware did not verify are still checked in software;
+	  frames with a checksum error are dropped. Enabled only if the
+	  MAC reports the feature in MAC_HW_Feature0.
+
+config RZV2H_GBETH_WQ
+	bool "Run GBETH0 RX/TX work on a dedicated work queue"
+	default n
+	depends on SCHED_WORKQUEUE
+	---help---
+	  Run the interrupt bottom half (RX, TX reclaim) and the TX poll
+	  work on a work queue of its own, at RZV2H_GBETH_WQ_PRIORITY,
+	  instead of LPWORK (LPWORK remains the fallback if the queue cannot
+	  be created). Link polling stays on LPWORK. With a priority below the
+	  application that reads the socket, the application empties the
+	  socket receive queue between frames, and frames that arrive
+	  faster wait in the RX ring instead of being copied and then
+	  dropped from a full socket queue.
+
+if RZV2H_GBETH_WQ
+
+config RZV2H_GBETH_WQ_PRIORITY
+	int "GBETH0 work queue priority"
+	range 1 254
+	default 90
+
+config RZV2H_GBETH_WQ_STACKSIZE
+	int "GBETH0 work queue stack size"
+	default 4096
+	---help---
+	  The work runs the network stack input path, so it needs a
+	  network-sized stack.
+
+endif # RZV2H_GBETH_WQ
+
+config RZV2H_GBETH_INTSEL
+	int "GBETH0 interrupt selector"
+	default 417
+	range 353 479
+	---help---
+	  INTSEL slot used to route the GBETH0 sbd_intr_o event (the DMA
+	  and MAC summary interrupt, Linux "macirq") to the R8 GIC.
+	  This is a software routing choice and must not conflict with
+	  another interrupt source.
+
+endmenu # RZ/V2H GBETH options
 
 endmenu # "RZ/V2H Configuration Options"

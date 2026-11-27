@@ -35,6 +35,13 @@
 #define MPU_SIZE_KB(x) ((x) * 1024U)
 #define MPU_SIZE_MB(x) ((x) * 1024U * 1024)
 
+/* Cacheable Normal memory as in the Renesas CR8 MPU table
+ * (BSP_MPU_ATTR_TEX_C_B_NORMAL_OUTER_DISABLE_INNER_ENABLE): inner
+ * write-back write-allocate, outer non-cacheable (TEX=100, C=0, B=1).
+ */
+
+#define RZV2H_MPU_NORMAL_CACHED (MPU_RACR_TEX(4) | MPU_RACR_B)
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/

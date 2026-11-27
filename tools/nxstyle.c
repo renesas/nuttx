@@ -243,6 +243,7 @@ static const char *g_white_prefix[] =
   "R_MHU_B_NS_",     /* Ref:  arch/arm/src/rzv2h */
   "RSP_INT_STSn",    /* Ref:  arch/arm/src/rzv2h */
   "R_CANFD_",        /* Ref:  arch/arm/src/rzv2h */
+  "R_GPIO",          /* Ref:  arch/arm/src/rzv2h */
 
   /* Ref:  apps/system/microros, apps/examples/microros_*
    * ROS 2 standard message package names and rosidl scalar type names

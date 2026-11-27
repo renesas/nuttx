@@ -1590,6 +1590,185 @@ standard ID frame and ``T`` an extended ID frame, each followed by the ID
    can0  7FF   [3]  01 02 99
    can0  123   [8]  DE AD BE EF 11 22 33 44
 
+.. _rzv2h-evk-ethernet:
+
+Ethernet
+========
+
+The ``rzv2h-evk:netnsh`` configuration provides ``eth0`` on GBETH0 with the
+KSZ9131 PHY at MDIO address 0 (RX/TX clock skew 1400 ps). Linux must not
+use GBETH0 while NuttX owns it.
+
+The defaults are MAC ``02:00:00:00:00:01``, IP ``192.168.10.2/24`` and
+gateway ``192.168.10.1``. The EVK uses the same defaults, so change the
+addresses of one board before putting both on one network.
+
+Ethernet setup
+--------------
+
+ Build and load ``nuttx``:
+
+.. code-block:: console
+
+   $ ./tools/configure.sh -l rzv2h-evk:netnsh
+   $ make -j4
+
+Connect GBETH0 to a PC, set the PC adapter to ``192.168.10.1/24`` and
+check the link. Wait for ``RUNNING`` before sending traffic.
+
+.. code-block:: text
+
+   nsh> ifconfig eth0
+   nsh> ping -c 5 -s 1472 192.168.10.1
+
+To change the board address:
+
+.. code-block:: text
+
+   nsh> ifdown eth0
+   nsh> ifconfig eth0 192.168.10.3 netmask 255.255.255.0 hw 02:00:00:00:00:02
+   nsh> ifup eth0
+
+Ethernet tests
+--------------
+
+Run one test at a time and start the receiver first. Stop the Raspberry Pi
+server with Ctrl-C after each test where it is the receiver. Restart the
+EVK TCP server for each connection.
+
+.. list-table:: Manual TCP/UDP throughput tests
+   :header-rows: 1
+   :widths: 16 38 46
+
+   * - Direction
+     - EVK command
+     - Raspberry Pi command
+   * - TCP Pi -> EVK
+     - ``iperf -s -i 1 &``
+     - ``iperf -c 192.168.10.2 -t 60 -i 1 -w 1M``
+   * - TCP EVK -> Pi
+     - ``iperf -c 192.168.10.1 -t 60 -i 1 &``
+     - ``iperf -s -i 1 -w 1M``
+   * - UDP EVK -> Pi
+     - ``iperf -c 192.168.10.1 -u -t 60 -i 1 &``
+     - ``iperf -s -u -i 1 -w 8M``
+   * - UDP Pi -> EVK
+     - ``iperf -s -u -i 1 -t 60 &``
+     - ``iperf -c 192.168.10.2 -u -b 1000M -l 1470 -w 4M -t 60 -i 1``
+
+The NuttX UDP sender uses 1472-byte payloads. The ``-b``, ``-l``,
+``-w`` and ``-P`` options apply to iperf2 on the Raspberry Pi.
+High offered UDP rates can lose packets; record receiver goodput and
+loss as well as sender rate. Sample CPU load during the test and
+capture interface/stack counters before and after:
+
+.. code-block:: text
+
+   nsh> cat /proc/cpuload
+   nsh> cat /proc/net/eth0
+   nsh> cat /proc/net/stat
+
+Interface counters are hexadecimal and cumulative. Compare deltas;
+CPU busy percentage alone does not identify the limiting function.
+For initialization timeouts, retain the clock/reset/PHY diagnostic.
+For ``RUNNING`` without traffic, check IP/MAC uniqueness, physical NIC
+routes, firewall and ARP. Under RX load, inspect IOB availability,
+ring/socket capacity and reader/worker priorities.
+
+.. _rzv2h-evk-ethernet-test-log:
+
+Ethernet test log
+-----------------
+
+The EVK console reported NuttX, ``eth0`` at ``192.168.10.2/24``,
+a 1500-byte MTU and a 1000 Mbit/s full-duplex GBETH0 link.
+
+TCP and UDP throughput
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table:: EVK application throughput and CPU load
+   :header-rows: 1
+   :widths: 12 38 31 19
+
+   * - Test
+     - EVK command
+     - EVK throughput
+     - EVK CPU load samples
+   * - TCP RX
+     - ``iperf -s -i 1 &``
+     - 801.52–850.48 Mbit/s across 59 one-second reports
+     - 95.4%, 91.9%
+   * - TCP TX
+     - ``iperf -c 192.168.10.1 -t 60 -i 1 &``
+     - 703.83 Mbit/s over 60.06 s
+     - 96.9%, 97.3%, 98.6%
+   * - UDP RX
+     - ``iperf -s -u -i 1 -t 60 &``
+     - 934.84 Mbit/s over 60.06 s
+     - 100.0%, 100.0%, 100.0%
+   * - UDP TX
+     - ``iperf -c 192.168.10.1 -u -t 60 -i 1 &``
+     - 508.95 Mbit/s over 60.06 s
+     - 100.0%, 100.0%
+
+TCP RX reports a range because the EVK server exited without printing a
+final total.
+
+3,000 pings with a 1472-byte payload
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The EVK received all 3,000 replies in 303 seconds. The command requested
+a 100 ms interval.
+
+.. code-block:: text
+
+   ping -c 3000 -i 100 -s 1472 192.168.10.1
+   PING 192.168.10.1 1472 bytes of data
+   ...
+   1472 bytes from 192.168.10.1: icmp_seq=2999 time=0.0 ms
+   3000 packets transmitted, 3000 received, 0% packet loss, time 303000 ms
+
+Interface restart
+~~~~~~~~~~~~~~~~~
+
+In each cycle, the EVK ran ``ping -c 5 -s 1472 192.168.10.1`` after
+The NuttX ``iperf`` supports the iperf2 protocol only; use iperf2 on the
+PC (``iperf2.exe`` on Windows). Start the receiver first and run one test
+at a time. Results were measured at 1000 Mbit/s full duplex.
+
+.. list-table:: EVK iperf results
+   :header-rows: 1
+   :widths: 12 34 38 16
+
+   * - Test
+     - EVK command
+     - PC command
+     - Mbit/s
+   * - TCP RX
+     - ``iperf -s -i 1 &``
+     - ``iperf -c 192.168.10.2 -t 60 -i 1 -w 1M``
+     - 504 [#evk-tcp-rx]_
+   * - TCP TX
+     - ``iperf -c 192.168.10.1 -t 60 -i 1 &``
+     - ``iperf -s -i 1 -w 1M``
+     - 536
+   * - UDP RX
+     - ``iperf -s -u -i 1 -t 60 &``
+     - ``iperf -c 192.168.10.2 -u -b 1000M -l 1470 -w 4M -t 60 -i 1``
+     - 789
+   * - UDP TX
+     - ``iperf -c 192.168.10.1 -u -t 60 -i 1 &``
+     - ``iperf -s -u -i 1 -w 8M``
+     - 427 [#evk-udp-tx]_
+
+.. [#evk-tcp-rx] Sender rate reported by the PC; the EVK server printed
+   no final total.
+.. [#evk-udp-tx] 0.60% loss reported by the PC.
+
+``cat /proc/cpuload`` and ``cat /proc/net/eth0`` show the CPU load and the
+interface counters during a test.
+
+
 Bring-up
 ========
 
@@ -1880,6 +2059,19 @@ OpenAMP procedure above.
 
 Configurations
 ==============
+
+netnsh
+------
+
+Ethernet-enabled NSH configuration for GBETH0. It includes IPv4, ARP,
+ICMP/ping, TCP/UDP, MDIO, automatic static network initialization and the
+``iperf``, ``wget``, ``renew`` and ``netdb`` commands.
+The bundled ``iperf`` uses the iperf2 protocol only; use iperf2 on the host.
+The preset uses 8 TX descriptors, 32 RX descriptors, 75 DTCM IOBs and
+DTCM TX/frame buffers.
+Hot network code runs from ITCM; D-cache, checksum offload, coalescing and
+a dedicated work queue are enabled. See the
+:ref:`Ethernet section <rzv2h-evk-ethernet>` for setup and recorded test output.
 
 nsh
 ---

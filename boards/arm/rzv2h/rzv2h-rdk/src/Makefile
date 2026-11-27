@@ -74,6 +74,10 @@ ifeq ($(CONFIG_RZV2H_SPI_B),y)
 CSRCS += rzv2h_spi.c
 endif
 
+ifeq ($(CONFIG_RZV2H_GBETH),y)
+CSRCS += rzv2h_gbeth.c
+endif
+
 ############################################################################
 # Example applications
 ############################################################################

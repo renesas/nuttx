@@ -48,6 +48,7 @@ PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 QSPI        Yes      xSPI controller in QSPI mode, manual-command transfers only
 OpenAMP     Yes      RPTUN/RPMsg transport using shared memory and MHU-B (Mailbox)
 CAN         Yes      CAN-FD on channels 0-5
+ETHERNET    Yes      Native GBETH0, KSZ9131 PHY over MDIO
 ==========  =======  ============================================================
 
 CLOCK
@@ -98,6 +99,25 @@ Hardware flow control and DMA are not implemented yet.
 
 An SCI channel can be used for UART or for simple I2C (see SCI I2C
 below), but not for both at once.
+
+Ethernet
+--------
+
+The native GBETH0 driver provides one Ethernet interface on CR8_0, using
+direct MAC/DMA register access and the common KSZ9131 PHY driver over MDIO.
+Both EVK and RDK provide a ``netnsh`` configuration with IPv4, ARP, ICMP,
+TCP/UDP and network test commands. Board code supplies clocks, reset,
+RGMII settings and interrupt routing; Linux must not own the same port.
+
+The network-device callbacks start/stop the interface and schedule TX
+work. DMA descriptor rings handle packet transfer; deferred interrupt work
+passes received frames to the network stack. Link polling uses the common
+PHY driver to update MAC speed/duplex and carrier state. MDIO carries PHY
+management operations, not packet payload.
+
+See the Ethernet sections of the :doc:`EVK <boards/rzv2h-evk/index>` and
+:doc:`RDK <boards/rzv2h-rdk/index>` board documents for configuration,
+connection instructions, test commands and recorded test output.
 
 GPIO
 ----

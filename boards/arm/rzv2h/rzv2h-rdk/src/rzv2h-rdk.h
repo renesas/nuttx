@@ -36,6 +36,25 @@
 
 #define LED_DRIVER_PATH "/dev/userleds"
 
+#ifdef CONFIG_RZV2H_GBETH
+/****************************************************************************
+ * Name: board_gbeth_initialize
+ *
+ * Description:
+ *   Enable the GBETH0 clocks, reset and interrupt routing for this board
+ *   and register the 'eth0' network device.
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+int board_gbeth_initialize(void);
+#endif
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
