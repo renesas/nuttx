@@ -44,6 +44,7 @@ RIIC I2C    Yes      Interrupt-driven RIIC master on channels 0-8
 SCI I2C     Yes      Interrupt-driven SCI simple I2C master on channels 0-9
 ADC         Yes      ADC-E unit 0 with 8 analog inputs and group-A scans
 RTC         Yes      Calendar, one-shot alarm, periodic wakeup, system clock.
+SDHI        Yes      SD memory on channels 0/1; optional internal DMA and UHS-I
 PWM         Yes      GPT (General PWM Timer) PWM on channels 0-15
 QSPI        Yes      xSPI controller in QSPI mode, manual-command transfers only
 OpenAMP     Yes      RPTUN/RPMsg transport using shared memory and MHU-B (Mailbox)
@@ -163,6 +164,7 @@ RIIC I2C  9 (riic0-riic8)      447-430 (txi/rxi only)
 ADC       1 (adc0)             429
 SPI       3 (spi0-spi2)        428-423 (txi/rxi only)
 CAN       6 (can0-can5)        419-400 (gerr/grecc, rec/trx/err)
+SDHI      3 (sdhi0-sdhi2)      399-397 (OXMN)
 ========  ==================  ================================
 
 Changing interrupt-select IDs (RIIC2 as an example)
@@ -398,6 +400,49 @@ loopback mode when opened, as selected by
 
 With ``CONFIG_RZV2H_CANFD_SOCKET``, the channels are SocketCAN network
 interfaces (``can0`` to ``can5``) instead of character devices.
+
+SDHI
+----
+
+The SDHI driver provides SD-memory block storage through the common NuttX
+MMC/SD upper half. It supports interrupt-driven PIO, single-block and
+multiblock reads/writes, and optional internal DMA. The EVK integrates
+SDHI0 and SDHI1; the RDK integrates SDHI0 only.
+
+``CONFIG_RZV2H_SDIO`` enables the host and
+``CONFIG_RZV2H_SDIO_CHANNEL0`` / ``CONFIG_RZV2H_SDIO_CHANNEL1`` select the
+required controllers. ``CONFIG_MMCSD`` and ``CONFIG_MMCSD_SDIO`` enable the
+block upper half. Each channel has independent device-minor, interrupt-select
+IRQ, interrupt-priority, card-detection and write-protection settings.
+Board initialization prepares the clocks, pins and supplies before registering
+cards as ``/dev/mmcsdN``, where N is the configured minor.
+
+One-bit and four-bit SD transfers are selected through
+``CONFIG_RZV2H_SDIO_WIDTH1`` / ``CONFIG_RZV2H_SDIO_WIDTH4``. The mutually
+exclusive timing choices are ``CONFIG_RZV2H_SDIO_DEFAULT`` (preset),
+``CONFIG_RZV2H_SDIO_HIGHSPEED`` and ``CONFIG_RZV2H_SDIO_UHS``. High Speed
+negotiates CMD6 and retains Default Speed if unsupported. UHS-I offers SDR50
+or SDR104, which uses SCC tuning. Timing policy and the requested clock ceiling are
+selected at build time and remain subject to card and board capabilities.
+
+``CONFIG_RZV2H_SDIO_DMA`` enables the internal DMA backend on supported
+board profiles. It requires a flat, single-core build and D-cache disabled
+during early startup. Eligible whole-sector buffers can reside in SRAM3 or
+core0 local DTCM, translated to its AXI window for DMA. Runtime cached SRAM3
+uses cache maintenance and requires complete 32-byte or 64-byte cache API
+lines; local DTCM remains non-cacheable. Cache enable after MPU setup remains
+a platform responsibility. ``CONFIG_RZV2H_SDIO_DMA_BOUNCE`` adds bounded SRAM
+staging for eligible unaligned buffers; other requests use PIO.
+
+The EVK and RDK ``nsh-sdio`` presets provide four-bit Default Speed PIO,
+FAT and ``dd``. Applications access mounted files through standard file APIs.
+
+Controller/card ownership must be exclusive to NuttX. SDHI2 board integration,
+eMMC, SDIO peripheral functions, multiplexed buses and DDR50 are unavailable.
+UHS requires four-bit mode. Native write protection reports the board input
+to the MMC/SD upper half; socket wiring and optional external fixtures
+are board-specific. Disabling card detection assumes fixed-present media and
+requires the card to be inserted before initialization.
 
 Supported Boards
 ================

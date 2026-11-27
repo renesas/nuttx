@@ -235,6 +235,14 @@ int rzv2h_bringup(void)
     }
 #endif
 
+#ifdef CONFIG_RZV2H_SDIO
+  ret = rzv2h_sdio_setup();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: RDK SDHI0 setup failed: %d\n", ret);
+    }
+#endif
+
 #ifdef CONFIG_RZV2H_SPI_B
   ret = board_spi_initialize();
   if (ret < 0)

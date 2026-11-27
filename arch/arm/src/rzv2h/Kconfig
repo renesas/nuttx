@@ -29,6 +29,9 @@ config ARCH_CHIP_R9A09G057
 	select RZV2H_HAVE_SCI7
 	select RZV2H_HAVE_SCI8
 	select RZV2H_HAVE_SCI9
+	select RZV2H_HAVE_SDHI0
+	select RZV2H_HAVE_SDHI1
+	select RZV2H_HAVE_SDHI2
 	select RZV2H_HAVE_RTC
 	select RZV2H_HAVE_RIIC0
 	select RZV2H_HAVE_RIIC1
@@ -80,6 +83,425 @@ config RZV2H_GPIO
 	depends on DEV_GPIO
 	---help---
 		Enable support for GPIO pins.
+
+config RZV2H_HAVE_SDHI0
+	bool
+	default n
+
+config RZV2H_HAVE_SDHI1
+	bool
+	default n
+
+config RZV2H_HAVE_SDHI2
+	bool
+	default n
+
+menuconfig RZV2H_SDIO
+	bool "SDHI support"
+	depends on RZV2H_HAVE_SDHI0 || RZV2H_HAVE_SDHI1 || RZV2H_HAVE_SDHI2
+	default n
+	select ARCH_HAVE_SDIO
+	select SDIO_BLOCKSETUP
+	---help---
+		Enable SD memory card access through the SDHI host controller and
+		the common MMC/SD driver. Transfers use interrupt-driven PIO or
+		the optional internal DMA backend. Multiblock transfers use an
+		automatic stop command or a predefined block count when supported.
+
+		NuttX must own the controller and card exclusively. SDIO peripheral
+		function support and multiplexed-bus operation are not implemented;
+		unsupported selections are rejected at build time.
+
+if RZV2H_SDIO
+
+# Board capabilities control the available controllers and transfer modes.
+
+config RZV2H_SDIO_BOARD_DMA
+	bool
+
+config RZV2H_SDIO_BOARD_UHS
+	bool
+
+config RZV2H_SDIO_BOARD_SDHI1
+	bool
+
+config RZV2H_SDIO_BOARD_SDHI2
+	bool
+
+config RZV2H_SDIO_CHANNEL0
+	bool "SDHI0"
+	depends on RZV2H_HAVE_SDHI0
+	---help---
+		Enable this SDHI controller. The board must provide its pin,
+		clock, power and interrupt-routing setup.
+
+if RZV2H_SDIO_CHANNEL0
+
+config RZV2H_SDIO0_CARDDECTECT
+	bool "SDHI0 card detection"
+	default y
+	select SCHED_HPWORK
+	select MMCSD_HAVE_CARDDETECT if MMCSD_SDIO
+	---help---
+		Report card insertion and removal using the native SDxCD input.
+		The board must route the signal. When disabled, the driver treats
+		the card as always present.
+		UHS operation requires card power recovery before reinsertion.
+
+config RZV2H_SDIO0_CARDDECTECT_NATIVE
+	bool
+	default y if RZV2H_SDIO0_CARDDECTECT
+
+config RZV2H_SDIO0_WRITEPROTECT
+	bool "SDHI0 write protection"
+	default n
+	select MMCSD_HAVE_WRITEPROTECT if MMCSD_SDIO
+	---help---
+		Report the native SDxWP input to the common MMC/SD driver for
+		write-permission checks. The board must route the signal and
+		configure its polarity. When disabled, this input is ignored.
+
+config RZV2H_SDIO0_WRITEPROTECT_NATIVE
+	bool
+	default y if RZV2H_SDIO0_WRITEPROTECT
+
+config RZV2H_SDIO0_INTSEL
+	int "SDHI0 OXMN interrupt-select IRQ number"
+	default 399
+	range 353 479
+	---help---
+		FSP IRQ number identifying an INTSEL destination. Values 353 to
+		479 correspond to SEL0 through SEL126; this is not a raw SEL index,
+		peripheral event ID or absolute GIC interrupt ID. Each enabled
+		controller needs a distinct, unused destination.
+
+config RZV2H_SDIO0_IRQ_PRIORITY
+	int "SDHI0 interrupt priority"
+	default 12
+	range 0 15
+	---help---
+		GIC interrupt priority: 0 is the highest and 15 the lowest.
+		The driver converts this value to the GIC priority-field encoding.
+
+config RZV2H_SDIO0_MINOR
+	int "SDHI0 MMC/SD block-device minor"
+	default 0
+	range 0 255
+	depends on MMCSD_SDIO
+	---help---
+		Select N for /dev/mmcsdN. SDHI0 defaults to /dev/mmcsd0,
+		independent of other enabled channels. Use distinct minors.
+
+endif # RZV2H_SDIO_CHANNEL0
+
+config RZV2H_SDIO_CHANNEL1
+	bool "SDHI1"
+	depends on RZV2H_HAVE_SDHI1
+	depends on RZV2H_SDIO_BOARD_SDHI1
+	default y
+	---help---
+		Enable this SDHI controller. The board must provide its pin,
+		clock, power and interrupt-routing setup.
+
+if RZV2H_SDIO_CHANNEL1
+
+config RZV2H_SDIO1_CARDDETECT
+	bool "SDHI1 card detection"
+	default y
+	select SCHED_HPWORK
+	select MMCSD_HAVE_CARDDETECT if MMCSD_SDIO
+	---help---
+		Report card insertion and removal using the native SDxCD input.
+		The board must route the signal. When disabled, the driver treats
+		the card as always present.
+		UHS operation requires card power recovery before reinsertion.
+
+config RZV2H_SDIO1_CARDDETECT_NATIVE
+	bool
+	default y if RZV2H_SDIO1_CARDDETECT
+
+config RZV2H_SDIO1_WRITEPROTECT
+	bool "SDHI1 write protection"
+	default n
+	select MMCSD_HAVE_WRITEPROTECT if MMCSD_SDIO
+	---help---
+		Report the native SDxWP input to the common MMC/SD driver for
+		write-permission checks. The board must route the signal and
+		configure its polarity. When disabled, this input is ignored.
+
+config RZV2H_SDIO1_WRITEPROTECT_NATIVE
+	bool
+	default y if RZV2H_SDIO1_WRITEPROTECT
+
+config RZV2H_SDIO1_INTSEL
+	int "SDHI1 OXMN interrupt-select IRQ number"
+	default 398
+	range 353 479
+	---help---
+		FSP IRQ number identifying an INTSEL destination. Values 353 to
+		479 correspond to SEL0 through SEL126; this is not a raw SEL index,
+		peripheral event ID or absolute GIC interrupt ID. Each enabled
+		controller needs a distinct, unused destination.
+
+config RZV2H_SDIO1_IRQ_PRIORITY
+	int "SDHI1 interrupt priority"
+	default 12
+	range 0 15
+	---help---
+		GIC interrupt priority: 0 is the highest and 15 the lowest.
+		The driver converts this value to the GIC priority-field encoding.
+
+config RZV2H_SDIO1_MINOR
+	int "SDHI1 MMC/SD block-device minor"
+	default 1
+	range 0 255
+	depends on MMCSD_SDIO
+	---help---
+		Select N for /dev/mmcsdN. SDHI1 defaults to /dev/mmcsd1,
+		independent of other enabled channels. Use distinct minors.
+
+endif # RZV2H_SDIO_CHANNEL1
+
+config RZV2H_SDIO_CHANNEL2
+	bool "SDHI2"
+	depends on RZV2H_HAVE_SDHI2
+	depends on RZV2H_SDIO_BOARD_SDHI2
+	---help---
+		Enable this SDHI controller. The board must provide its pin,
+		clock, power and interrupt-routing setup.
+		This option is available only when the board declares SDHI2
+		support.
+
+if RZV2H_SDIO_CHANNEL2
+
+config RZV2H_SDIO2_CARDDECTECT
+	bool "SDHI2 card detection"
+	default y
+	select SCHED_HPWORK
+	select MMCSD_HAVE_CARDDETECT if MMCSD_SDIO
+	---help---
+		Report card insertion and removal using the native SDxCD input.
+		The board must route the signal. When disabled, the driver treats
+		the card as always present.
+		UHS operation requires card power recovery before reinsertion.
+
+config RZV2H_SDIO2_CARDDECTECT_NATIVE
+	bool
+	default y if RZV2H_SDIO2_CARDDECTECT
+
+config RZV2H_SDIO2_WRITEPROTECT
+	bool "SDHI2 write protection"
+	default n
+	select MMCSD_HAVE_WRITEPROTECT if MMCSD_SDIO
+	---help---
+		Report the native SDxWP input to the common MMC/SD driver for
+		write-permission checks. The board must route the signal and
+		configure its polarity. When disabled, this input is ignored.
+
+config RZV2H_SDIO2_WRITEPROTECT_NATIVE
+	bool
+	default y if RZV2H_SDIO2_WRITEPROTECT
+
+config RZV2H_SDIO2_INTSEL
+	int "SDHI2 OXMN interrupt-select IRQ number"
+	default 397
+	range 353 479
+	---help---
+		FSP IRQ number identifying an INTSEL destination. Values 353 to
+		479 correspond to SEL0 through SEL126; this is not a raw SEL index,
+		peripheral event ID or absolute GIC interrupt ID. Each enabled
+		controller needs a distinct, unused destination.
+
+config RZV2H_SDIO2_IRQ_PRIORITY
+	int "SDHI2 interrupt priority"
+	default 12
+	range 0 15
+	---help---
+		GIC interrupt priority: 0 is the highest and 15 the lowest.
+		The driver converts this value to the GIC priority-field encoding.
+
+config RZV2H_SDIO2_MINOR
+	int "SDHI2 MMC/SD block-device minor"
+	default 2
+	range 0 255
+	depends on MMCSD_SDIO
+	---help---
+		Select N for /dev/mmcsdN. SDHI2 defaults to /dev/mmcsd2,
+		independent of other enabled channels. Use distinct minors.
+
+endif # RZV2H_SDIO_CHANNEL2
+
+choice
+	prompt "SD data-bus width"
+	default RZV2H_SDIO_WIDTH1
+	---help---
+		Select the maximum SD memory bus width. Discovery starts in
+		one-bit mode. Four-bit operation requires card support and board
+		wiring for all four data lines. UHS-I requires the four-bit option.
+
+config RZV2H_SDIO_WIDTH1
+	bool "1-bit"
+
+config RZV2H_SDIO_WIDTH4
+	bool "4-bit"
+	---help---
+		Allow four-bit SD transfers. The board must route DAT0 through
+		DAT3. Clock timing and PIO/DMA selection are configured separately.
+
+endchoice
+
+config SDIO_WIDTH
+	int
+	default 1 if RZV2H_SDIO_WIDTH1
+	default 4 if RZV2H_SDIO_WIDTH4
+
+config RZV2H_SDIO_MAX_FREQUENCY
+	int "Maximum transfer frequency in Hz"
+	default 200000000 if RZV2H_SDIO_UHS_SDR104
+	default 100000000 if RZV2H_SDIO_UHS
+	default 50000000 if RZV2H_SDIO_HIGHSPEED
+	default 25000000
+	range 400000 200000000 if RZV2H_SDIO_UHS
+	range 400000 50000000 if !RZV2H_SDIO_UHS
+	---help---
+		Maximum requested SD transfer clock. The selected timing mode and
+		board configuration can impose a lower limit. Default Speed is
+		limited to 25 MHz and SD High Speed to 50 MHz. SDR50 and SDR104
+		modes allow up to 100 MHz and 200 MHz, respectively.
+		The actual clock depends on the controller input clock and its
+		supported dividers; this setting does not change the input clock.
+
+config RZV2H_SDIO_CARD
+	bool
+	default n
+	---help---
+		SDIO peripheral functions and function interrupts are not supported.
+		This symbol must remain disabled for SD memory card operation.
+
+config RZV2H_SDIO_DMA
+	bool "SDHI internal DMA"
+	default n
+	depends on RZV2H_SDIO_BOARD_DMA
+	depends on BUILD_FLAT && !SMP && ARMV7R_DCACHE_DISABLE
+	select SDIO_DMA
+	---help---
+		Use the internal DMAC on board-supported SDHI0/SDHI1 controllers.
+		Direct DMA requires 8-byte-aligned buffers containing whole
+		512-byte sectors in system SRAM3 or core0 local DTCM. DTCM CPU
+		addresses 0x00020000-0x0003ffff are translated to the core0 AXI
+		window 0x12060000-0x1207ffff and remain non-cacheable under the
+		platform MPU map. With the data cache enabled for SRAM3,
+		direct buffers must own complete 32-byte or 64-byte cache API
+		lines. The driver cleans transmit data and invalidates receive
+		data around DMA. The caller must not access the buffer until
+		transfer completion. Other cache line sizes use PIO.
+		Bus/security permissions must allow DMA access. Early startup
+		cache enable remains disabled until the MPU map is configured.
+
+		The optional staging buffer handles eligible unaligned SRAM3/DTCM
+		requests. Requests outside these limits use PIO.
+
+		An aborted active DMA transfer can fault the host and block further
+		commands until recovery. A failed UHS session requires board/card
+		power cycling; a controller reset does not restore card power or
+		I/O voltage.
+
+config RZV2H_SDIO_DMA_BOUNCE
+	bool "DMA staging for unaligned buffers"
+	default y
+	depends on RZV2H_SDIO_DMA
+	---help---
+		Use one 128-byte-aligned, 4 KiB staging buffer per enabled host for
+		whole-sector requests in SRAM3 or core0 DTCM that do not meet DMA
+		alignment (8 bytes with cache off, complete cache lines with
+		cache on). Eligible aligned buffers use direct DMA.
+		DTCM requires 8-byte alignment even with global cache enabled.
+		Larger unaligned requests and other memory regions use PIO.
+		One extra CPU copy is required, bounded to 4 KiB; receive copy
+		may run in interrupt context before transfer completion is posted.
+		With cache on, maintenance applies to the private staging buffer.
+		The extra copy increases CPU work and can increase interrupt
+		latency.
+
+config RZV2H_SDIO_XFRDEBUG
+	bool "Log SD memory transfer summaries"
+	default n
+	depends on DEBUG_MEMCARD_INFO
+	---help---
+		Print task-context summaries when eventwait consumes an event for
+		CMD17, CMD18, CMD24 or CMD25. Include command, block geometry,
+		termination mode, remaining bytes and completion status.
+		Logging adds serial-output overhead and can reduce throughput.
+
+choice
+	prompt "SD speed mode"
+	default RZV2H_SDIO_DEFAULT
+	---help---
+		Select the timing policy shared by the enabled controllers.
+		UHS-I requires board support and an SDHC/SDXC card supporting the
+		requested mode. Discovery fails if negotiation cannot establish
+		that mode. Timing policy is selected at build time.
+
+config RZV2H_SDIO_DEFAULT
+	bool "Default Speed"
+	---help---
+		Use SD Default Speed only, with a transfer ceiling of 25 MHz.
+		This policy does not request a CMD11 voltage switch. The board
+		defines the actual I/O supply; selecting this option does not
+		change a fixed-voltage board's wiring.
+
+config RZV2H_SDIO_HIGHSPEED
+	bool "High Speed"
+	depends on MMCSD && MMCSD_SDIO
+	---help---
+		Select SD High Speed with CMD6. Transfers use up to 50 MHz after
+		the card confirms selection; other cards use Default Speed.
+		This policy does not request a CMD11 voltage switch or change a
+		fixed-voltage board's wiring.
+
+config RZV2H_SDIO_UHS
+	bool "UHS-I"
+	depends on RZV2H_SDIO_BOARD_UHS
+	depends on RZV2H_SDIO_WIDTH4 && !SDIO_WIDTH_D1_ONLY
+	depends on MMCSD && MMCSD_SDIO
+	---help---
+		Request 1.8 V signaling and negotiate four-bit operation and the
+		selected UHS-I timing mode. SDR104 also performs SCC tuning with
+		CMD19. The board must provide a compatible I/O supply and wiring.
+
+		Use Type B drive strength and select a card current limit within
+		the card capabilities and board power budget.
+
+		DDR50 and automatic recovery from a failed UHS session are not
+		supported. Recovery requires full board/card power cycling.
+
+endchoice
+
+choice
+	prompt "UHS-I timing mode"
+	default RZV2H_SDIO_UHS_SDR50
+	depends on RZV2H_SDIO_UHS
+
+config RZV2H_SDIO_UHS_SDR50
+	bool "SDR50 (up to 100 MHz)"
+
+config RZV2H_SDIO_UHS_SDR104
+	bool "SDR104 (up to 200 MHz with SCC tuning)"
+
+endchoice
+
+# SDHI0 uses SD memory cards. Keep the legacy eMMC media symbol hidden
+# and disabled for configuration compatibility.
+
+config RZV2H_SDIO0_MEDIA_SD
+	bool
+	default y if RZV2H_SDIO_CHANNEL0
+
+config RZV2H_SDIO0_MEDIA_EMMC
+	bool
+
+endif # RZV2H_SDIO
+
 
 # Peripheral
 config RZV2H_HAVE_ADC

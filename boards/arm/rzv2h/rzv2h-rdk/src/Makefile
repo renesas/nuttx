@@ -70,6 +70,10 @@ endif
 # Peripheral driver initialization
 ############################################################################
 
+ifeq ($(CONFIG_RZV2H_SDIO),y)
+CSRCS += rzv2h_sdio.c
+endif
+
 ifeq ($(CONFIG_RZV2H_SPI_B),y)
 CSRCS += rzv2h_spi.c
 endif
