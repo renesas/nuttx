@@ -43,8 +43,20 @@
  * after mpu_control(true) aborts.
  */
 
-#define MPU_REGION_SRAM 2
+#ifdef CONFIG_RZV2H_DCACHE
+#  define MPU_REGION_SRAM 3 /* After the Strongly-ordered default region */
+#else
+#  define MPU_REGION_SRAM 2
+#endif
 #define MPU_REGION_CODE (nitems(g_mpu_region_table) - 1)
+
+/* Index of the non-cacheable GBETH DMA window: just below the code window,
+ * above MPU_REGION_SRAM so that it overrides the cacheable SRAM default.
+ */
+
+#ifdef CONFIG_RZV2H_GBETH
+#  define MPU_REGION_DMA  (nitems(g_mpu_region_table) - 2)
+#endif
 
 /****************************************************************************
  * External Symbols
@@ -59,6 +71,15 @@
 extern uint8_t __mpu_code_start[];
 extern uint8_t __mpu_code_end[];
 
+/* Bounds of the GBETH DMA memory (descriptors and packet buffers), padded
+ * by the linker script to a power of two and aligned to its size.
+ */
+
+#ifdef CONFIG_RZV2H_GBETH
+extern uint8_t __dma_start[];
+extern uint8_t __dma_end[];
+#endif
+
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -71,6 +92,27 @@ extern uint8_t __mpu_code_end[];
 
 struct mpu_region_s g_mpu_region_table[] =
 {
+#ifdef CONFIG_RZV2H_DCACHE
+  /* Default for 0x00000000..0x7FFFFFFF (lowest priority)
+   *
+   * mpu_control() enables the background region (SCTLR.BR), and the
+   * PMSAv7 default map makes every unmapped address below 0x80000000
+   * Normal memory, i.e. cacheable once the D-cache is on.  The CR8 may then
+   * fill cache lines speculatively from DDR (0x40000000, not initialized
+   * in a debugger-only boot) or other unbacked space, and a fill that never
+   * completes locks the bus.  Strongly-ordered (TEX=000, C=0, B=0) keeps
+   * unmapped addresses accessible as before but never cached or read
+   * speculatively.  Every region below has a higher number and overrides
+   * it; with this entry their numbers in the comments shift up by one.
+   */
+
+  {
+    0x00000000,                                        /* base address */
+    MPU_SIZE_MB(2048),                                 /* size */
+    MPU_RACR_AP_RWRW | MPU_RACR_XN                     /* attribute */
+  },
+#endif
+
   /* region 0 (ITCM)
    *
    * Read-only, and deliberately NOT XN: this is where the exception table
@@ -108,13 +150,17 @@ struct mpu_region_s g_mpu_region_table[] =
    * mpu_control(true) writes SCTLR_M faults, which looks like
    * "cp15_wrsctlr() crashed" but is really a prefetch abort on the NOPs
    * immediately following the mcr [armv7-r/sctlr.h:523].
+   *
+   * Cacheable as in the Renesas CR8 table: inner write-back, outer
+   * non-cacheable (RZV2H_MPU_NORMAL_CACHED).  Outer write-back attributes
+   * are never used by the vendor on this bus.
    */
 
   {
     0x08180000,                                        /* base address */
     MPU_SIZE_KB(512),                                  /* size */
-    MPU_RACR_AP_RWRW | MPU_RACR_TEX(1) | MPU_RACR_C |
-    MPU_RACR_B | MPU_RACR_XN                           /* attribute */
+    MPU_RACR_AP_RWRW | RZV2H_MPU_NORMAL_CACHED |
+    MPU_RACR_XN                                        /* attribute */
   },
 
   /* region 3 (Peripheral)
@@ -133,17 +179,19 @@ struct mpu_region_s g_mpu_region_table[] =
 
   /* region 4 (xSPI)
    *
-   * Read-only, cacheable, matching the CR8 reference table (region 5).
-   * Nothing here writes through the mapped window -- page-program uses
-   * DirectTransfer instead -- so a stray store faults immediately
-   * rather than stalling the CPU in the write-buffer flush.
+   * The flash window is read-only, execute-never, and Normal
+   * non-cacheable (TEX=001, C=0, B=0). This prevents D-cache line fills
+   * from the window, including before the xSPI controller is initialized.
+   * Flash programming uses DirectTransfer commands.
+   *
+   * This entry is always present and takes priority over the
+   * Strongly-ordered default region when D-cache is enabled.
    */
 
   {
     0x20000000,                                        /* base address */
     MPU_SIZE_MB(256),                                  /* size */
-    MPU_RACR_AP_RORO | MPU_RACR_TEX(1) | MPU_RACR_C |
-    MPU_RACR_B | MPU_RACR_XN                           /* attribute */
+    MPU_RACR_AP_RORO | MPU_RACR_TEX(1) | MPU_RACR_XN   /* attribute */
   },
 
 #ifdef CONFIG_RZV2H_RPTUN
@@ -170,22 +218,42 @@ struct mpu_region_s g_mpu_region_table[] =
   },
 #endif
 
-  /* Last region (SRAM code window: .text, .rodata, .init_section,
-   * .ARM.exidx, and the .vectors load image)
+#ifdef CONFIG_RZV2H_GBETH
+  /* GBETH DMA window (the descriptor rings, the .dma section)
    *
-   * Read-only and executable.  Base and size are filled in from the link map
-   * by rzv2h_mpuinit(); see the note on MPU_REGION_CODE above for why this
-   * has to stay last.
+   * Normal, non-cacheable (TEX=001, C=0, B=0) and XN, so the CPU and the
+   * GBETH DMA always see the same descriptors with the D-cache on.  The
+   * packet buffers are cacheable and maintained by the driver.  It lies
+   * inside the SRAM region and after the code window, never overlapping
+   * it.  Base and size are filled in from the link map by rzv2h_mpuinit().
    */
 
   {
     0,                                                 /* base: link map */
     0,                                                 /* size: link map */
-    MPU_RACR_AP_RORO | MPU_RACR_TEX(1) | MPU_RACR_C |
-    MPU_RACR_B                                         /* attribute */
+    MPU_RACR_AP_RWRW | MPU_RACR_TEX(1) | MPU_RACR_XN   /* attribute */
+  },
+#endif
+
+  /* Last region (SRAM code window: .text, .rodata, .init_section,
+   * .ARM.exidx, and the .vectors load image)
+   *
+   * Read-only and executable, cacheable like region 2.  Base and size are
+   * filled in from the link map by rzv2h_mpuinit(); see the note on
+   * MPU_REGION_CODE above for why this has to stay last.
+   */
+
+  {
+    0,                                                 /* base: link map */
+    0,                                                 /* size: link map */
+    MPU_RACR_AP_RORO | RZV2H_MPU_NORMAL_CACHED         /* attribute */
   }
 };
-
+ #ifdef CONFIG_ARM_MPU
+static_assert(nitems(g_mpu_region_table) <= CONFIG_ARM_MPU_NREGIONS,
+              "g_mpu_region_table has more entries than "
+              "CONFIG_ARM_MPU_NREGIONS");
+#endif
 #ifdef CONFIG_ARM_MPU
 /* MPUIR as read at boot.  Kept around so the region count and the
  * MPUIR_SEPARATE bit can be inspected from the debugger without CP15 access:
@@ -251,19 +319,34 @@ void rzv2h_mpuinit(void)
   DEBUGASSERT(g_mpu_region_table[MPU_REGION_CODE].size <=
               g_mpu_region_table[MPU_REGION_SRAM].size);
 
+#ifdef CONFIG_RZV2H_GBETH
+  /* The linker script pads .dma to a power of two and asserts that its base
+   * is a multiple of that size, so this is an exact PMSAv7 region.
+   */
+
+  g_mpu_region_table[MPU_REGION_DMA].base = (uintptr_t)__dma_start;
+  g_mpu_region_table[MPU_REGION_DMA].size = __dma_end - __dma_start;
+
+  DEBUGASSERT((g_mpu_region_table[MPU_REGION_DMA].size &
+               (g_mpu_region_table[MPU_REGION_DMA].size - 1)) == 0);
+  DEBUGASSERT((g_mpu_region_table[MPU_REGION_DMA].base &
+               (g_mpu_region_table[MPU_REGION_DMA].size - 1)) == 0);
+#endif
+
   mpu_initialize(&g_mpu_region_table[0], nitems(g_mpu_region_table));
 
   /* Enable caches after MPU configuration. MMIO regions must be
-   * non-cacheable before D-cache is turned on.
+   * non-cacheable before D-cache is turned on, and DMA memory must be
+   * non-cacheable (GBETH: the .dma region above) because no driver does
+   * cache maintenance.  up_enable_dcache() invalidates the cache first.
    */
 
   up_invalidate_icache_all();
   up_enable_icache();
 
-  /* TODO: re-check enabling cache to inscrease performance
-   */
-
-  /* up_enable_dcache(); */
+#ifdef CONFIG_RZV2H_DCACHE
+  up_enable_dcache();
+#endif
 
 #endif
 }

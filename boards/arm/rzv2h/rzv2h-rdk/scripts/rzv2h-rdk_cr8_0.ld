@@ -117,6 +117,114 @@ SECTIONS
     ASSERT(_vector_load == ORIGIN(RAM),
            "U-Boot reset trampoline expects .vectors at ORIGIN(RAM)")
 #endif
+#ifdef CONFIG_RZV2H_ITCM_HOTCODE
+    /* Hot network code that runs from ITCM (CONFIG_RZV2H_ITCM_HOTCODE): the
+     * GBETH driver, the IPv4/UDP/TCP receive and send paths, the socket
+     * calls, I/O buffers, memcpy, semaphores and the atomics, watchdogs and
+     * system time they use, the scheduler's context switch and the
+     * interrupt entry.
+     * It is stored in RAM and copied to ITCM by arm_boot(), after the
+     * exception table at the start of ITCM.  It comes before .text so that
+     * these input sections are not taken by the *(.text .text.*) below.
+     */
+
+    .itcm ORIGIN(ITCM) + 0x100 :
+    {
+        _sitcm = ABSOLUTE(.);
+        *libarch.a:rzv2h_gbeth.o(.text .text.*)
+        *libnet.a:ipv4_input.o(.text .text.*)
+        *libnet.a:udp_input.o(.text .text.*)
+        *libnet.a:udp_callback.o(.text .text.*)
+        *libnet.a:udp_recvfrom.o(.text .text.*)
+        *libnet.a:devif_callback.o(.text .text.*)
+        *libnet.a:netdev_iob.o(.text .text.*)
+        *libnet.a:net_lock.o(.text .text.*)
+        *libnet.a:net_iob_concat.o(.text .text.*)
+        *libnet.a:tcp_input.o(.text .text.*)
+        *libnet.a:tcp_callback.o(.text .text.*)
+        *libmm.a:iob_*.o(.text .text.*)
+        *libc.a:arch_memcpy.o(.text .text.*)
+        *libc.a:sem_wait.o(.text .text.*)
+        *libc.a:sem_post.o(.text .text.*)
+        *libc.a:lib_mutex.o(.text .text.*)
+        *libsched.a:sem_wait.o(.text .text.*)
+        *libsched.a:sem_post.o(.text .text.*)
+        *libsched.a:sem_timedwait.o(.text .text.*)
+        *libsched.a:kwork_thread.o(.text .text.*)
+        *libsched.a:kwork_queue.o(.text .text.*)
+        *libsched.a:sched_yield.o(.text .text.*)
+        *libsched.a:sched_addreadytorun.o(.text .text.*)
+        *libsched.a:sched_removereadytorun.o(.text .text.*)
+        *libsched.a:sched_addblocked.o(.text .text.*)
+        *libsched.a:sched_removeblocked.o(.text .text.*)
+        *libsched.a:sched_switchcontext.o(.text .text.*)
+        *libsched.a:sched_mergepending.o(.text .text.*)
+        *libsched.a:sched_lock.o(.text .text.*)
+        *libsched.a:sched_unlock.o(.text .text.*)
+        *libsched.a:sched_gettcb.o(.text .text.*)
+        *libsched.a:sem_waitirq.o(.text .text.*)
+        *libsched.a:irq_dispatch.o(.text .text.*)
+        *libarch.a:arm_vectors.o(.text .text.*)
+        *libarch.a:arm_doirq.o(.text .text.*)
+        *libarch.a:arm_syscall.o(.text .text.*)
+        *libarch.a:arm_gicv2.o(.text .text.*)
+        *libfs.a:fs_files.o(.text .text.*)
+        *libfs.a:socket.o(.text .text.*)
+        *libnet.a:recvfrom.o(.text .text.*)
+        *libnet.a:recvmsg.o(.text .text.*)
+        *libnet.a:recv.o(.text .text.*)
+        *libnet.a:send.o(.text .text.*)
+        *libnet.a:sendto.o(.text .text.*)
+        *libnet.a:sendmsg.o(.text .text.*)
+        *libnet.a:udp_sendto_buffered.o(.text .text.*)
+        *libnet.a:udp_send.o(.text .text.*)
+        *libnet.a:udp_wrbuffer.o(.text .text.*)
+        *libnet.a:udp_conn.o(.text .text.*)
+        *libnet.a:udp_finddev.o(.text .text.*)
+        *libnet.a:devif_poll.o(.text .text.*)
+        *libnet.a:devif_send.o(.text .text.*)
+        *libnet.a:devif_iobsend.o(.text .text.*)
+        *libnet.a:netdev_txnotify.o(.text .text.*)
+        *libnet.a:arp_out.o(.text .text.*)
+        *libnet.a:arp_table.o(.text .text.*)
+        *libnet.a:arp_send.o(.text .text.*)
+        *libnet.a:tcp_recvfrom.o(.text .text.*)
+        *libnet.a:tcp_send_buffered.o(.text .text.*)
+        *libnet.a:tcp_send.o(.text .text.*)
+        *libnet.a:tcp_appsend.o(.text .text.*)
+        *libnet.a:tcp_devpoll.o(.text .text.*)
+        *libnet.a:tcp_wrbuffer.o(.text .text.*)
+        *libnet.a:tcp_recvwindow.o(.text .text.*)
+        *libnet.a:netdev_lock.o(.text .text.*)
+        *libnet.a:net_bufpool.o(.text .text.*)
+        *libnet.a:udp_devpoll.o(.text .text.*)
+        *libnet.a:ipv4_build_header.o(.text .text.*)
+        *libc.a:arch_atomic.o(.text .text.*)
+        *libc.a:tls_getinfo.o(.text .text.*)
+        *libc.a:lib_errno.o(.text .text.*)
+        *libc.a:sem_getvalue.o(.text .text.*)
+        *libc.a:sig_isemptyset.o(.text .text.*)
+        *libsched.a:sem_tickwait.o(.text .text.*)
+        *libsched.a:sem_clockwait.o(.text .text.*)
+        *libsched.a:clock_systime_ticks.o(.text .text.*)
+        *libsched.a:wd_start.o(.text .text.*)
+        *libsched.a:wd_cancel.o(.text .text.*)
+        *libsched.a:task_gettid.o(.text .text.*)
+        *libsched.a:sig_pending.o(.text .text.*)
+        *libc.a:lib_memset.o(.text .text.*)
+        *libc.a:sem_init.o(.text .text.*)
+        *libc.a:sem_trywait.o(.text .text.*)
+        *libc.a:sig_nandset.o(.text .text.*)
+        *libsched.a:sem_destroy.o(.text .text.*)
+        *libsched.a:sched_idletask.o(.text .text.*)
+        . = ALIGN(4);
+        _eitcm = ABSOLUTE(.);
+    } AT> RAM
+
+    _litcm = LOADADDR(.itcm);
+    ASSERT(_eitcm <= ORIGIN(ITCM) + LENGTH(ITCM), ".itcm overflows ITCM")
+#endif
+
     .text :
     {
         . = ALIGN(4);
@@ -145,11 +253,10 @@ SECTIONS
 
     .dtcm (NOLOAD) :
     {
-        __HeapBase = .;
-        KEEP(*(.heap))
-        __HeapLimit = .;
         KEEP(*(.stack))
         KEEP(*(.stack.*))
+        . = ALIGN(64);
+        *(.dtcm.gbeth)
     } > DTCM
 
     .ARM.extab :
@@ -194,7 +301,12 @@ SECTIONS
 
     __mpu_code_end = ABSOLUTE(.);
 
-    _eronly = ABSOLUTE(.);
+    /* Where arm_head.S copies the .data initial values from.  .data is
+     * loaded in place, so this equals _sdata and the copy is a no-op; it
+     * must not be "." here, because .dma may sit between the two.
+     */
+
+    _eronly = LOADADDR(.data);
 
 #ifdef CONFIG_RZV2H_RPTUN
     /* Multi-OS sample maps the resource table directly at 0x42f00000 through
@@ -213,6 +325,27 @@ SECTIONS
            "RZ/V2H resource table exceeds the reserved region")
 #endif
 
+#ifdef CONFIG_RZV2H_GBETH
+    /* GBETH DMA memory: descriptors and packet buffers, mapped Normal
+     * non-cacheable by one MPU region (see rzv2h_mpu_region.c), which needs
+     * a 2^n size and a base that is a multiple of it.  The section follows
+     * the code window, whose end is aligned to its own 2^n size, and is
+     * padded up to 2^n the same way as .rom_region_pad.  (NOLOAD): it is not
+     * zeroed at boot; the driver initializes it in ifup.
+     */
+
+    .dma (NOLOAD) :
+    {
+        __dma_start = ABSOLUTE(.);
+        KEEP(*(.dma .dma.*))
+        . = ALIGN(1 << LOG2CEIL(ABSOLUTE(.) - __dma_start));
+        __dma_end = ABSOLUTE(.);
+    } > RAM
+
+    ASSERT(__dma_start % (__dma_end - __dma_start) == 0,
+           "GBETH .dma region is not aligned to its size")
+#endif
+
     .data :
     {
         _sdata = ABSOLUTE(.);
@@ -221,6 +354,21 @@ SECTIONS
         CONSTRUCTORS
         . = ALIGN(4);
         _edata = ABSOLUTE(.);
+    } > RAM
+
+    /* The FSP BSP heap (g_heap, BSP_CFG_HEAP_BYTES).  NuttX has its own heap
+     * and nothing calls the FSP's sbrk, so it stays out of DTCM, which holds
+     * the GBETH I/O buffers instead.  Its input section is PROGBITS: (NOLOAD)
+     * keeps the 32 KB of zeros out of the image, and placing it before .bss
+     * keeps it below _ebss, where the NuttX heap starts.
+     */
+
+    .heap (NOLOAD) :
+    {
+        . = ALIGN(8);
+        __HeapBase = .;
+        KEEP(*(.heap))
+        __HeapLimit = .;
     } > RAM
 
     .bss :

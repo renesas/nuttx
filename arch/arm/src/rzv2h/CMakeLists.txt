@@ -69,4 +69,8 @@ if(CONFIG_RZV2H_CANFD)
   list(APPEND SRCS rzv2h_canfd.c)
 endif()
 
+if(CONFIG_RZV2H_GBETH)
+  list(APPEND SRCS rzv2h_gbeth.c)
+endif()
+
 target_sources(arch PRIVATE ${SRCS})

@@ -418,5 +418,14 @@ int rzv2h_bringup(void)
   rzv2h_canfd_register_all();
 #endif
 
+#ifdef CONFIG_RZV2H_GBETH
+  ret = board_gbeth_initialize();
+  if (ret < 0)
+    {
+      syslog(LOG_ERR, "ERROR: GBETH initialization failed: %d\n", ret);
+      return ret;
+    }
+#endif
+
   return OK;
 }

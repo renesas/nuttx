@@ -103,6 +103,10 @@ endif
 
 endif
 
+ifeq ($(CONFIG_NET_KSZ9131),y)
+  CSRCS += ksz9131.c
+endif
+
 ifeq ($(CONFIG_NET_E1000),y)
   CSRCS += e1000.c
 endif

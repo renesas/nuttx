@@ -77,3 +77,7 @@ endif
 ifeq ($(CONFIG_RZV2H_CANFD),y)
 CHIP_CSRCS += rzv2h_canfd.c
 endif
+
+ifeq ($(CONFIG_RZV2H_GBETH),y)
+CHIP_CSRCS += rzv2h_gbeth.c
+endif

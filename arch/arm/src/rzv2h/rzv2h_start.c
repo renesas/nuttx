@@ -63,6 +63,11 @@
 extern uint8_t _vector_start[]; /* Beginning of vector block (run address) */
 extern uint8_t _vector_end[];   /* End+1 of vector block (run address) */
 extern uint8_t _vector_load[];  /* Load copy of the vector block in RAM */
+#ifdef CONFIG_RZV2H_ITCM_HOTCODE
+extern uint8_t _sitcm[];        /* Start of .itcm (run address in ITCM) */
+extern uint8_t _eitcm[];        /* End+1 of .itcm */
+extern uint8_t _litcm[];        /* Load copy of .itcm in RAM */
+#endif
 
 /****************************************************************************
  * Private function
@@ -159,6 +164,36 @@ static void rzv2h_vectorsetup(void)
   UP_ISB();
 }
 
+#ifdef CONFIG_RZV2H_ITCM_HOTCODE
+/****************************************************************************
+ * Name: rzv2h_itcmsetup
+ *
+ * Description:
+ *   Copy the hot network code (.itcm, CONFIG_RZV2H_ITCM_HOTCODE) from its
+ *   load image in RAM to ITCM, where it is linked to run.  Must run before
+ *   anything calls that code (memcpy included, so this is a plain word
+ *   loop) and before rzv2h_mpuinit() makes ITCM read-only.
+ *
+ ****************************************************************************/
+
+static void rzv2h_itcmsetup(void)
+{
+  volatile uint32_t *dest = (volatile uint32_t *)_sitcm;
+  const uint32_t    *src  = (const uint32_t *)_litcm;
+  const uint32_t    *end  = (const uint32_t *)(_litcm + (_eitcm - _sitcm));
+
+  while (src < end)
+    {
+      *dest++ = *src++;
+    }
+
+  /* The words just written are about to be fetched as instructions. */
+
+  UP_DSB();
+  UP_ISB();
+}
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -204,6 +239,9 @@ void arm_boot(void)
   UP_ISB();
 
   rzv2h_vectorsetup();
+#ifdef CONFIG_RZV2H_ITCM_HOTCODE
+  rzv2h_itcmsetup();
+#endif
 
   arm_fpuconfig();
 

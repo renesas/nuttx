@@ -96,6 +96,10 @@ if(CONFIG_NET)
     endif()
   endif()
 
+  if(CONFIG_NET_KSZ9131)
+    list(APPEND SRCS ksz9131.c)
+  endif()
+
   if(CONFIG_NET_E1000)
     list(APPEND SRCS e1000.c)
   endif()

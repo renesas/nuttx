@@ -486,6 +486,17 @@ config NET_KSZ9477_PORT_SNIFF
 		All the packets received on port A and/or transmitted on port B
 		can be mirrored on the sniffer port.
 
+config NET_KSZ9131
+	bool "Microchip KSZ9131 Gigabit RGMII PHY support"
+	default n
+	depends on MDIO_BUS
+	---help---
+		Support for the Microchip/Micrel KSZ9131 10/100/1000 RGMII PHY.
+		The driver is reached through the upper-half MDIO bus and is
+		called by an Ethernet MAC driver to reset and configure the PHY
+		(RGMII skews, delay DLLs, auto-negotiation) and to read the
+		negotiated link.
+
 menuconfig NET_LAN9250
 	bool "Microchip LAN9250 support"
 	default n
