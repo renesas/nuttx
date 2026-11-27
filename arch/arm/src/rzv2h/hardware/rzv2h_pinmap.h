@@ -66,6 +66,10 @@
 
 #define RZV2H_PINMUX_OUTPUT(port, pin, mode)  RZV2H_PINMUX(port, pin, mode)
 
+/* Pin identifier and configuration settings. */
+
+#define RZV2H_PIN_CFG(id, cfg)     ((gpio_pinset_t){ (id), (cfg) })
+
 /* GPIO output pin. Set the level with rzv2h_gpiowrite(). */
 
 #define RZV2H_GPIO_OUTPUT(port, pin) \
@@ -594,5 +598,25 @@
 
 #define GPIO_CANFD5_TX_P4_6_M5  RZV2H_PINMUX(4, 6, 5)
 #define GPIO_CANFD5_RX_P4_7_M5  RZV2H_PINMUX(4, 7, 5)
+
+/* SDHI dedicated pin aliases supplied by FSP. */
+
+/* SDHI0 */
+
+#define RZV2H_PIN_SD0CLK           BSP_IO_SD0CLK
+#define RZV2H_PIN_SD0CMD           BSP_IO_SD0CMD
+#define RZV2H_PIN_SD0DAT0          BSP_IO_SD0DAT0
+#define RZV2H_PIN_SD0DAT1          BSP_IO_SD0DAT1
+#define RZV2H_PIN_SD0DAT2          BSP_IO_SD0DAT2
+#define RZV2H_PIN_SD0DAT3          BSP_IO_SD0DAT3
+
+/* SDHI1 */
+
+#define RZV2H_PIN_SD1CLK           BSP_IO_SD1CLK
+#define RZV2H_PIN_SD1CMD           BSP_IO_SD1CMD
+#define RZV2H_PIN_SD1DAT0          BSP_IO_SD1DAT0
+#define RZV2H_PIN_SD1DAT1          BSP_IO_SD1DAT1
+#define RZV2H_PIN_SD1DAT2          BSP_IO_SD1DAT2
+#define RZV2H_PIN_SD1DAT3          BSP_IO_SD1DAT3
 
 #endif /* __ARCH_ARM_SRC_RZV2H_HARDWARE_RZV2H_PINMAP_H */

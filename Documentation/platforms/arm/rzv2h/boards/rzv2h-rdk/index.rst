@@ -597,6 +597,260 @@ These definitions are in ``boards/arm/rzv2h/rzv2h-rdk/include/board.h``.
 The ``pwm`` board configuration (``rzv2h-rdk:pwm``) enables GPT6
 (PWM output on ``PA_4``) and the ``pwm`` application for interactive testing.
 
+.. _rzv2h-rdk-sdio:
+
+SD Card (SDHI)
+==============
+
+The SDHI driver provides SD-memory block storage through the NuttX MMC/SD
+upper half. The ``rzv2h-rdk:nsh-sdio`` preset uses SDHI0 and exposes an
+inserted card as ``/dev/mmcsd0``.
+
+* Single and multiblock transfers over a one-bit or four-bit bus.
+* Default Speed, High Speed, UHS-I SDR50 and SDR104.
+* Interrupt-driven PIO, with optional internal DMA.
+* Native card detect and an optional external write-protect input.
+
+SDIO peripheral functions, eMMC and DDR50 are not supported.
+
+Sockets and signaling
+---------------------
+
+.. list-table:: Sockets
+   :header-rows: 1
+   :widths: 20 30 50
+
+   * - Socket
+     - Controller
+     - Default device
+   * - SD1
+     - SDHI0
+     - ``/dev/mmcsd0``
+
+The RDK supports SDHI0 only. Host I/O is fixed at 1.8 V and the card
+supply is 3.3 V. The board port does not switch the I/O voltage or cycle
+card power. External signals must match the board's I/O supply.
+
+SDHI configuration
+------------------
+
+Build the NSH storage configuration:
+
+.. code-block:: console
+
+   $ ./tools/configure.sh -l rzv2h-rdk:nsh-sdio
+   $ make -j4
+
+The preset selects four-bit Default Speed PIO, native card detect, FAT
+and ``dd``. The options are under *System Type -> RZ/V2H Configuration
+Options -> SDHI support*.
+
+The main settings are:
+
+.. code-block:: kconfig
+
+   CONFIG_RZV2H_SDIO=y
+   CONFIG_RZV2H_SDIO_CHANNEL0=y
+   CONFIG_RZV2H_SDIO0_MINOR=0
+   CONFIG_RZV2H_SDIO_WIDTH4=y
+   CONFIG_MMCSD=y
+   CONFIG_MMCSD_SDIO=y
+   CONFIG_MMCSD_MULTIBLOCK_LIMIT=8
+   CONFIG_FS_FAT=y
+
+The minor number selects ``/dev/mmcsdN`` independently of the channel.
+``CONFIG_MMCSD_MULTIBLOCK_LIMIT=8`` limits a request to 4 KiB.
+Select ``CONFIG_RZV2H_SDIO_CHANNEL0`` for SD1. The defaults are minor 0
+and ``CONFIG_RZV2H_SDIO0_INTSEL=399``. SDHI1 and SDHI2 are not routed
+by this board port.
+
+SDHI speed and DMA transfer options
+-----------------------------------
+
+Select one timing policy and set ``CONFIG_RZV2H_SDIO_MAX_FREQUENCY`` to
+the clock ceiling:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 50 30
+
+   * - Timing
+     - Selection
+     - Clock ceiling
+   * - Default Speed
+     - ``CONFIG_RZV2H_SDIO_DEFAULT``
+     - 25 MHz
+   * - High Speed
+     - ``CONFIG_RZV2H_SDIO_HIGHSPEED``
+     - 50 MHz
+   * - UHS-I SDR50
+     - ``CONFIG_RZV2H_SDIO_UHS`` and ``CONFIG_RZV2H_SDIO_UHS_SDR50``
+     - 100 MHz
+   * - UHS-I SDR104
+     - ``CONFIG_RZV2H_SDIO_UHS`` and ``CONFIG_RZV2H_SDIO_UHS_SDR104``
+     - 200 MHz
+
+The actual mode also depends on the card. UHS needs a UHS-I card and
+four-bit mode, and SDR104 tunes the sampling clock at initialization.
+
+PIO is the default. For internal DMA select:
+
+.. code-block:: kconfig
+
+   CONFIG_ARMV7R_DCACHE_DISABLE=y
+   CONFIG_RZV2H_SDIO_DMA=y
+
+DMA needs a flat, single-core build with D-cache disabled during early startup.
+Whole-sector buffers may reside in SRAM3 (``0x08180000-0x081fffff``) or core0
+local DTCM (``0x00020000-0x0003ffff``); DTCM maps to its AXI alias for DMA.
+Alignment is 8 bytes for non-cacheable DTCM or cache-off SRAM3; cached SRAM3
+requires complete 32-byte or 64-byte cache API lines and cache maintenance.
+The backend supports runtime D-cache after safe platform MPU initialization;
+this option does not enable the cache. ``CONFIG_RZV2H_SDIO_DMA_BOUNCE=y``
+adds a 4 KiB SRAM staging buffer per host for eligible unaligned SRAM3/DTCM
+buffers. Other requests use PIO.
+
+SDHI card detect and write protect
+----------------------------------
+
+Card detect (CD) uses the socket's native circuit. Write protect (WP)
+needs an external input because the socket has no WP switch connected.
+
+.. list-table:: Default pins (defined in ``board.h``)
+   :header-rows: 1
+   :widths: 20 30 20 30
+
+   * - Input
+     - GPIO / signal
+     - Pinmux
+     - Definition
+   * - SDHI0 CD
+     - PA5 / SD0CD
+     - 15
+     - ``BOARD_SDHI0_CD``
+   * - SDHI0 WP
+     - PA4 / SD0WP
+     - 15
+     - ``BOARD_SDHI0_WP``
+
+Other native SoC routes exist (SDHI0: CD on P9_4, WP on P9_3) but are
+not wired to the socket. To use one, change ``BOARD_SDHI0_CD`` or
+``BOARD_SDHI0_WP`` in
+``boards/arm/rzv2h/rzv2h-rdk/include/board.h`` (port 10 is PA), keep the
+peripheral-input flag, and wire the pin externally. Release conflicting
+SPI/PWM functions and rebuild after changing a route.
+
+Enable CD and WP independently:
+
+.. code-block:: kconfig
+
+   CONFIG_RZV2H_SDIO0_CARDDECTECT=y
+   CONFIG_RZV2H_SDIO0_WRITEPROTECT=y
+
+Native input selection is automatic. Leave WP off if the input is not
+wired. With CD off the card is treated as always present: insert it
+before startup and leave it in.
+
+**WP wiring.** Use 3.3 V logic and the board ground for the external
+PA4/SD0WP input. This control input is separate from the socket's fixed
+1.8 V clock, command and data signals; do not apply 3.3 V to those signals.
+Add an external pull-up to 3.3 V so WP is defined when the switch is open.
+The driver enables the input buffer but no internal pull resistor.
+``BOARD_SDHI0_WP_ACTIVE_LOW`` sets which level means protected; with a
+pull-down circuit set it to 1. Power off before changing wiring.
+
+.. list-table:: WP polarity (default ``BOARD_SDHI0_WP_ACTIVE_LOW=0``)
+   :header-rows: 1
+   :widths: 30 35 35
+
+   * - External WP level
+     - State reported
+     - Access
+   * - LOW (ground)
+     - Writable
+     - Read and write
+   * - HIGH (3.3 V)
+     - Write protected
+     - Read only
+
+WP is read when the driver reports card status, so there is no message
+when the level changes. With WP active, raw reads still work but a FAT
+mount fails with ``EACCES`` (13):
+
+.. code-block:: text
+
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh: mount: mount failed: 13
+
+**CD messages and card removal.** CD events are logged at ``LOG_NOTICE``
+(enable ``CONFIG_SYSLOG_CONSOLE=y``). The prefix is the controller, not
+the minor:
+
+.. code-block:: text
+
+   SDHI0: card removed
+   SDHI0: card detected
+
+Close all users and unmount before removing the card. Once removal
+handling completes, the device is gone:
+
+.. code-block:: text
+
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+
+Remove the card, then check the device:
+
+.. code-block:: text
+
+   nsh> ls /dev/mmcsd0
+   ls: /dev/mmcsd0: No such file or directory
+
+After a UHS session wait for ``SDHI0: W02 slot restart ready; reinsert
+card`` before reinserting. Removal during I/O and rapid reinsertion are
+not supported. If initialization fails, power-cycle the board and card,
+because a controller reset alone may not reset the card session.
+
+SDHI storage test
+-----------------
+
+Mount the card. The FAT driver finds a volume in a primary MBR partition;
+no ``p1``/``p2`` nodes are created and ext4 partitions are not accessible.
+
+.. code-block:: text
+
+   nsh> mkdir /mnt/sdcard
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh> echo hello > /mnt/sdcard/example.txt
+   nsh> cat /mnt/sdcard/example.txt
+   hello
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+
+Raw read throughput (with ``CONFIG_SYSTEM_DD_STATS=y``; the rate depends
+on the card and configuration):
+
+.. code-block:: text
+
+   nsh> dd if=/dev/mmcsd0 of=/dev/null bs=16384 count=1024
+   16777216 bytes (1024 blocks) copied, 4168000 usec, 3930 KB/s
+
+For a filesystem benchmark and stress test enable
+``CONFIG_BENCHMARK_SD_BENCH`` and ``CONFIG_TESTING_SD_STRESS`` (with
+``CONFIG_ALLOW_BSD_COMPONENTS=y``), mount the card on ``/mnt`` and run
+``sdbench`` and ``sdstress``. Check their output for write, read and data
+errors as well as their exit status.
+
+SDHI operating requirements
+---------------------------
+
+* NuttX must own the SDHI controller, the card, and its clocks, pins and
+  interrupt route. Linux must not access the same card.
+* Keep D-cache disabled during early startup; runtime D-cache with DMA
+  requires safe MPU initialization and the cache maintenance described above.
+* After an interrupted DMA transfer the host can stay faulted: stop all
+  card users and recover the card session before retrying.
+
 CAN
 ===
 
@@ -1174,6 +1428,15 @@ returned ``ENETUNREACH`` (101). After ``ifup eth0`` and PHY link recovery at
 
 Configurations
 ==============
+
+nsh-sdio
+--------
+
+NuttShell configuration for the SD1 socket (SDHI0) at ``/dev/mmcsd0``.
+It selects four-bit Default Speed PIO, an eight-sector multiblock limit,
+FAT and ``dd``, with native card detection and optional error logging.
+See :ref:`rzv2h-rdk-sdio` for the fixed-voltage board restrictions,
+configuration choices, optional DMA/UHS and application usage.
 
 netnsh
 ------

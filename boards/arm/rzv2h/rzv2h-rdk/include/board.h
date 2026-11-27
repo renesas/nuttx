@@ -460,6 +460,83 @@
 #  error "RZV2H-RDK does not route CANFD4/CANFD5 pins to any connector"
 #endif
 
+/* SDHI0: RDK socket SD1 (R16UH0052EU0100, section 3.9, Figure 13).
+ * Socket VDD is a separate 3.3 V rail. The board port does not implement
+ * I/O voltage selection or socket power control.
+ * The PLLCLN / 8 IMCLK target matches the current FSP clock profile.
+ * The input clock, frequency limit and pads require RDK validation.
+ */
+
+/* Board input clock and permitted SDCLK ceiling. Protocol rate targets
+ * are selected by the architecture driver; this is not qualification.
+ */
+
+#define BOARD_SDHI_MAX_FREQUENCY       200000000u
+#define BOARD_SDHI_INPUT_CLOCK         200000000u
+
+/* Conservative protocol current policy, not a measured supply rating. */
+
+#define BOARD_SDHI0_MAX_CURRENT_MA     200u
+#define BOARD_SDHI0_EMBEDDED_CARD      0
+
+#define BOARD_SDHI_SIGNAL_CFG \
+  (IOPORT_CFG_DRIVE_B11 | IOPORT_CFG_SLEW_RATE_SLOW | \
+   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+#define BOARD_SDHI_CLOCK_CFG \
+  (IOPORT_CFG_DRIVE_B11 | IOPORT_CFG_SLEW_RATE_SLOW)
+
+#define BOARD_SDHI0_CLK \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0CLK, BOARD_SDHI_CLOCK_CFG)
+#define BOARD_SDHI0_CMD \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0CMD, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT0 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT0, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT1 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT1, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT2 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT2, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT3 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT3, BOARD_SDHI_SIGNAL_CFG)
+
+/* Optional external PA4/F15/SD0WP input; the socket has no lock signal.
+ * Active HIGH reports protection. This does not select the pad supply.
+ */
+
+#if defined(CONFIG_RZV2H_SDIO_CHANNEL0) && \
+    defined(CONFIG_RZV2H_SDIO0_WRITEPROTECT_NATIVE)
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_1) && BOARD_SPI1_SSL_USED && \
+      BOARD_SPI1_SSL_ROUTE == BOARD_SPI1_SSL_ROUTE_SSLB0_PA4
+#    error "RDK SDHI0 WP conflicts with SPI1 SSL on PA4"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_2) && BOARD_SPI2_SSL_USED && \
+      BOARD_SPI2_SSL_ROUTE == BOARD_SPI2_SSL_ROUTE_SSLC3_PA4
+#    error "RDK SDHI0 WP conflicts with SPI2 SSL on PA4"
+#  endif
+#  if defined(CONFIG_RZV2H_GPT6_PWM) || defined(CONFIG_RZV2H_GPT10_PWM)
+#    error "RDK SDHI0 WP conflicts with GPT6/GPT10 PWM on PA4"
+#  endif
+#  define BOARD_SDHI0_WP \
+  RZV2H_PINMUX_CFG(10, 4, 15, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+#  define BOARD_SDHI0_WP_ACTIVE_LOW 0
+#endif
+
+#define BOARD_SDHI0_CD \
+  RZV2H_PINMUX_CFG(10, 5, 15, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+
+#if defined(CONFIG_RZV2H_SDIO_CHANNEL0) && \
+    defined(CONFIG_RZV2H_SDIO0_CARDDECTECT_NATIVE)
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_1) && BOARD_SPI1_SSL_USED && \
+      BOARD_SPI1_SSL_ROUTE == BOARD_SPI1_SSL_ROUTE_SSLB1_PA5
+#    error "RDK SDHI0 CD conflicts with SPI1 SSL on PA5"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_2) && BOARD_SPI2_SSL_USED && \
+      BOARD_SPI2_SSL_ROUTE == BOARD_SPI2_SSL_ROUTE_SSLC2_PA5
+#    error "RDK SDHI0 CD conflicts with SPI2 SSL on PA5"
+#  endif
+#endif
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/

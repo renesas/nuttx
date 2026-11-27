@@ -212,5 +212,9 @@ int rzv2h_appexamples(void);
  * Example application initialization functions
  ****************************************************************************/
 
+#ifdef CONFIG_RZV2H_SDIO
+int rzv2h_sdio_setup(void);
+#endif
+
 #endif /* __ASSEMBLY__ */
 #endif /* __BOARDS_ARM_RZV2H_RZV2H_EVK_SRC_H */

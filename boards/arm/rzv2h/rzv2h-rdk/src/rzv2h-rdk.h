@@ -79,6 +79,10 @@ struct spi_dev_s;
 
 int rzv2h_bringup(void);
 
+#ifdef CONFIG_RZV2H_SDIO
+int rzv2h_sdio_setup(void);
+#endif
+
 /****************************************************************************
  * Name: board_rptun_initialize
  *

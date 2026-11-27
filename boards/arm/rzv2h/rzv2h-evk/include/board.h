@@ -474,6 +474,160 @@
 #define BOARD_CANFD5_RX_GPIO  GPIO_CANFD5_RX_P4_7_M5
 #define BOARD_CANFD5_STB_GPIO GPIO_P7_5_OUTPUT
 
+/* SDHI configurations */
+
+/* EVK SDHI0/1 IMCLK is PLLCLN / 8 = 200 MHz with 24 MHz QEXTAL.
+ */
+
+/* Board input clock and permitted SDCLK ceiling. Protocol rate targets
+ * are selected by the architecture driver; this is not qualification.
+ */
+
+#define BOARD_SDHI_MAX_FREQUENCY       200000000u
+#define BOARD_SDHI_INPUT_CLOCK  200000000u
+
+/* Retain the default card-power allowance on both sockets. A higher limit
+ * needs separate VMMC supply-path, connector and thermal qualification.
+ * This is not the VQMMC signaling-rail rating or measured card current.
+ */
+
+#define BOARD_SDHI0_MAX_CURRENT_MA      200u
+#define BOARD_SDHI1_MAX_CURRENT_MA      200u
+
+/* Power limits for functions 2/3 (600/800 mA) apply to an independently
+ * qualified embedded SD device, not this socket (SD Part 1 Table 4-11).
+ */
+
+#define BOARD_SDHI0_EMBEDDED_CARD      0
+#define BOARD_SDHI1_EMBEDDED_CARD      0
+
+/* SDHI socket wiring and pin settings. */
+
+/* Socket WP is unwired; optional external inputs use active-high
+ * protection.
+ */
+
+#define BOARD_SDHI_SIGNAL_CFG \
+  (IOPORT_CFG_DRIVE_B11 | IOPORT_CFG_SLEW_RATE_SLOW | \
+   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+#define BOARD_SDHI_CLOCK_CFG \
+  (IOPORT_CFG_DRIVE_B11 | IOPORT_CFG_SLEW_RATE_SLOW)
+#define BOARD_SDHI_OUTPUT_CFG(level) \
+  (IOPORT_CFG_PORT_DIRECTION_OUTPUT | IOPORT_CFG_DRIVE_B01 | \
+   IOPORT_CFG_SLEW_RATE_FAST | (level))
+
+#define BOARD_SDHI0_VSEL \
+  RZV2H_PIN_CFG(BSP_IO_PORT_10_PIN_00, \
+                BOARD_SDHI_OUTPUT_CFG(IOPORT_CFG_PORT_OUTPUT_LOW))
+#define BOARD_SDHI0_CLK \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0CLK, BOARD_SDHI_CLOCK_CFG)
+#define BOARD_SDHI0_CMD \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0CMD, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT0 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT0, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT1 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT1, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT2 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT2, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI0_DAT3 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD0DAT3, BOARD_SDHI_SIGNAL_CFG)
+#if defined(CONFIG_RZV2H_SDIO0_CARDDECTECT_NATIVE)
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_1) && BOARD_SPI1_SSL_USED && \
+      BOARD_SPI1_SSL_ROUTE == BOARD_SPI1_SSL_ROUTE_SSLB1_PA5
+#    error "SDHI0 CD conflicts with SPI1 SSL on PA5"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_2) && BOARD_SPI2_SSL_USED && \
+      BOARD_SPI2_SSL_ROUTE == BOARD_SPI2_SSL_ROUTE_SSLC2_PA5
+#    error "SDHI0 CD conflicts with SPI2 SSL on PA5"
+#  endif
+#endif
+
+#define BOARD_SDHI0_CD \
+  RZV2H_PINMUX_CFG(10, 5, 15, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+
+/* Optional active-high WP fixture: EXP CN2.10 -> U5 -> PA4/SD0WP. */
+
+#ifdef CONFIG_RZV2H_SDIO0_WRITEPROTECT_NATIVE
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_1) && BOARD_SPI1_SSL_USED && \
+      BOARD_SPI1_SSL_ROUTE == BOARD_SPI1_SSL_ROUTE_SSLB0_PA4
+#    error "SDHI0 WP conflicts with SPI1 SSL on PA4"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_2) && BOARD_SPI2_SSL_USED && \
+      BOARD_SPI2_SSL_ROUTE == BOARD_SPI2_SSL_ROUTE_SSLC3_PA4
+#    error "SDHI0 WP conflicts with SPI2 SSL on PA4"
+#  endif
+#  ifdef CONFIG_RZV2H_GPT10_PWM
+#    error "SDHI0 WP conflicts with GPT10 PWM on PA4"
+#  endif
+#  ifndef BOARD_SDHI0_WP
+#    define BOARD_SDHI0_WP \
+  RZV2H_PINMUX_CFG(10, 4, 15, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+#  endif
+#  ifndef BOARD_SDHI0_WP_ACTIVE_LOW
+#    define BOARD_SDHI0_WP_ACTIVE_LOW 0
+#  endif
+#endif
+
+#define BOARD_SDHI0_POWER \
+  RZV2H_PIN_CFG(BSP_IO_PORT_10_PIN_01, \
+                BOARD_SDHI_OUTPUT_CFG(IOPORT_CFG_PORT_OUTPUT_HIGH))
+
+#define BOARD_SDHI1_VSEL \
+  RZV2H_PIN_CFG(BSP_IO_PORT_10_PIN_02, \
+                BOARD_SDHI_OUTPUT_CFG(IOPORT_CFG_PORT_OUTPUT_LOW))
+#define BOARD_SDHI1_CLK \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1CLK, BOARD_SDHI_CLOCK_CFG)
+#define BOARD_SDHI1_CMD \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1CMD, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI1_DAT0 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1DAT0, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI1_DAT1 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1DAT1, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI1_DAT2 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1DAT2, BOARD_SDHI_SIGNAL_CFG)
+#define BOARD_SDHI1_DAT3 \
+  RZV2H_PIN_CFG(RZV2H_PIN_SD1DAT3, BOARD_SDHI_SIGNAL_CFG)
+#if defined(CONFIG_RZV2H_SDIO1_CARDDETECT_NATIVE)
+#  if defined(CONFIG_RZV2H_GPT4_PWM) || defined(CONFIG_RZV2H_GPT8_PWM)
+#    error "SDHI1 CD conflicts with GPT4/GPT8 PWM on P94"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_0) && BOARD_SPI0_SSL_USED && \
+      BOARD_SPI0_SSL_ROUTE == BOARD_SPI0_SSL_ROUTE_SSLA1_P94
+#    error "SDHI1 CD conflicts with SPI0 SSL on P94"
+#  endif
+#endif
+
+#define BOARD_SDHI1_CD \
+  RZV2H_PINMUX_CFG(9, 4, 14, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+
+/* Optional active-high WP fixture: EXP CN2.9 -> U5 -> PA6/SD1WP. */
+
+#ifdef CONFIG_RZV2H_SDIO1_WRITEPROTECT_NATIVE
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_1) && BOARD_SPI1_SSL_USED && \
+      BOARD_SPI1_SSL_ROUTE == BOARD_SPI1_SSL_ROUTE_SSLB2_PA6
+#    error "SDHI1 WP conflicts with SPI1 SSL on PA6"
+#  endif
+#  if defined(CONFIG_RZV2H_SPI_CHANNEL_2) && BOARD_SPI2_SSL_USED && \
+      BOARD_SPI2_SSL_ROUTE == BOARD_SPI2_SSL_ROUTE_SSLC1_PA6
+#    error "SDHI1 WP conflicts with SPI2 SSL on PA6"
+#  endif
+#  ifndef BOARD_SDHI1_WP
+#    define BOARD_SDHI1_WP \
+  RZV2H_PINMUX_CFG(10, 6, 15, \
+                   IOPORT_CFG_SPECIAL_PURPOSE_PORT_INPUT_ENABLE)
+#  endif
+#  ifndef BOARD_SDHI1_WP_ACTIVE_LOW
+#    define BOARD_SDHI1_WP_ACTIVE_LOW 0
+#  endif
+#endif
+
+#define BOARD_SDHI1_POWER \
+  RZV2H_PIN_CFG(BSP_IO_PORT_10_PIN_03, \
+                BOARD_SDHI_OUTPUT_CFG(IOPORT_CFG_PORT_OUTPUT_HIGH))
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/

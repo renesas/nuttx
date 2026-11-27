@@ -65,6 +65,10 @@ if(CONFIG_RZV2H_SPI_B)
   list(APPEND SRCS rzv2h_spi.c)
 endif()
 
+if(CONFIG_RZV2H_SDIO)
+  list(APPEND SRCS rzv2h_sdio.c)
+endif()
+
 if(CONFIG_RZV2H_GBETH)
   list(APPEND SRCS rzv2h_gbeth.c)
 endif()

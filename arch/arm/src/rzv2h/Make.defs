@@ -78,6 +78,13 @@ ifeq ($(CONFIG_RZV2H_CANFD),y)
 CHIP_CSRCS += rzv2h_canfd.c
 endif
 
+ifeq ($(CONFIG_RZV2H_SDIO),y)
+CHIP_CSRCS += rzv2h_sdio.c
+ifeq ($(CONFIG_RZV2H_SDIO_DMA),y)
+CHIP_CSRCS += rzv2h_sdio_dma.c
+endif
+endif
+
 ifeq ($(CONFIG_RZV2H_GBETH),y)
 CHIP_CSRCS += rzv2h_gbeth.c
 endif

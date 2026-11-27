@@ -69,6 +69,13 @@ if(CONFIG_RZV2H_CANFD)
   list(APPEND SRCS rzv2h_canfd.c)
 endif()
 
+if(CONFIG_RZV2H_SDIO)
+  list(APPEND SRCS rzv2h_sdio.c)
+  if(CONFIG_RZV2H_SDIO_DMA)
+    list(APPEND SRCS rzv2h_sdio_dma.c)
+  endif()
+endif()
+
 if(CONFIG_RZV2H_GBETH)
   list(APPEND SRCS rzv2h_gbeth.c)
 endif()

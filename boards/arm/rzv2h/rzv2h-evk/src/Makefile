@@ -86,4 +86,8 @@ endif
 # Example applications
 ############################################################################
 
+ifeq ($(CONFIG_RZV2H_SDIO),y)
+CSRCS += rzv2h_sdio.c
+endif
+
 include $(TOPDIR)/boards/Board.mk

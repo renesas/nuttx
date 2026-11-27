@@ -1,9 +1,28 @@
 # ##############################################################################
-# boards/arm/rzv/rzv2h-evk/Kconfig
+# boards/arm/rzv2h/rzv2h-evk/Kconfig
 #
 # Kconfig for the RZV2H_EVK board support package for the RZV2H MPU.
 #
 if ARCH_BOARD_RZV2H_EVK
+
+config RZV2H_SDIO_BOARD_SDHI1
+	bool
+	default y
+	---help---
+		The EVK provides board resources for SDHI1.
+
+config RZV2H_SDIO_BOARD_DMA
+	bool
+	default y if RZV2H_SDIO_CHANNEL0 || RZV2H_SDIO_CHANNEL1
+	---help---
+		Internal DMA is available on SDHI0 and SDHI1.
+
+config RZV2H_SDIO_BOARD_UHS
+	bool
+	default y if RZV2H_SDIO_CHANNEL0 || RZV2H_SDIO_CHANNEL1
+	---help---
+		The board provides the UHS-I I/O supply configuration for SDHI0
+		and SDHI1.
 
 config BOARD_RZV2H_EVK
     bool "RZV2H-EVK Board Support"

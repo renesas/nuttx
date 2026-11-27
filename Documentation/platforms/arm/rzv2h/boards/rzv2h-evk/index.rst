@@ -1369,6 +1369,451 @@ Start a 1 Hz PWM signal at 50% duty cycle on channel 7::
 
 The ``-f`` option sets the frequency in Hz and ``-d`` sets the duty cycle.
 
+.. _rzv2h-evk-sdio:
+
+SD Card (SDHI)
+==============
+
+The SDHI driver provides SD-memory block storage through the NuttX MMC/SD
+upper half. The ``rzv2h-evk:nsh-sdio`` preset uses SDHI0 and exposes an
+inserted card as ``/dev/mmcsd0``.
+
+* Single and multiblock transfers over a one-bit or four-bit bus.
+* Default Speed, High Speed, UHS-I SDR50 and SDR104.
+* Interrupt-driven PIO, with optional internal DMA.
+* Native card detect and an optional external write-protect input.
+
+SDIO peripheral functions, eMMC and DDR50 are not supported.
+
+Sockets and signaling
+---------------------
+
+.. list-table:: Sockets
+   :header-rows: 1
+   :widths: 20 30 50
+
+   * - Socket
+     - Controller
+     - Default device
+   * - SD1
+     - SDHI0
+     - ``/dev/mmcsd0``
+   * - SD2
+     - SDHI1
+     - ``/dev/mmcsd1``
+
+Each socket has independent card power and selectable 3.3 V / 1.8 V
+signaling. External signals must match the selected I/O voltage.
+
+SDHI configuration
+------------------
+
+Build the NSH storage configuration::
+
+.. code-block:: console
+
+   $ ./tools/configure.sh -l rzv2h-evk:nsh-sdio
+   $ make -j4
+
+The preset selects four-bit Default Speed PIO, native card detect, FAT
+and ``dd``. The options are under *System Type -> RZ/V2H Configuration
+Options -> SDHI host controller support*:
+
+The main settings are:
+
+.. code-block:: kconfig
+
+   CONFIG_RZV2H_SDIO=y
+   CONFIG_RZV2H_SDIO_CHANNEL0=y
+   CONFIG_RZV2H_SDIO0_MINOR=0
+   CONFIG_RZV2H_SDIO_WIDTH4=y
+   CONFIG_MMCSD=y
+   CONFIG_MMCSD_SDIO=y
+   CONFIG_MMCSD_MULTIBLOCK_LIMIT=8
+   CONFIG_FS_FAT=y
+
+The minor number selects ``/dev/mmcsdN`` independently of the channel.
+``CONFIG_MMCSD_MULTIBLOCK_LIMIT=8`` limits a request to 4 KiB.
+For both sockets also select ``CONFIG_RZV2H_SDIO_CHANNEL1``. Use distinct
+minors and interrupt routes (defaults: minors 0/1,
+``CONFIG_RZV2H_SDIO0_INTSEL=418``, ``CONFIG_RZV2H_SDIO1_INTSEL=419``).
+Timing and bus width are shared by both channels.
+
+SDHI speed and DMA transfer options
+--------------------------
+
+Select one timing policy and set ``CONFIG_RZV2H_SDIO_MAX_FREQUENCY`` to
+the clock ceiling:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 50 30
+
+   * - Timing
+     - Selection
+     - Clock ceiling
+   * - Default Speed
+     - ``CONFIG_RZV2H_SDIO_DEFAULT``
+     - 25 MHz
+   * - High Speed
+     - ``CONFIG_RZV2H_SDIO_HIGHSPEED``
+     - 50 MHz
+   * - UHS-I SDR50
+     - ``CONFIG_RZV2H_SDIO_UHS`` and ``CONFIG_RZV2H_SDIO_UHS_SDR50``
+     - 100 MHz
+   * - UHS-I SDR104
+     - ``CONFIG_RZV2H_SDIO_UHS`` and ``CONFIG_RZV2H_SDIO_UHS_SDR104``
+     - 200 MHz
+
+The actual mode also depends on the card. UHS needs a UHS-I card and
+four-bit mode, and SDR104 tunes the sampling clock at initialization.
+
+PIO is the default. For internal DMA select:
+
+.. code-block:: kconfig
+
+   CONFIG_ARMV7R_DCACHE_DISABLE=y
+   CONFIG_RZV2H_SDIO_DMA=y
+
+DMA needs a flat, single-core build with D-cache disabled during early startup.
+Whole-sector buffers may reside in SRAM3 (``0x08180000-0x081fffff``) or core0
+local DTCM (``0x00020000-0x0003ffff``); DTCM maps to its AXI alias for DMA.
+Alignment is 8 bytes for non-cacheable DTCM or cache-off SRAM3; cached SRAM3
+requires complete 32-byte or 64-byte cache API lines and cache maintenance.
+The backend supports runtime D-cache after safe platform MPU initialization;
+this option does not enable the cache. ``CONFIG_RZV2H_SDIO_DMA_BOUNCE=y``
+adds a 4 KiB SRAM staging buffer per host for eligible unaligned SRAM3/DTCM
+buffers. Other requests use PIO.
+
+SDHI card detect and write protect
+----------------------------------
+
+Card detect (CD) uses the socket's native circuit. Write protect (WP)
+needs an external input because the socket has no WP switch connected.
+
+.. list-table:: Default pins (defined in ``board.h``)
+   :header-rows: 1
+   :widths: 20 30 20 30
+
+   * - Input
+     - GPIO / signal
+     - Pinmux
+     - Definition
+   * - SDHI0 CD
+     - PA5 / SD0CD
+     - 15
+     - ``BOARD_SDHI0_CD``
+   * - SDHI0 WP
+     - PA4 / SD0WP
+     - 15
+     - ``BOARD_SDHI0_WP``
+   * - SDHI1 CD
+     - P9_4 / SD1CD
+     - 14
+     - ``BOARD_SDHI1_CD``
+   * - SDHI1 WP
+     - PA6 / SD1WP
+     - 15
+     - ``BOARD_SDHI1_WP``
+
+Other native SoC routes exist (SDHI0: CD on P9_4, WP on P9_3; SDHI1: CD
+on PA1 or PA7, WP on P9_3 or PA0) but are not wired to the sockets. To
+use one, change the ``BOARD_SDHI<n>_CD`` / ``_WP`` definition in
+``boards/arm/rzv2h/rzv2h-evk/include/board.h`` (port 10 is PA), keep the
+peripheral-input flag, and wire the pin externally. PA0 and PA1 are
+used for SDHI0 voltage and power control, and P9_3 / P9_4 serve one
+controller at a time.
+
+Enable them per controller:
+
+.. code-block:: kconfig
+
+   CONFIG_RZV2H_SDIO0_CARDDECTECT=y
+   CONFIG_RZV2H_SDIO0_WRITEPROTECT=y
+
+Native input selection is derived automatically; no separate software CD/WP source
+is needed. Leave WP disabled when its external input is not wired. Disabling CD
+selects fixed-present operation: insert the card before startup and leave
+it connected.
+
+For SDHI1, use the corresponding ``CONFIG_RZV2H_SDIO1_CARDDETECT``
+and ``CONFIG_RZV2H_SDIO1_WRITEPROTECT`` options. CD and WP are enabled
+independently for each controller.
+
+External WP wiring
+~~~~~~~~~~~~~~~~~~
+
+The default external WP routes use 3.3 V logic at the expansion header:
+
+* SD1 WP: EXP CN2 pin 10, through U5, to PA4/SD0WP.
+* SD2 WP: EXP CN2 pin 9, through U5, to PA6/SD1WP.
+
+Use the board's 3.3 V logic supply and board ground for the external
+circuit. The 3.3 V connection is on the header side of U5; retain the
+board's level-translator configuration. An alternative SoC pinmux route
+does not automatically provide the same header connection or voltage.
+
+Use an external pull-up resistor from WP to the board's 3.3 V logic
+supply so the input has a defined level when a switch or open-drain source
+is open. With ``BOARD_SDHI0_WP_ACTIVE_LOW=0`` (the default), this leaves
+writes protected; closing the switch to ground makes the input LOW and
+allows writes. The pull resistor connects to the supply; the switch must
+not short the supply directly to ground.
+
+For SDHI1, apply the same circuit and polarity choice using
+``BOARD_SDHI1_WP_ACTIVE_LOW``.
+
+The polarity setting defines which level means write protected; it does
+not enable a pull resistor. The board pin definitions enable the input
+buffer but do not configure an internal pull resistor. Provide the
+external resistor and match the polarity to the complete external circuit.
+Do not leave the input floating or connect two driven outputs together.
+Disable conflicting SPI/PWM functions and power off before changing wiring.
+
+The default ``BOARD_SDHI<n>_WP_ACTIVE_LOW=0`` gives:
+
+.. list-table::
+   :header-rows: 1
+
+   * - External WP level
+     - Reported state
+     - Intended access
+   * - LOW (ground)
+     - Writable
+     - Read and write
+   * - HIGH (3.3 V at the external input)
+     - Write protected
+     - Read only at the block interface
+
+For an external circuit using a pull-down resistor from WP to ground,
+set ``BOARD_SDHI0_WP_ACTIVE_LOW`` to 1. The idle LOW state then protects
+writes, and a switch to 3.3 V makes the input HIGH and allows writes::
+
+   #define BOARD_SDHI0_WP_ACTIVE_LOW 1
+
+With ``BOARD_SDHI<n>_WP_ACTIVE_LOW=1``, LOW means write protected and
+HIGH means writable. Close files, unmount and stop card I/O before
+changing the protection state.
+
+CD is a separate native input: LOW indicates an inserted card. Retain the
+socket's card-detect circuit. An externally rerouted mechanical CD switch
+needs a defined HIGH level when open, normally supplied by a pull-up,
+and must pull CD LOW when the card is inserted. Match its voltage to the
+selected board input path. ``BOARD_SDHI<n>_WP_ACTIVE_LOW`` affects WP only;
+it does not invert CD.
+
+CD messages and removal sequence
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CD messages use syslog at ``LOG_NOTICE``. Route syslog to the console
+(for example, ``CONFIG_SYSLOG_CONSOLE=y``) and allow notice messages in
+the syslog mask. Memory-card debug logging is not required for these
+notices. With CD enabled, normal removal and insertion produce:
+
+.. code-block:: text
+
+   SDHI0: card removed
+   SDHI0: card detected
+
+The prefix identifies the controller, not the device minor. Notifications
+are asynchronous; ``card detected`` reports presence, not successful
+card initialization or a mounted filesystem.
+
+Before removal, close all card users and unmount::
+
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+
+Fully remove the card. Once removal handling completes, the device should
+be absent::
+
+   nsh> ls /dev/mmcsd0
+   ls: /dev/mmcsd0: No such file or directory
+
+For UHS reinsertion, keep the card out until this additional notice::
+
+   SDHI0: W02 slot restart ready; reinsert card
+
+Reinsert the card and wait for initialization. Check the device before
+mounting the filesystem again::
+
+   nsh> ls /dev/mmcsd0
+
+This should print ``/dev/mmcsd0``.
+
+Removal during I/O and rapid reinsertion are not supported. If slot
+preparation or initialization fails, cold-cycle the board and card;
+a host-controller reset alone may not reset the card session.
+
+WP checks and messages
+~~~~~~~~~~~~~~~~~~~~~~
+
+The examples below use the default active-high WP polarity
+(``BOARD_SDHI<n>_WP_ACTIVE_LOW=0``). Reverse HIGH and LOW for the
+active-low pull-down circuit.
+
+WP is sampled when the driver reports card status. There is no automatic
+``WP changed`` console message when the external level changes.
+
+With the card inserted and WP HIGH, a raw read is still allowed::
+
+   nsh> dd if=/dev/mmcsd0 of=/dev/null bs=512 count=1
+   512 bytes (1 blocks) copied, ...
+
+Ensure ``/mnt/sdcard`` exists. With the current FAT binding, attempting to
+mount the protected card returns EACCES (13), for example::
+
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh: mount: mount failed: 13
+
+This mount rejection does not mean the card is unreadable. To check normal
+file access, power off, restore WP LOW, reboot and use the FAT-volume
+example below. Do not use raw card writes to check protection.
+
+For optional MMC/SD write-rejection diagnostics, enable::
+
+   CONFIG_DEBUG_FEATURES=y
+   CONFIG_DEBUG_ERROR=y
+   CONFIG_DEBUG_FS=y
+   CONFIG_DEBUG_FS_ERROR=y
+
+A block write rejected by the MMC/SD write-protection check can then log::
+
+   ERROR: Card is locked or write protected
+
+The logger may prepend a function name. This is an operation-time error,
+not a WP transition notice. A FAT mount can reject access earlier, so
+this message is not required for the mount-failure example. Error reporting
+can be disabled in normal builds without disabling the CD/WP checks.
+
+
+Using a FAT volume
+------------------
+
+Insert a card containing a compatible FAT volume, then mount it::
+
+   nsh> ls /dev/mmcsd0
+   nsh> mkdir /mnt/sdcard
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh> ls /mnt/sdcard
+
+The preset accesses the FAT volume through the whole-card device. The FAT
+mount code can locate a compatible volume in a primary MBR partition;
+Linux-style ``p1`` / ``p2`` nodes are not created automatically for SD cards.
+The FAT configuration does not provide access to an ext4 Linux root partition.
+
+On a writable volume, create and copy a file::
+
+   nsh> echo hello > /mnt/sdcard/example.txt
+   nsh> cp /mnt/sdcard/example.txt /mnt/sdcard/example-copy.txt
+   nsh> cmp /mnt/sdcard/example.txt /mnt/sdcard/example-copy.txt
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+
+Successful ``cmp`` produces no output. Applications must handle short I/O
+and errors, flush pending writes and close files before unmounting.
+
+Storage checks
+--------------
+
+For SDHI1 use ``CONFIG_RZV2H_SDIO1_CARDDECTECT`` and
+``CONFIG_RZV2H_SDIO1_WRITEPROTECT``. Leave WP off if the input is not
+wired. With CD off the card is treated as always present: insert it
+before startup and leave it in.
+
+**WP wiring.** Use 3.3 V logic and the board ground.
+SD1 WP is EXP CN2 pin 10 and SD2 WP is EXP CN2 pin 9 (both through U5).
+Add an external pull-up to 3.3 V so the input is defined when the switch
+is open. The driver enables the input buffer but no internal pull
+resistor. ``BOARD_SDHI<n>_WP_ACTIVE_LOW`` sets which level means
+protected; with a pull-down circuit set it to 1.
+
+.. list-table:: WP polarity (default ``BOARD_SDHI<n>_WP_ACTIVE_LOW=0``)
+   :header-rows: 1
+   :widths: 30 35 35
+
+   * - External WP level
+     - State reported
+     - Access
+   * - LOW (ground)
+     - Writable
+     - Read and write
+   * - HIGH (3.3 V)
+     - Write protected
+     - Read only
+
+WP is read when the driver reports card status, so there is no message
+when the level changes. With WP active, raw reads still work but a FAT
+mount fails with ``EACCES`` (13):
+
+.. code-block:: text
+
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh: mount: mount failed: 13
+
+**CD messages and card removal.** CD events are logged at ``LOG_NOTICE``
+(enable ``CONFIG_SYSLOG_CONSOLE=y``). The prefix is the controller, not
+the minor:
+
+.. code-block:: text
+
+   SDHI0: card removed
+   SDHI0: card detected
+
+Close all users and unmount before removing the card. The device is
+then gone:
+
+.. code-block:: text
+
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+   nsh> ls /dev/mmcsd0
+   ls: /dev/mmcsd0: No such file or directory
+
+After a UHS session wait for ``SDHI0: W02 slot restart ready; reinsert
+card`` before reinserting. Removal during I/O and rapid reinsertion are
+not supported. If initialization fails, power-cycle the board and card,
+because a controller reset alone may not reset the card session.
+
+SDHI storage test
+-----------------
+
+Mount the card. The FAT driver finds a volume in a primary MBR partition;
+no ``p1``/``p2`` nodes are created and ext4 partitions are not accessible.
+
+.. code-block:: text
+
+   nsh> mkdir /mnt/sdcard
+   nsh> mount -t vfat /dev/mmcsd0 /mnt/sdcard
+   nsh> echo hello > /mnt/sdcard/example.txt
+   nsh> cat /mnt/sdcard/example.txt
+   hello
+   nsh> cd /
+   nsh> umount /mnt/sdcard
+
+Raw read throughput (with ``CONFIG_SYSTEM_DD_STATS=y``; the rate depends
+on the card and configuration):
+
+.. code-block:: text
+
+   nsh> dd if=/dev/mmcsd0 of=/dev/null bs=16384 count=1024
+   16777216 bytes (1024 blocks) copied, 4168000 usec, 3930 KB/s
+
+For a filesystem benchmark and stress test enable
+``CONFIG_BENCHMARK_SD_BENCH`` and ``CONFIG_TESTING_SD_STRESS`` (with
+``CONFIG_ALLOW_BSD_COMPONENTS=y``), mount the card on ``/mnt`` and run
+``sdbench`` and ``sdstress``. Both end with exit status 0 when no write,
+read or data error occurred.
+
+SDHI operating requirements
+---------------------------
+
+* NuttX must own the SDHI controller, the card, and its clocks, pins and
+  interrupt route. Linux must not access the same card.
+* Keep the D-cache disabled when using DMA.
+* After an interrupted DMA transfer the host can stay faulted: stop all
+  card users and recover the card session before retrying.
+
 CAN
 ===
 
@@ -2081,6 +2526,15 @@ SCI UART bring-up on CR8_0. SCI0 provides the default 115200-8N1 NSH
 console through CN3 and is registered as ``/dev/console`` and
 ``/dev/ttyS0``.
 
+nsh-sdio
+--------
+
+NuttShell configuration for the SD1 socket (SDHI0) at ``/dev/mmcsd0``.
+It selects four-bit Default Speed PIO, an eight-sector multiblock limit,
+FAT and ``dd``, with native card detection and optional error logging.
+See :ref:`rzv2h-evk-sdio` for configuration choices, wiring, optional DMA/UHS
+and application usage.
+
 nsh-leds
 --------
 
@@ -2112,8 +2566,11 @@ adc
 ---
 
 ADC configuration enabling ADC-E unit 0, ``/dev/adc0``, scan-end interrupt
-delivery, software triggering, and the standard ADC example. Its FIFO size is
-nine so one full eight-channel scan fits in the upper-half circular buffer.
+delivery, software triggering, the standard ``adc`` example, and the
+RZ/V2H-specific ``rzv2h_adc`` example. Its FIFO size is nine so one full
+eight-channel scan fits in the upper-half circular buffer. When Window A is
+enabled, ``rzv2h_adc`` reports the accumulated comparison mask and counters
+through ``/dev/adc0``; it does not require a GPIO device.
 
 nsh-spi
 -------
